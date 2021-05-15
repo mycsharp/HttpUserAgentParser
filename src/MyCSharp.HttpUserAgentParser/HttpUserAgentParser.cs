@@ -53,7 +53,7 @@ namespace MyCSharp.HttpUserAgentParser
         {
             foreach (var item in HttpUserAgentStatics.Browsers)
             {
-                Match match = Regex.Match(userAgent, $@"{item.Key}.*?([0-9\.]+)", RegexOptions.IgnoreCase);
+                Match match = item.Key.Match(userAgent);
                 if (match.Success)
                 {
                     return (item.Value, match.Groups[1].Value);

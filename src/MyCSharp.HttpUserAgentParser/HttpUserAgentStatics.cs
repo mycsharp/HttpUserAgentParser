@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser
 {
@@ -50,43 +51,45 @@ namespace MyCSharp.HttpUserAgentParser
             new("symbian", "Symbian OS", HttpUserAgentPlatformType.Symbian),
         };
 
-        internal static Dictionary<string, string> Browsers = new()
+        private static RegexOptions DefaultBrowserRegexFlags = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private static Regex CreateDefaultRegex(string key) => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
+        internal static Dictionary<Regex, string> Browsers = new()
         {
-            { "OPR", "Opera" },
-            { "Flock", "Flock" },
-            { "Edge", "Edge" },
-            { "EdgA", "Edge" },
-            { "Edg", "Edge" },
-            { "Vivaldi", "Vivaldi" },
-            { "Brave Chrome", "Brave" },
-            { "Chrome", "Chrome" },
-            { "CriOS", "Chrome" },
-            { "Opera.*?Version", "Opera" },
-            { "Opera", "Opera" },
-            { "MSIE", "Internet Explorer" },
-            { "Internet Explorer", "Internet Explorer" },
-            { "Trident.* rv", "Internet Explorer" },
-            { "Shiira", "Shiira" },
-            { "Firefox", "Firefox" },
-            { "FxiOS", "Firefox" },
-            { "Chimera", "Chimera" },
-            { "Phoenix", "Phoenix" },
-            { "Firebird", "Firebird" },
-            { "Camino", "Camino" },
-            { "Netscape", "Netscape" },
-            { "OmniWeb", "OmniWeb" },
-            { "Safari", "Safari" },
-            { "Mozilla", "Mozilla" },
-            { "Konqueror", "Konqueror" },
-            { "icab", "iCab" },
-            { "Lynx", "Lynx" },
-            { "Links", "Links" },
-            { "hotjava", "HotJava" },
-            { "amaya", "Amaya" },
-            { "IBrowse", "IBrowse" },
-            { "Maxthon", "Maxthon" },
-            { "ipod touch", "Apple iPod" },
-            { "Ubuntu", "Ubuntu Web Browser" },
+            { CreateDefaultRegex("OPR"), "Opera" },
+            { CreateDefaultRegex("Flock"), "Flock" },
+            { CreateDefaultRegex("Edge"), "Edge" },
+            { CreateDefaultRegex("EdgA"), "Edge" },
+            { CreateDefaultRegex("Edg"), "Edge" },
+            { CreateDefaultRegex("Vivaldi"), "Vivaldi" },
+            { CreateDefaultRegex("Brave Chrome"), "Brave" },
+            { CreateDefaultRegex("Chrome"), "Chrome" },
+            { CreateDefaultRegex("CriOS"), "Chrome" },
+            { CreateDefaultRegex("Opera.*?Version"), "Opera" },
+            { CreateDefaultRegex("Opera"), "Opera" },
+            { CreateDefaultRegex("MSIE"), "Internet Explorer" },
+            { CreateDefaultRegex("Internet Explorer"), "Internet Explorer" },
+            { CreateDefaultRegex("Trident.* rv"), "Internet Explorer" },
+            { CreateDefaultRegex("Shiira"), "Shiira" },
+            { CreateDefaultRegex("Firefox"), "Firefox" },
+            { CreateDefaultRegex("FxiOS"), "Firefox" },
+            { CreateDefaultRegex("Chimera"), "Chimera" },
+            { CreateDefaultRegex("Phoenix"), "Phoenix" },
+            { CreateDefaultRegex("Firebird"), "Firebird" },
+            { CreateDefaultRegex("Camino"), "Camino" },
+            { CreateDefaultRegex("Netscape"), "Netscape" },
+            { CreateDefaultRegex("OmniWeb"), "OmniWeb" },
+            { CreateDefaultRegex("Safari"), "Safari" },
+            { CreateDefaultRegex("Mozilla"), "Mozilla" },
+            { CreateDefaultRegex("Konqueror"), "Konqueror" },
+            { CreateDefaultRegex("icab"), "iCab" },
+            { CreateDefaultRegex("Lynx"), "Lynx" },
+            { CreateDefaultRegex("Links"), "Links" },
+            { CreateDefaultRegex("hotjava"), "HotJava" },
+            { CreateDefaultRegex("amaya"), "Amaya" },
+            { CreateDefaultRegex("IBrowse"), "IBrowse" },
+            { CreateDefaultRegex("Maxthon"), "Maxthon" },
+            { CreateDefaultRegex("ipod touch"), "Apple iPod" },
+            { CreateDefaultRegex("Ubuntu"), "Ubuntu Web Browser" },
         };
 
         internal static Dictionary<string, string> Mobiles = new()
@@ -177,7 +180,7 @@ namespace MyCSharp.HttpUserAgentParser
         internal static Dictionary<string, string> Robots = new()
         {
             { "googlebot", "Googlebot" },
-            { "googleweblight","Google Web Light" },
+            { "googleweblight", "Google Web Light" },
             { "PetalBot", "PetalBot" },
             { "DuplexWeb-Google", "DuplexWeb-Google" },
             { "Storebot-Google", "Storebot-Google" },
