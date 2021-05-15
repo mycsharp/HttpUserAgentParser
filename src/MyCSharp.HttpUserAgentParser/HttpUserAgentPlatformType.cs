@@ -2,7 +2,7 @@
 {
     public enum HttpUserAgentPlatformType
     {
-        Unknown,
+        Unknown = 0,
         Generic,
         Windows,
         Linux,

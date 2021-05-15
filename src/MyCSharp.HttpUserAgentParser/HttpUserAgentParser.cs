@@ -72,7 +72,7 @@ namespace MyCSharp.HttpUserAgentParser
         {
             foreach (KeyValuePair<string, string> item in HttpUserAgentStatics.Robots)
             {
-                if (Regex.IsMatch(userAgent, $"{Regex.Escape(item.Key)}", RegexOptions.IgnoreCase))
+                if (userAgent.Contains(item.Key, StringComparison.OrdinalIgnoreCase))
                 {
                     return item.Value;
                 }
@@ -90,7 +90,7 @@ namespace MyCSharp.HttpUserAgentParser
         {
             foreach (KeyValuePair<string, string> item in HttpUserAgentStatics.Mobiles)
             {
-                if (userAgent.IndexOf(item.Key, StringComparison.OrdinalIgnoreCase) != -1)
+                if (userAgent.Contains(item.Key, StringComparison.OrdinalIgnoreCase))
                 {
                     return item.Value;
                 }
