@@ -78,6 +78,8 @@ public void ConfigureServices(IServiceCollection services)
     {
         options.CacheEntryOptions.SlidingExpiration = TimeSpan.FromMinutes(60); // default is 1 day
 
+        // limit the total entries in the MemoryCache
+        //   each unique user agent string counts as one entry
         options.CacheOptions.SizeLimit = 1024; // default is 256
     });
 }
