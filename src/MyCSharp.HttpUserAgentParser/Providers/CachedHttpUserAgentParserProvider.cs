@@ -7,6 +7,6 @@ namespace MyCSharp.HttpUserAgentParser.Providers
         private readonly ConcurrentDictionary<string, HttpUserAgentInformation> _cache = new();
 
         public HttpUserAgentInformation Parse(string userAgent)
-            => _cache.GetOrAdd(userAgent, HttpUserAgentInformation.Parse(userAgent));
+            => _cache.GetOrAdd(userAgent, HttpUserAgentParser.Parse(userAgent));
     }
 }
