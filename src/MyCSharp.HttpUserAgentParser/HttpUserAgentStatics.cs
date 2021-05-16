@@ -5,7 +5,7 @@ namespace MyCSharp.HttpUserAgentParser
 {
     public static class HttpUserAgentStatics
     {
-        public static HashSet<HttpUserAgentPlatformInformation> Platforms = new()
+        public static readonly HashSet<HttpUserAgentPlatformInformation> Platforms = new()
         {
             new("windows nt 10.0", "Windows 10", HttpUserAgentPlatformType.Windows),
             new("windows nt 6.3", "Windows 8.1", HttpUserAgentPlatformType.Windows),
@@ -51,7 +51,7 @@ namespace MyCSharp.HttpUserAgentParser
             new("symbian", "Symbian OS", HttpUserAgentPlatformType.Symbian),
         };
 
-        private static RegexOptions DefaultBrowserRegexFlags = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private const RegexOptions DefaultBrowserRegexFlags = RegexOptions.IgnoreCase | RegexOptions.Compiled;
         private static Regex CreateDefaultRegex(string key) => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
         internal static Dictionary<Regex, string> Browsers = new()
         {
@@ -92,7 +92,7 @@ namespace MyCSharp.HttpUserAgentParser
             { CreateDefaultRegex("Ubuntu"), "Ubuntu Web Browser" },
         };
 
-        internal static Dictionary<string, string> Mobiles = new()
+        internal static readonly Dictionary<string, string> Mobiles = new()
         {
             // Legacy
             { "mobileexplorer", "Mobile Explorer" },
@@ -177,7 +177,7 @@ namespace MyCSharp.HttpUserAgentParser
             { "cellphone", "Generic Mobile" },
         };
 
-        internal static Dictionary<string, string> Robots = new()
+        internal static readonly Dictionary<string, string> Robots = new()
         {
             { "googlebot", "Googlebot" },
             { "googleweblight", "Google Web Light" },
@@ -223,7 +223,7 @@ namespace MyCSharp.HttpUserAgentParser
             { "Sistrix", "Sistrix" }
         };
 
-        internal static Dictionary<string, string> Tools = new()
+        internal static readonly Dictionary<string, string> Tools = new()
         {
             { "curl", "curl" }
         };

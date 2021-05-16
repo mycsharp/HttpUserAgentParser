@@ -1,6 +1,6 @@
 ﻿namespace MyCSharp.HttpUserAgentParser
 {
-    public enum HttpUserAgentPlatformType
+    public enum HttpUserAgentPlatformType : byte
     {
         Unknown = 0,
         Generic,

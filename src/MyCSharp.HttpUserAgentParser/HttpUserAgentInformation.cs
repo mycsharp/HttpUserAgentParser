@@ -11,7 +11,7 @@
         public string? MobileDeviceType { get; }
 
 
-        public HttpUserAgentInformation(string userAgent, HttpUserAgentType type, HttpUserAgentPlatformInformation? platform, string? name, string? version, string? mobileDeviceType)
+        public HttpUserAgentInformation(string userAgent, HttpUserAgentType type, in HttpUserAgentPlatformInformation? platform, string? name, string? version, string? mobileDeviceType)
         {
             UserAgent = userAgent;
             Type = type;

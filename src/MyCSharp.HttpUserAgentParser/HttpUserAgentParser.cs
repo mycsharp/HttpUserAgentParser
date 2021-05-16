@@ -33,7 +33,7 @@ namespace MyCSharp.HttpUserAgentParser
 
         public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
         {
-            foreach (var item in HttpUserAgentStatics.Platforms)
+            foreach (HttpUserAgentPlatformInformation item in HttpUserAgentStatics.Platforms)
             {
                 if (Regex.IsMatch(userAgent, $"{Regex.Escape(item.Id)}", RegexOptions.IgnoreCase))
                 {
@@ -51,7 +51,7 @@ namespace MyCSharp.HttpUserAgentParser
 
         public static (string Name, string? Version)? GetBrowser(string userAgent)
         {
-            foreach (var item in HttpUserAgentStatics.Browsers)
+            foreach (KeyValuePair<Regex, string> item in HttpUserAgentStatics.Browsers)
             {
                 Match match = item.Key.Match(userAgent);
                 if (match.Success)

@@ -37,6 +37,5 @@ namespace MyCSharp.HttpUserAgentParser.DependencyInjection
 
             return options;
         }
-
     }
 }

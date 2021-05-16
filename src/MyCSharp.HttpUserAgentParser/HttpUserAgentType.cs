@@ -1,6 +1,6 @@
 ﻿namespace MyCSharp.HttpUserAgentParser
 {
-    public enum HttpUserAgentType
+    public enum HttpUserAgentType : byte
     {
         Unknown,
         Browser,
