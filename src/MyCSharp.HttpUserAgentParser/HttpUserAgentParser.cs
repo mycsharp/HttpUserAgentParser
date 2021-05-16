@@ -42,6 +42,7 @@ namespace MyCSharp.HttpUserAgentParser
 
             return null;
         }
+
         public static bool TryGetPlatform(string userAgent, [NotNullWhen(true)] out HttpUserAgentPlatformInformation? platform)
         {
             platform = GetPlatform(userAgent);
@@ -61,6 +62,7 @@ namespace MyCSharp.HttpUserAgentParser
 
             return null;
         }
+
         public static bool TryGetBrowser(string userAgent, [NotNullWhen(true)] out (string Name, string? Version)? browser)
         {
             browser = GetBrowser(userAgent);
@@ -79,6 +81,7 @@ namespace MyCSharp.HttpUserAgentParser
 
             return null;
         }
+
         public static bool TryGetRobot(string userAgent, [NotNullWhen(true)] out string? robotName)
         {
             robotName = GetRobot(userAgent);
@@ -97,6 +100,7 @@ namespace MyCSharp.HttpUserAgentParser
 
             return null;
         }
+        
         public static bool TryGetMobileDevice(string userAgent, [NotNullWhen(true)] out string? device)
         {
             device = GetMobileDevice(userAgent);
