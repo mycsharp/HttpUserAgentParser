@@ -42,7 +42,7 @@ public void MyMethod(string userAgent)
 }
 ```
 
-If no cache is required but dependency injection is still desired, the default cache provider can simply be used. This registers the dummy class `HttpUserAgentParserDefaultProvider`, which does not cache at all.
+If no cache is required but dependency injection is still desired, the default cache provider can simply be used. This registers the `HttpUserAgentParserDefaultProvider`, which does not cache at all.
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -105,12 +105,12 @@ public void MyMethod(IHttpUserAgentParserAccessor parserAccessor)
 
 ## Disclaimer
 
-This library is inspired by [UserAgentService by DannyBoyNg](https://github.com/DannyBoyNg/UserAgentService) and contains optimizations for our requirements on myCSharp.de.
+This library is inspired by [UserAgentService by DannyBoyNg](https://github.com/DannyBoyNg/UserAgentService) and contains optimizations for our requirements on [myCSharp.de](https://mycsharp.de).
 We decided to fork the project, because we want a general restructuring with corresponding breaking changes.
 
 ## Maintained
 
-by [@gfoidl](https://github.com/gfoidl) and [@BenjaminAbt](https://github.com/BenjaminAbt)
+by [@BenjaminAbt](https://github.com/BenjaminAbt) and [@gfoidl](https://github.com/gfoidl)
 
 ## License
 
