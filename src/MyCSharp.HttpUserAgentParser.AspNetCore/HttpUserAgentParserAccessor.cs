@@ -6,7 +6,7 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore
     public interface IHttpUserAgentParserAccessor
     {
         string HttpContextUserAgent { get; }
-        HttpUserAgentInformation ParseFromHttpContext();
+        HttpUserAgentInformation Get();
     }
 
     public class HttpUserAgentParserAccessor : IHttpUserAgentParserAccessor
@@ -23,7 +23,7 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore
         public string HttpContextUserAgent =>
             _httpContextAccessor?.HttpContext?.Request?.Headers["User-Agent"].ToString()!;
 
-        public HttpUserAgentInformation ParseFromHttpContext()
+        public HttpUserAgentInformation Get()
             => _httpUserAgentParser.Parse(HttpContextUserAgent);
     }
 }
