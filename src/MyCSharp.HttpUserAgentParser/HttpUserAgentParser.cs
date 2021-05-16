@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
@@ -35,7 +34,7 @@ namespace MyCSharp.HttpUserAgentParser
         {
             foreach (HttpUserAgentPlatformInformation item in HttpUserAgentStatics.Platforms)
             {
-                if (Regex.IsMatch(userAgent, $"{Regex.Escape(item.Id)}", RegexOptions.IgnoreCase))
+                if (item.Regex.IsMatch(userAgent))
                 {
                     return item;
                 }
@@ -51,12 +50,12 @@ namespace MyCSharp.HttpUserAgentParser
 
         public static (string Name, string? Version)? GetBrowser(string userAgent)
         {
-            foreach (KeyValuePair<Regex, string> item in HttpUserAgentStatics.Browsers)
+            foreach ((Regex key, string? value) in HttpUserAgentStatics.Browsers)
             {
-                Match match = item.Key.Match(userAgent);
+                Match match = key.Match(userAgent);
                 if (match.Success)
                 {
-                    return (item.Value, match.Groups[1].Value);
+                    return (value, match.Groups[1].Value);
                 }
             }
 
@@ -70,11 +69,11 @@ namespace MyCSharp.HttpUserAgentParser
 
         public static string? GetRobot(string userAgent)
         {
-            foreach (KeyValuePair<string, string> item in HttpUserAgentStatics.Robots)
+            foreach ((string key, string value) in HttpUserAgentStatics.Robots)
             {
-                if (userAgent.Contains(item.Key, StringComparison.OrdinalIgnoreCase))
+                if (userAgent.Contains(key, StringComparison.OrdinalIgnoreCase))
                 {
-                    return item.Value;
+                    return value;
                 }
             }
 
@@ -88,11 +87,11 @@ namespace MyCSharp.HttpUserAgentParser
 
         public static string? GetMobileDevice(string userAgent)
         {
-            foreach (KeyValuePair<string, string> item in HttpUserAgentStatics.Mobiles)
+            foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
             {
-                if (userAgent.Contains(item.Key, StringComparison.OrdinalIgnoreCase))
+                if (userAgent.Contains(key, StringComparison.OrdinalIgnoreCase))
                 {
-                    return item.Value;
+                    return value;
                 }
             }
 
