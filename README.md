@@ -30,7 +30,17 @@ Version = "90.0.4430.212"
 MobileDeviceType = null
 ```
 
-### Caching
+### Dependency Injection and Caching
+
+For dependency injection mechanisms, the `IHttpUserAgentParserProvider` interface exists, for which built-in or custom caching mechanisms can be used. The use is always:
+
+```csharp
+private IHttpUserAgentParserProvider _parser;
+public void MyMethod(string userAgent)
+{
+    HttpUserAgentInformation info = _parser.Parse(userAgent);
+}
+```
 
 If no cache is required but dependency injection is still desired, the default cache provider can simply be used. This registers the dummy class `HttpUserAgentParserDefaultProvider`, which does not cache at all.
 
