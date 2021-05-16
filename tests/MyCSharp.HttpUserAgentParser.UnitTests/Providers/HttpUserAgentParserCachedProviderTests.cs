@@ -1,10 +1,5 @@
 // Copyright © myCSharp 2020-2021, all rights reserved
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentAssertions;
 using MyCSharp.HttpUserAgentParser.Providers;
 using Xunit;
