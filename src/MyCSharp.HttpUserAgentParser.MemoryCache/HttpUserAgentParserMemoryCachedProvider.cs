@@ -1,4 +1,4 @@
-﻿// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2021, all rights reserved
 
 using System;
 using Microsoft.Extensions.Caching.Memory;
@@ -32,11 +32,11 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
         }
 
         [ThreadStatic]
-        private static CacheKey? t_key;
+        private static CacheKey? s_tKey;
 
         private CacheKey GetKey(string userAgent)
         {
-            CacheKey key = t_key ??= new();
+            CacheKey key = s_tKey ??= new CacheKey();
 
             key.UserAgent = userAgent;
             key.Options = _options;
@@ -44,11 +44,33 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
             return key;
         }
 
-        private class CacheKey
+        private class CacheKey : IEquatable<CacheKey> // required for IMemoryCache
         {
             public string UserAgent { get; set; } = null!;
 
             public HttpUserAgentParserMemoryCachedProviderOptions Options { get; set; } = null!;
+
+            public bool Equals(CacheKey? other)
+            {
+                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(other, null)) return false;
+
+                return this.UserAgent == other.UserAgent && this.Options == other.Options;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as CacheKey);
+            }
+
+            public override int GetHashCode()
+            {
+                int hash = 13;
+                hash = (hash * 7) + UserAgent.GetHashCode();
+                hash = (hash * 7) + Options.GetHashCode();
+
+                return hash;
+            }
         }
     }
 }
