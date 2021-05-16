@@ -1,6 +1,6 @@
-﻿using System;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using MyCSharp.HttpUserAgentParser.Providers;
+using System;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache
 {

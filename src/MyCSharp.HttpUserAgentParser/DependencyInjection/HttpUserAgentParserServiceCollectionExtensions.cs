@@ -17,7 +17,7 @@ namespace MyCSharp.HttpUserAgentParser.DependencyInjection
         /// <summary>
         /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
         /// </summary>
-        public static HttpUserAgentParserDependencyInjectionOptions AddCachedHttpUserAgentParser(
+        public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentCachedParser(
             this IServiceCollection services)
         {
             return AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>(services);

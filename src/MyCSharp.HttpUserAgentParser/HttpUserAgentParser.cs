@@ -100,7 +100,7 @@ namespace MyCSharp.HttpUserAgentParser
 
             return null;
         }
-        
+
         public static bool TryGetMobileDevice(string userAgent, [NotNullWhen(true)] out string? device)
         {
             device = GetMobileDevice(userAgent);
