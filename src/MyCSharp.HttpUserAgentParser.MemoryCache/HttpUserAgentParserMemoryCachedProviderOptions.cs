@@ -12,12 +12,8 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
         public MemoryCacheOptions CacheOptions { get; }
         public MemoryCacheEntryOptions CacheEntryOptions { get; }
 
-        public HttpUserAgentParserMemoryCachedProviderOptions()
-            : this(null, null) { }
-
         public HttpUserAgentParserMemoryCachedProviderOptions(MemoryCacheOptions cacheOptions)
             : this(cacheOptions, null) { }
-
 
         public HttpUserAgentParserMemoryCachedProviderOptions(MemoryCacheEntryOptions cacheEntryOptions)
             : this(null, cacheEntryOptions) { }
