@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="Moq" Version="4.16.1" />
@@ -22,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MyCSharp.HttpUserAgentParser.AspNetCore\MyCSharp.HttpUserAgentParser.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\MyCSharp.HttpUserAgentParser.MemoryCache\MyCSharp.HttpUserAgentParser.MemoryCache.csproj" />
   </ItemGroup>
 
 </Project>

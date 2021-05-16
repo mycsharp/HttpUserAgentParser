@@ -3,7 +3,6 @@
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Xunit;
-using Xunit.Sdk;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests
 {

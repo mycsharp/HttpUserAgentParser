@@ -8,7 +8,7 @@ using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests.DependencyInjection
 {
-    public class HttpUserAgentParserServiceCollectionExtensionsTests
+    public class HttpUserAgentParserMemoryCacheServiceCollectionExtensions
     {
         public class TestHttpUserAgentParserProvider : IHttpUserAgentParserProvider
         {
