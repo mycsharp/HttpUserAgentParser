@@ -3,6 +3,6 @@
     public class DefaultHttpUserAgentParserProvider : IHttpUserAgentParserProvider
     {
         public HttpUserAgentInformation Parse(string userAgent)
-            => HttpUserAgentParser.Parse(userAgent);
+            => HttpUserAgentInformation.Parse(userAgent);
     }
 }
