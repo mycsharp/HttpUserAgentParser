@@ -10,17 +10,29 @@
         public string? Version { get; }
         public string? MobileDeviceType { get; }
 
-
-        public HttpUserAgentInformation(string userAgent, HttpUserAgentType type, in HttpUserAgentPlatformInformation? platform, string? name, string? version, string? mobileDeviceType)
+        private HttpUserAgentInformation(string userAgent, HttpUserAgentPlatformInformation? platform, HttpUserAgentType type, string? name, string? version, string? deviceName)
         {
             UserAgent = userAgent;
             Type = type;
-            MobileDeviceType = mobileDeviceType;
-            Platform = platform;
             Name = name;
+            Platform = platform;
             Version = version;
+            MobileDeviceType = deviceName;
         }
 
+        // parse
+
         public static HttpUserAgentInformation Parse(string userAgent) => HttpUserAgentParser.Parse(userAgent);
+
+        // create factories
+
+        public static HttpUserAgentInformation CreateForRobot(string userAgent, string robotName)
+            => new(userAgent, null, HttpUserAgentType.Robot, robotName, null, null);
+
+        public static HttpUserAgentInformation CreateForBrowser(string userAgent, HttpUserAgentPlatformInformation? platform, string? browserName, string? browserVersion, string? deviceName)
+            => new(userAgent, platform, HttpUserAgentType.Browser, browserName, browserVersion, deviceName);
+
+        public static HttpUserAgentInformation CreateForUnknown(string userAgent, HttpUserAgentPlatformInformation? platform, string? deviceName)
+            => new(userAgent, platform, HttpUserAgentType.Unknown, null, null, deviceName);
     }
 }

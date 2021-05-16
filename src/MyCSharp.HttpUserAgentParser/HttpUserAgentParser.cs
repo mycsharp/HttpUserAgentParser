@@ -14,7 +14,7 @@ namespace MyCSharp.HttpUserAgentParser
             // analyze
             if (TryGetRobot(userAgent, out string? robotName))
             {
-                return new HttpUserAgentInformation(userAgent, HttpUserAgentType.Robot, null, robotName, null, null);
+                return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
             }
 
             HttpUserAgentPlatformInformation? platform = GetPlatform(userAgent);
@@ -22,10 +22,10 @@ namespace MyCSharp.HttpUserAgentParser
 
             if (TryGetBrowser(userAgent, out (string Name, string? Version)? browser))
             {
-                return new HttpUserAgentInformation(userAgent, HttpUserAgentType.Browser, platform, browser?.Name, browser?.Version, mobileDeviceType);
+                return HttpUserAgentInformation.CreateForBrowser(userAgent, platform, browser?.Name, browser?.Version, mobileDeviceType);
             }
 
-            return new HttpUserAgentInformation(userAgent, HttpUserAgentType.Unknown, platform, null, null, mobileDeviceType);
+            return HttpUserAgentInformation.CreateForUnknown(userAgent, platform, mobileDeviceType);
         }
 
         public static string Cleanup(string userAgent) => userAgent.Trim();
