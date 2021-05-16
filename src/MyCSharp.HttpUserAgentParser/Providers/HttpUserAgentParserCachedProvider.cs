@@ -2,7 +2,7 @@
 
 namespace MyCSharp.HttpUserAgentParser.Providers
 {
-    public class CachedHttpUserAgentParserProvider : IHttpUserAgentParserProvider
+    public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     {
         private readonly ConcurrentDictionary<string, HttpUserAgentInformation> _cache = new();
 

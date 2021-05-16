@@ -1,6 +1,6 @@
 ﻿namespace MyCSharp.HttpUserAgentParser.Providers
 {
-    public class DefaultHttpUserAgentParserProvider : IHttpUserAgentParserProvider
+    public class HttpUserAgentParserDefaultProvider : IHttpUserAgentParserProvider
     {
         public HttpUserAgentInformation Parse(string userAgent)
             => HttpUserAgentParser.Parse(userAgent);

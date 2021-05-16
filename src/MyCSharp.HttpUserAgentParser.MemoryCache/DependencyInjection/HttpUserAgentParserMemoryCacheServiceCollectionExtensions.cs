@@ -8,7 +8,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection
     public static class HttpUserAgentParserMemoryCacheServiceCollectionExtensions
     {
         /// <summary>
-        /// Registers <see cref="CachedHttpUserAgentParserProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+        /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
         /// </summary>
         public static HttpUserAgentParserDependencyInjectionOptions AddMemoryCachedHttpUserAgentParser(
             this IServiceCollection services, Action<HttpUserAgentParserMemoryCachedProviderOptions>? options = null)

@@ -6,21 +6,21 @@ namespace MyCSharp.HttpUserAgentParser.DependencyInjection
     public static class HttpUserAgentParserServiceCollectionExtensions
     {
         /// <summary>
-        /// Registers <see cref="DefaultHttpUserAgentParserProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+        /// Registers <see cref="HttpUserAgentParserDefaultProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
         /// </summary>
         public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser(
             this IServiceCollection services)
         {
-            return AddHttpUserAgentParser<DefaultHttpUserAgentParserProvider>(services);
+            return AddHttpUserAgentParser<HttpUserAgentParserDefaultProvider>(services);
         }
 
         /// <summary>
-        /// Registers <see cref="CachedHttpUserAgentParserProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+        /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
         /// </summary>
         public static HttpUserAgentParserDependencyInjectionOptions AddCachedHttpUserAgentParser(
             this IServiceCollection services)
         {
-            return AddHttpUserAgentParser<CachedHttpUserAgentParserProvider>(services);
+            return AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>(services);
         }
 
         /// <summary>
