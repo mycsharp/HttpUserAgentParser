@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿// Copyright © myCSharp 2020-2021, all rights reserved
+
+using System;
+using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
-using System;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection
 {

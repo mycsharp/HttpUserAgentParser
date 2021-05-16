@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright © myCSharp 2020-2021, all rights reserved
+
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 

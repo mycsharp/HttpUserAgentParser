@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+// Copyright © myCSharp 2020-2021, all rights reserved
+
+using Microsoft.AspNetCore.Http;
 using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore
@@ -24,6 +26,6 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore
             _httpContextAccessor?.HttpContext?.Request?.Headers["User-Agent"].ToString()!;
 
         public HttpUserAgentInformation Get()
-            => _httpUserAgentParser.Parse(HttpContextUserAgent);
+            => _httpUserAgentParser.Parse(this.HttpContextUserAgent);
     }
 }

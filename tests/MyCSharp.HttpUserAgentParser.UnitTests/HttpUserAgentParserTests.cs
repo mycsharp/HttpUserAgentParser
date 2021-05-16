@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿// Copyright © myCSharp 2020-2021, all rights reserved
+
+using FluentAssertions;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests

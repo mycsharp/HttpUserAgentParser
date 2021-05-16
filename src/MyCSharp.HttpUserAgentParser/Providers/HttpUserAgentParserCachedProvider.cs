@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿// Copyright © myCSharp 2020-2021, all rights reserved
+
+using System.Collections.Concurrent;
 
 namespace MyCSharp.HttpUserAgentParser.Providers
 {

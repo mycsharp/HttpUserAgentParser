@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿// Copyright © myCSharp 2020-2021, all rights reserved
+
+using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser
 {

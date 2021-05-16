@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using MyCSharp.HttpUserAgentParser.Providers;
+﻿// Copyright © myCSharp 2020-2021, all rights reserved
+
 using System;
+using Microsoft.Extensions.Caching.Memory;
+using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache
 {

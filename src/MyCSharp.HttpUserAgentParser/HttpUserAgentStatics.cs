@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+// Copyright © myCSharp 2020-2021, all rights reserved
+
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser
@@ -56,7 +58,7 @@ namespace MyCSharp.HttpUserAgentParser
 
         private const RegexOptions DefaultBrowserRegexFlags = RegexOptions.IgnoreCase | RegexOptions.Compiled;
         private static Regex CreateDefaultBrowserRegex(string key) => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
-        internal static Dictionary<Regex, string> Browsers = new()
+        public static Dictionary<Regex, string> Browsers = new()
         {
             { CreateDefaultBrowserRegex("OPR"), "Opera" },
             { CreateDefaultBrowserRegex("Flock"), "Flock" },
@@ -95,7 +97,7 @@ namespace MyCSharp.HttpUserAgentParser
             { CreateDefaultBrowserRegex("Ubuntu"), "Ubuntu Web Browser" },
         };
 
-        internal static readonly Dictionary<string, string> Mobiles = new()
+        public static readonly Dictionary<string, string> Mobiles = new()
         {
             // Legacy
             { "mobileexplorer", "Mobile Explorer" },
@@ -180,7 +182,7 @@ namespace MyCSharp.HttpUserAgentParser
             { "cellphone", "Generic Mobile" },
         };
 
-        internal static readonly (string Key, string Value)[] Robots =
+        public static readonly (string Key, string Value)[] Robots =
         {
             ( "googlebot", "Googlebot" ),
             ( "googleweblight", "Google Web Light" ),
@@ -226,7 +228,7 @@ namespace MyCSharp.HttpUserAgentParser
             ( "Sistrix", "Sistrix" )
         };
 
-        internal static readonly Dictionary<string, string> Tools = new()
+        public static readonly Dictionary<string, string> Tools = new()
         {
             { "curl", "curl" }
         };

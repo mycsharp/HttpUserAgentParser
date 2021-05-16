@@ -1,4 +1,6 @@
-﻿namespace MyCSharp.HttpUserAgentParser.Providers
+﻿// Copyright © myCSharp 2020-2021, all rights reserved
+
+namespace MyCSharp.HttpUserAgentParser.Providers
 {
     public class HttpUserAgentParserDefaultProvider : IHttpUserAgentParserProvider
     {
