@@ -23,7 +23,7 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore
         }
 
         public string HttpContextUserAgent =>
-            _httpContextAccessor?.HttpContext?.Request?.Headers["User-Agent"].ToString()!;
+            _httpContextAccessor.HttpContext?.Request?.Headers["User-Agent"].ToString()!;
 
         public HttpUserAgentInformation Get()
             => _httpUserAgentParser.Parse(this.HttpContextUserAgent);
