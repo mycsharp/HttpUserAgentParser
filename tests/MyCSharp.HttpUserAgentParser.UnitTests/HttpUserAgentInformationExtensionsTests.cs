@@ -16,20 +16,31 @@ namespace MyCSharp.HttpUserAgentParser.UnitTests
         public void IsType(string userAgent, HttpUserAgentType expectedType, bool isMobile)
         {
             HttpUserAgentInformation info = HttpUserAgentInformation.Parse(userAgent);
-            info.IsType(expectedType).Should().Be(true);
 
             if (expectedType == HttpUserAgentType.Browser)
             {
+                info.IsType(HttpUserAgentType.Browser).Should().Be(true);
+                info.IsType(HttpUserAgentType.Robot).Should().Be(false);
+                info.IsType(HttpUserAgentType.Unknown).Should().Be(false);
+
                 info.IsBrowser().Should().Be(true);
                 info.IsRobot().Should().Be(false);
             }
             else if (expectedType == HttpUserAgentType.Robot)
             {
+                info.IsType(HttpUserAgentType.Browser).Should().Be(false);
+                info.IsType(HttpUserAgentType.Robot).Should().Be(true);
+                info.IsType(HttpUserAgentType.Unknown).Should().Be(false);
+
                 info.IsBrowser().Should().Be(false);
                 info.IsRobot().Should().Be(true);
             }
             else if (expectedType == HttpUserAgentType.Unknown)
             {
+                info.IsType(HttpUserAgentType.Browser).Should().Be(false);
+                info.IsType(HttpUserAgentType.Robot).Should().Be(false);
+                info.IsType(HttpUserAgentType.Unknown).Should().Be(true);
+
                 info.IsBrowser().Should().Be(false);
                 info.IsRobot().Should().Be(false);
             }
