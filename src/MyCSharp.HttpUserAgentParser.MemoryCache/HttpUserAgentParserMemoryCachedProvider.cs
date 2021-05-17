@@ -6,6 +6,7 @@ using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache
 {
+    /// <inheritdoc/>
     public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvider
     {
         private readonly IMemoryCache _memoryCache;
@@ -17,6 +18,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
             _options = options;
         }
 
+        /// <inheritdoc/>
         public HttpUserAgentInformation Parse(string userAgent)
         {
             CacheKey key = this.GetKey(userAgent);

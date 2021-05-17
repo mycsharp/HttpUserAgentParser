@@ -4,7 +4,6 @@
         <Product>HTTP User Agent Parser</Product>
         <Description>Parses user agents for Browser, Platform and Bots.</Description>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <IsPackable>true</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>

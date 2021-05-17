@@ -4,7 +4,6 @@
         <Product>HTTP User Agent Parser Extensions for ASP.NET Core</Product>
         <Description>HTTP User Agent Parser Extensions for ASP.NET Core</Description>
         <TargetFramework>net5.0</TargetFramework>
-        <IsPackable>true</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
