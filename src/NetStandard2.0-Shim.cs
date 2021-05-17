@@ -13,6 +13,7 @@ namespace System.Diagnostics.CodeAnalysis
 
 namespace MyCSharp.HttpUserAgentParser
 {
+    using System;
     using System.Collections.Generic;
 
     internal static class Extensions
@@ -22,5 +23,8 @@ namespace MyCSharp.HttpUserAgentParser
             key = kvp.Key;
             value = kvp.Value;
         }
+
+        public static bool Contains(this string instance, string value, StringComparison _)
+            => instance.Contains(value);
     }
 }
