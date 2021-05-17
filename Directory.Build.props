@@ -18,7 +18,6 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
-        <IsPackable>true</IsPackable>
         <GenerateDocumentationFile Condition="'$(Configuration)' == 'Release'">true</GenerateDocumentationFile>
     </PropertyGroup>
 </Project>
