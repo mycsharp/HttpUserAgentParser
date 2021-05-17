@@ -1,0 +1,46 @@
+name: NETCore
+
+on:
+    push:
+      branches:
+        - master
+    pull_request:
+      types: [closed]
+      branches:
+        - master
+
+env:
+  BuildConfig: Release
+
+jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
+      
+      - uses: dotnet/nbgv@master # https://github.com/dotnet/nbgv
+        id: nbgv
+
+      - name: Versioning
+        run: echo ${{ steps.nbgv.outputs.SemVer2 }}
+
+      - name: Build with dotnet
+        run: dotnet build
+              --configuration ${{ env.BuildConfig }}
+              /p:Version=${{ steps.nbgv.outputs.AssemblyVersion }}
+
+      - name: Test with dotnet
+        run: dotnet test 
+
+      - name: Pack NuGet
+        run: dotnet pack 
+              --configuration ${{ env.BuildConfig }}
+              /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
+
+      - name: Push to NuGet
+        run: dotnet nuget push **/*.nupkg
+                --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
+                --source https://api.nuget.org/v3/index.json
+                --no-symbols 1

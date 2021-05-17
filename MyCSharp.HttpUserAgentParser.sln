@@ -19,6 +19,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParse
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests", "tests\MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests\MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.csproj", "{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{5738CE0D-5E6E-47CB-BFF5-08F45A2C33AD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+		LICENSE = LICENSE
+		NuGet.config = NuGet.config
+		README.md = README.md
+		version.json = version.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
