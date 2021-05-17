@@ -117,11 +117,11 @@ AMD Ryzen 9 5950X, 1 CPU, 32 logical and 16 physical cores
   DefaultJob : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
 ```
 
-|              Method |        Mean |    Error |   StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|-------------------- |------------:|---------:|---------:|-------:|-------:|------:|----------:|
-|           UA Parser | 1,017.48 us | 6.132 us | 5.736 us | 1.9531 |      - |     - |   36921 B |
-|    UserAgentService |    51.23 us | 0.661 us | 0.619 us | 3.3569 | 0.3052 |     - |   56616 B |
-| HttpUserAgentParser |    26.80 us | 0.310 us | 0.290 us |      - |      - |     - |     432 B |
+|              Method |        Mean |     Error |    StdDev |   Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|-------------------- |------------:|----------:|----------:|--------:|-------:|------:|----------:|
+|         'UA Parser' | 3,238.59 us | 27.435 us | 25.663 us |  7.8125 |      - |     - |  168225 B |
+|    UserAgentService |   391.11 us |  5.126 us |  4.795 us | 35.1563 | 3.4180 |     - |  589664 B |
+| HttpUserAgentParser |    67.07 us |  0.740 us |  0.693 us |       - |      - |     - |     848 B |
 
 ## Disclaimer
 

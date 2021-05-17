@@ -1,3 +1,5 @@
+// Copyright © myCSharp 2020-2021, all rights reserved
+
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
