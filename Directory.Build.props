@@ -1,12 +1,10 @@
 <Project>
     <PropertyGroup>
         <MinClientVersion>2.12</MinClientVersion>
-        <GenerateDocumentationFile Condition=" '$(Configuration)' == 'Release' ">true</GenerateDocumentationFile>
         <Authors>MyCSharp.de, Benjamin Abt, Günther Foidl and Contributors</Authors>
         <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <DefaultLanguage>en-US</DefaultLanguage>
-        <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
         <Description>HTTP User Agent Parser for .NET</Description>
         <NoPackageAnalysis>true</NoPackageAnalysis>
         <LangVersion>preview</LangVersion>
@@ -14,5 +12,12 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <DebugType>embedded</DebugType>
+        <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
+        <IsBenchmarkProject>$(MsBuildProjectName.Contains('Benchmark'))</IsBenchmarkProject>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
+        <GenerateDocumentationFile Condition="'$(Configuration)' == 'Release'">true</GenerateDocumentationFile>
     </PropertyGroup>
 </Project>

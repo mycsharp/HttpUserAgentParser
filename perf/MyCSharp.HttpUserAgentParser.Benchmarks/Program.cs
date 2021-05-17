@@ -1,14 +1,12 @@
 // Copyright © myCSharp 2020-2021, all rights reserved
 
+using System.Reflection;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 
-namespace MyCSharp.HttpUserAgentParser.Benchmarks
-{
-    class Program
-    {
-        static void Main()
-        {
-            BenchmarkRunner.Run<UserAgentBenchmarks>();
-        }
-    }
-}
+// Needed for DeviceDetector.NET
+// https://github.com/totpero/DeviceDetector.NET/issues/44
+ManualConfig config = ManualConfig.Create(DefaultConfig.Instance)
+    .WithOptions(ConfigOptions.DisableOptimizationsValidator);
+
+BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args, config);
