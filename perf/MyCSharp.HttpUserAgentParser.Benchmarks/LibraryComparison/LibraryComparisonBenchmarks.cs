@@ -10,31 +10,19 @@ using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.Benchmarks.LibraryComparison
 {
-    [Config(typeof(Config))]
+    [ShortRunJob]
+    [MemoryDiagnoser]
+    [CategoriesColumn]
+    [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     public class LibraryComparisonBenchmarks
     {
-        private class Config : ManualConfig
-        {
-            public Config()
-            {
-                AddDiagnoser(MemoryDiagnoser.Default);
-
-                AddColumn(CategoriesColumn.Default);
-                AddLogicalGroupRules(BenchmarkLogicalGroupRule.ByCategory);
-
-                // Needed for DeviceDetector.NET
-                // https://github.com/totpero/DeviceDetector.NET/issues/44
-                WithOptions(ConfigOptions.DisableOptimizationsValidator);
-            }
-        }
-
         public record TestData(string Label, string UserAgent)
         {
             public override string ToString() => Label;
         }
 
         [ParamsSource(nameof(GetTestUserAgents))]
-        public TestData Data { get; set; } = null!;
+        public TestData Data { get; set; }
 
         public IEnumerable<TestData> GetTestUserAgents()
         {
