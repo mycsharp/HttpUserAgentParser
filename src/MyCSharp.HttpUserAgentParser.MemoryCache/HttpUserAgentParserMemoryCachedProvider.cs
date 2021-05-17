@@ -50,20 +50,10 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
 
             public HttpUserAgentParserMemoryCachedProviderOptions Options { get; set; } = null!;
 
-            public bool Equals(CacheKey? other)
-            {
-                if (ReferenceEquals(this, other)) return true;
-                if (other is null) return false;
+            public bool Equals(CacheKey? other) => this.UserAgent == other?.UserAgent;
+            public override bool Equals(object? obj) => this.Equals(obj as CacheKey);
 
-                return this.UserAgent == other.UserAgent && this.Options == other.Options;
-            }
-
-            public override bool Equals(object? obj)
-            {
-                return this.Equals(obj as CacheKey);
-            }
-
-            public override int GetHashCode() => HashCode.Combine(this.UserAgent, this.Options);
+            public override int GetHashCode() => this.UserAgent.GetHashCode();
         }
     }
 }
