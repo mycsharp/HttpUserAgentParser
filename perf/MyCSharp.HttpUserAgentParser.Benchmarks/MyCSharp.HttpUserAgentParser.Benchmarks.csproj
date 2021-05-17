@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net5.0</TargetFramework>
         <Nullable>disable</Nullable>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
