@@ -99,7 +99,11 @@ namespace MyCSharp.HttpUserAgentParser
         {
             foreach ((string key, string value) in HttpUserAgentStatics.Robots)
             {
+#if NETSTANDARD2_0
+                if (userAgent.Contains(key))
+#else
                 if (userAgent.Contains(key, StringComparison.OrdinalIgnoreCase))
+#endif
                 {
                     return value;
                 }
@@ -124,7 +128,11 @@ namespace MyCSharp.HttpUserAgentParser
         {
             foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
             {
+#if NETSTANDARD2_0
+                if (userAgent.Contains(key))
+#else
                 if (userAgent.Contains(key, StringComparison.OrdinalIgnoreCase))
+#endif
                 {
                     return value;
                 }
