@@ -10,7 +10,7 @@ namespace MyCSharp.HttpUserAgentParser
     public readonly struct HttpUserAgentPlatformInformation
     {
         /// <summary>
-        /// Regex to match
+        /// Regex-pattern that matches this user agent string
         /// </summary>
         public Regex Regex { get; }
 

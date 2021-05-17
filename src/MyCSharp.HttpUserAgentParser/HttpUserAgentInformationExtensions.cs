@@ -8,24 +8,24 @@ namespace MyCSharp.HttpUserAgentParser
     public static class HttpUserAgentInformationExtensions
     {
         /// <summary>
-        /// returns true <typeparam name="userAgent.Type"></typeparam> is of <param name="type">type</param>
+        /// Tests if <paramref name="userAgent"/> is of <paramref name="type" />
         /// </summary>
         public static bool IsType(this in HttpUserAgentInformation userAgent, HttpUserAgentType type) => userAgent.Type == type;
 
         /// <summary>
-        /// returns true <see cref="HttpUserAgentInformation.Type"/> is a robot
+        /// Tests if <paramref name="userAgent"/> is of type <see cref="HttpUserAgentType.Robot"/>
         /// </summary>
         public static bool IsRobot(this in HttpUserAgentInformation userAgent) => IsType(userAgent, HttpUserAgentType.Robot);
 
         /// <summary>
-        /// returns true <see cref="HttpUserAgentInformation.Type"/> is a browser
+        /// Tests if <paramref name="userAgent"/> is of type <see cref="HttpUserAgentType.Browser"/>
         /// </summary>
         public static bool IsBrowser(this in HttpUserAgentInformation userAgent) => IsType(userAgent, HttpUserAgentType.Browser);
 
         /// <summary>
-        /// returns true if agent is a mobile device
+        /// returns <c>true</c> if agent is a mobile device
         /// </summary>
-        /// <remarks>checks if <seealso cref="HttpUserAgentInformation.MobileDeviceType"/> is null</remarks>
+        /// <remarks>checks if <see cref="HttpUserAgentInformation.MobileDeviceType"/> is null</remarks>
         public static bool IsMobile(this in HttpUserAgentInformation userAgent) => userAgent.MobileDeviceType is not null;
     }
 }
