@@ -1,10 +1,13 @@
-﻿// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2021, all rights reserved
 
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.DependencyInjection
 {
+    /// <summary>
+    /// Dependency injection extensions
+    /// </summary>
     public static class HttpUserAgentParserServiceCollectionExtensions
     {
         /// <summary>
