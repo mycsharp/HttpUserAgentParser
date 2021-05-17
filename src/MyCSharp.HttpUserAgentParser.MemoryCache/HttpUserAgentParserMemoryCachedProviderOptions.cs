@@ -14,15 +14,31 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
     /// </summary>
     public class HttpUserAgentParserMemoryCachedProviderOptions
     {
+        /// <summary>
+        /// Cache options
+        /// </summary>
         public MemoryCacheOptions CacheOptions { get; }
+
+        /// <summary>
+        /// Cache entry options
+        /// </summary>
         public MemoryCacheEntryOptions CacheEntryOptions { get; }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProviderOptions"/>
+        /// </summary>
         public HttpUserAgentParserMemoryCachedProviderOptions(MemoryCacheOptions cacheOptions)
             : this(cacheOptions, null) { }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProviderOptions"/>
+        /// </summary>
         public HttpUserAgentParserMemoryCachedProviderOptions(MemoryCacheEntryOptions cacheEntryOptions)
             : this(null, cacheEntryOptions) { }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProviderOptions"/>
+        /// </summary>
         public HttpUserAgentParserMemoryCachedProviderOptions(MemoryCacheOptions? cacheOptions = null, MemoryCacheEntryOptions? cacheEntryOptions = null)
         {
             this.CacheEntryOptions = cacheEntryOptions ?? new MemoryCacheEntryOptions

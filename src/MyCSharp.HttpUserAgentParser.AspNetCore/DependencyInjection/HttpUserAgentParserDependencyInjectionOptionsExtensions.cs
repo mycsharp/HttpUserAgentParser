@@ -1,4 +1,4 @@
-﻿// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2021, all rights reserved
 
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
@@ -6,6 +6,9 @@ using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection
 {
+    /// <summary>
+    /// Dependency injection extensions for ASP.NET Core environments
+    /// </summary>
     public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
     {
         /// <summary>

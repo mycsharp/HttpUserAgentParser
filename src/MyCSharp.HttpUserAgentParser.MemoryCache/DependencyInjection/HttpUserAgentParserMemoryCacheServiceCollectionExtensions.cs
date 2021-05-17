@@ -1,4 +1,4 @@
-﻿// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2021, all rights reserved
 
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +7,9 @@ using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection
 {
+    /// <summary>
+    /// Dependency injection extensions for IMemoryCache
+    /// </summary>
     public static class HttpUserAgentParserMemoryCacheServiceCollectionExtensions
     {
         /// <summary>
