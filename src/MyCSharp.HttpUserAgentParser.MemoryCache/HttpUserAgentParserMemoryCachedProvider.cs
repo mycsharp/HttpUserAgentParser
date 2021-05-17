@@ -63,14 +63,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
                 return this.Equals(obj as CacheKey);
             }
 
-            public override int GetHashCode()
-            {
-                int hash = 13;
-                hash = (hash * 7) + UserAgent.GetHashCode();
-                hash = (hash * 7) + Options.GetHashCode();
-
-                return hash;
-            }
+            public override int GetHashCode() => HashCode.Combine(this.UserAgent, this.Options);
         }
     }
 }
