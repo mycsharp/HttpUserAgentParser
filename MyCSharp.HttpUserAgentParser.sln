@@ -31,6 +31,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{5738CE0D-5E6E-47
 		version.json = version.json
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{FAAD18A0-E1B8-448D-B611-AFBDA8A89808}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyCSharp.HttpUserAgentParser.Benchmarks", "perf\MyCSharp.HttpUserAgentParser.Benchmarks\MyCSharp.HttpUserAgentParser.Benchmarks.csproj", "{A0D213E9-6408-46D1-AFAF-5096C2F6E027}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +65,10 @@ Global
 		{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0D213E9-6408-46D1-AFAF-5096C2F6E027}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0D213E9-6408-46D1-AFAF-5096C2F6E027}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0D213E9-6408-46D1-AFAF-5096C2F6E027}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0D213E9-6408-46D1-AFAF-5096C2F6E027}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -72,6 +80,7 @@ Global
 		{75960783-8BF9-479C-9ECF-E9653B74C9A2} = {F54C9296-4EF7-40F0-9F20-F23A2270ABC9}
 		{3C8CCD44-F47C-4624-8997-54C42F02E376} = {008A2BAB-78B4-42EB-A5D4-DE434438CEF0}
 		{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E} = {F54C9296-4EF7-40F0-9F20-F23A2270ABC9}
+		{A0D213E9-6408-46D1-AFAF-5096C2F6E027} = {FAAD18A0-E1B8-448D-B611-AFBDA8A89808}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E8B0C994-0BF2-4692-9E22-E48B265B2804}
