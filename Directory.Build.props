@@ -14,5 +14,6 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <DebugType>embedded</DebugType>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 </Project>
