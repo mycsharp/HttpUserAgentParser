@@ -1,4 +1,4 @@
-﻿// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2021, all rights reserved
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -6,8 +6,14 @@ using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser
 {
+    /// <summary>
+    /// Parser logic for user agents
+    /// </summary>
     public static class HttpUserAgentParser
     {
+        /// <summary>
+        /// Parses given <param name="userAgent">user agent</param>
+        /// </summary>
         public static HttpUserAgentInformation Parse(string userAgent)
         {
             // prepare
@@ -30,8 +36,14 @@ namespace MyCSharp.HttpUserAgentParser
             return HttpUserAgentInformation.CreateForUnknown(userAgent, platform, mobileDeviceType);
         }
 
+        /// <summary>
+        /// pre-cleanup of <param name="userAgent">user agent</param>
+        /// </summary>
         public static string Cleanup(string userAgent) => userAgent.Trim();
 
+        /// <summary>
+        /// returns the platform or null
+        /// </summary>
         public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
         {
             foreach (HttpUserAgentPlatformInformation item in HttpUserAgentStatics.Platforms)
@@ -45,12 +57,18 @@ namespace MyCSharp.HttpUserAgentParser
             return null;
         }
 
+        /// <summary>
+        /// returns true if platform was found
+        /// </summary>
         public static bool TryGetPlatform(string userAgent, [NotNullWhen(true)] out HttpUserAgentPlatformInformation? platform)
         {
             platform = GetPlatform(userAgent);
             return platform is not null;
         }
 
+        /// <summary>
+        /// returns the browser or null
+        /// </summary>
         public static (string Name, string? Version)? GetBrowser(string userAgent)
         {
             foreach ((Regex key, string? value) in HttpUserAgentStatics.Browsers)
@@ -65,12 +83,18 @@ namespace MyCSharp.HttpUserAgentParser
             return null;
         }
 
+        /// <summary>
+        /// returns true if browser was found
+        /// </summary>
         public static bool TryGetBrowser(string userAgent, [NotNullWhen(true)] out (string Name, string? Version)? browser)
         {
             browser = GetBrowser(userAgent);
             return browser is not null;
         }
 
+        /// <summary>
+        /// returns the robot or null
+        /// </summary>
         public static string? GetRobot(string userAgent)
         {
             foreach ((string key, string value) in HttpUserAgentStatics.Robots)
@@ -84,12 +108,18 @@ namespace MyCSharp.HttpUserAgentParser
             return null;
         }
 
+        /// <summary>
+        /// returns true if robot was found
+        /// </summary>
         public static bool TryGetRobot(string userAgent, [NotNullWhen(true)] out string? robotName)
         {
             robotName = GetRobot(userAgent);
             return robotName is not null;
         }
 
+        /// <summary>
+        /// returns the device or null
+        /// </summary>
         public static string? GetMobileDevice(string userAgent)
         {
             foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
@@ -103,6 +133,9 @@ namespace MyCSharp.HttpUserAgentParser
             return null;
         }
 
+        /// <summary>
+        /// returns true if device was found
+        /// </summary>
         public static bool TryGetMobileDevice(string userAgent, [NotNullWhen(true)] out string? device)
         {
             device = GetMobileDevice(userAgent);

@@ -5,11 +5,24 @@ using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser
 {
+    /// <summary>
+    /// Parser settings
+    /// </summary>
     public static class HttpUserAgentStatics
     {
-
+        /// <summary>
+        /// Regex defauls for platform mappings
+        /// </summary>
         private const RegexOptions DefaultPlatformsRegexFlags = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+
+        /// <summary>
+        /// Creates default platform mapping regex
+        /// </summary>
         private static Regex CreateDefaultPlatformRegex(string key) => new(Regex.Escape($"{key}"), DefaultPlatformsRegexFlags);
+
+        /// <summary>
+        /// Platforms
+        /// </summary>
         public static readonly HashSet<HttpUserAgentPlatformInformation> Platforms = new()
         {
             new(CreateDefaultPlatformRegex("windows nt 10.0"), "Windows 10", HttpUserAgentPlatformType.Windows),
@@ -56,8 +69,18 @@ namespace MyCSharp.HttpUserAgentParser
             new(CreateDefaultPlatformRegex("symbian"), "Symbian OS", HttpUserAgentPlatformType.Symbian),
         };
 
+        /// <summary>
+        /// Regex defauls for browser mappings
+        /// </summary>
         private const RegexOptions DefaultBrowserRegexFlags = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        /// <summary>
+        /// Creates default browser mapping regex
+        /// </summary>
         private static Regex CreateDefaultBrowserRegex(string key) => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
+
+        /// <summary>
+        /// Browsers
+        /// </summary>
         public static Dictionary<Regex, string> Browsers = new()
         {
             { CreateDefaultBrowserRegex("OPR"), "Opera" },
@@ -97,6 +120,9 @@ namespace MyCSharp.HttpUserAgentParser
             { CreateDefaultBrowserRegex("Ubuntu"), "Ubuntu Web Browser" },
         };
 
+        /// <summary>
+        /// Mobiles
+        /// </summary>
         public static readonly Dictionary<string, string> Mobiles = new()
         {
             // Legacy
@@ -182,6 +208,9 @@ namespace MyCSharp.HttpUserAgentParser
             { "cellphone", "Generic Mobile" },
         };
 
+        /// <summary>
+        /// Robots
+        /// </summary>
         public static readonly (string Key, string Value)[] Robots =
         {
             ( "googlebot", "Googlebot" ),
@@ -228,6 +257,9 @@ namespace MyCSharp.HttpUserAgentParser
             ( "Sistrix", "Sistrix" )
         };
 
+        /// <summary>
+        /// Tools
+        /// </summary>
         public static readonly Dictionary<string, string> Tools = new()
         {
             { "curl", "curl" }
