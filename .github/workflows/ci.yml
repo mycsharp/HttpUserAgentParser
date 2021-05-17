@@ -39,6 +39,8 @@ jobs:
               /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
 
       - name: Push to NuGet
+        ## push only stable packages
+        if: github.ref == 'refs/heads/main'
         run: dotnet nuget push **/*.nupkg
                 --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
                 --source https://api.nuget.org/v3/index.json
