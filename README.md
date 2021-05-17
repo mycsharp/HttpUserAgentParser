@@ -107,8 +107,6 @@ public void MyMethod(IHttpUserAgentParserAccessor parserAccessor)
 
 ## Benchmark
 
-### Parse of `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.62`
-
 ```sh
 BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
 AMD Ryzen 9 5950X, 1 CPU, 32 logical and 16 physical cores
