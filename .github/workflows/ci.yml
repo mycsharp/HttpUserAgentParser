@@ -3,11 +3,11 @@ name: NETCore
 on:
     push:
       branches:
-        - master
+        - main
     pull_request:
       types: [closed]
       branches:
-        - master
+        - main
 
 env:
   BuildConfig: Release
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-      
+
       - uses: dotnet/nbgv@master # https://github.com/dotnet/nbgv
         id: nbgv
 
@@ -32,10 +32,10 @@ jobs:
               /p:Version=${{ steps.nbgv.outputs.AssemblyVersion }}
 
       - name: Test with dotnet
-        run: dotnet test 
+        run: dotnet test
 
       - name: Pack NuGet
-        run: dotnet pack 
+        run: dotnet pack
               --configuration ${{ env.BuildConfig }}
               /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
 
