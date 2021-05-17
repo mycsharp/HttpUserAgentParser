@@ -24,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{5738CE0D-5E6E-47
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		.github\workflows\ci.yml = .github\workflows\ci.yml
+		Directory.Build.props = Directory.Build.props
 		LICENSE = LICENSE
 		NuGet.config = NuGet.config
 		README.md = README.md

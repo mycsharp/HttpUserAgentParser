@@ -19,7 +19,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
 
         public HttpUserAgentInformation Parse(string userAgent)
         {
-            CacheKey key = GetKey(userAgent);
+            CacheKey key = this.GetKey(userAgent);
 
             return _memoryCache.GetOrCreate(key, static entry =>
             {
@@ -53,7 +53,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
             public bool Equals(CacheKey? other)
             {
                 if (ReferenceEquals(this, other)) return true;
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
 
                 return this.UserAgent == other.UserAgent && this.Options == other.Options;
             }
