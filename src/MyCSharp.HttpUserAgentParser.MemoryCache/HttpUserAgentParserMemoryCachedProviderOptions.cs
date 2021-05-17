@@ -7,13 +7,13 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
 {
     /// <summary>
     /// Provider options for <see cref="HttpUserAgentParserMemoryCachedProvider"/>
+    /// <remarks>
+    /// Default of <seealso cref="MemoryCacheOptions.SizeLimit"/> is 256.
+    /// Default of <seealso cref="MemoryCacheEntryOptions.SlidingExpiration"/> is 1 day
+    /// </remarks>
     /// </summary>
     public class HttpUserAgentParserMemoryCachedProviderOptions
     {
-        /// <summary>
-        /// Default of <seealso cref="MemoryCacheOptions.SizeLimit"/> is 256.
-        /// Default of <seealso cref="MemoryCacheEntryOptions.SlidingExpiration"/> is 1 day
-        /// </summary>
         public MemoryCacheOptions CacheOptions { get; }
         public MemoryCacheEntryOptions CacheEntryOptions { get; }
 
@@ -32,6 +32,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
             };
             this.CacheOptions = cacheOptions ?? new MemoryCacheOptions
             {
+                // defaults
                 SizeLimit = 256
             };
         }
