@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Product>HTTP User Agent Parser Extensions for ASP.NET Core</Product>
+        <Description>HTTP User Agent Parser Extensions for ASP.NET Core</Description>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MyCSharp.HttpUserAgentParser\MyCSharp.HttpUserAgentParser.csproj" />
+    </ItemGroup>
+
+</Project>
