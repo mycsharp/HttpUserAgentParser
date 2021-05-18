@@ -24,7 +24,7 @@ namespace MyCSharp.HttpUserAgentParser
             value = kvp.Value;
         }
 
-        public static bool Contains(this string instance, string value, StringComparison _)
-            => instance.Contains(value);
+        public static bool Contains(this string instance, string value, StringComparison comparison)
+            => instance.IndexOf(value, comparison) >= 0;
     }
 }
