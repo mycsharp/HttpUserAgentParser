@@ -70,7 +70,7 @@ The package [MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/pac
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-    services.AddHttpUserAgentMemoryCachedParser();
+    services.AddHttpUserAgentMemoryCachedParser(); 
 
     // or use options
 
@@ -80,10 +80,12 @@ public void ConfigureServices(IServiceCollection services)
 
         // limit the total entries in the MemoryCache
         //   each unique user agent string counts as one entry
-        options.CacheOptions.SizeLimit = 1024; // default is 256
+        options.CacheOptions.SizeLimit = 1024; // default is null (= no limit)
     });
 }
 ```
+
+> `AddHttpUserAgentMemoryCachedParser` registeres `HttpUserAgentParserMemoryCachedProvider` as singleton which contains an isolated `MemoryCache` object.
 
 ### ASP.NET Core
 
