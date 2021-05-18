@@ -10,6 +10,10 @@
         <DefineConstants>$(DefineConstants);OS_WIN</DefineConstants>
     </PropertyGroup>
 
+    <PropertyGroup Label="No strong named assembly references">
+        <NoWarn>$(NoWarn);CS8002</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
         <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.12.1" Condition="'$(OS)' == 'Windows_NT'" />

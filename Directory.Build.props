@@ -1,4 +1,5 @@
 <Project>
+
     <PropertyGroup>
         <MinClientVersion>2.12</MinClientVersion>
         <Authors>MyCSharp.de, Benjamin Abt, Günther Foidl and Contributors</Authors>
@@ -15,9 +16,18 @@
         <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
         <IsBenchmarkProject>$(MsBuildProjectName.Contains('Benchmark'))</IsBenchmarkProject>
         <IsPackable>false</IsPackable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
         <GenerateDocumentationFile Condition="'$(Configuration)' == 'Release'">true</GenerateDocumentationFile>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)MyCSharp.HttpUserAgentParser.snk</AssemblyOriginatorKeyFile>
+
+        <PublicKey>00240000048000009400000006020000002400005253413100040000010001003d5c022c088a46d41d5a5bf7591f3a3dcba30f76b0f43a312b6e45bb419d32283175cbd8bfd83134b123da6db83479e50596fb6bbe0e8c6cef50c01c64a0861c963daaf6905920f44ffe1ce44b3cfcb9c23779f34bc90c7b04e74e36a19bb58af3a69456d49b56993969dba9f8e9e935c2757844a11066d1091477f10cd923b7</PublicKey>
+    </PropertyGroup>
+
 </Project>
