@@ -85,7 +85,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-> `AddHttpUserAgentMemoryCachedParser` registeres `HttpUserAgentParserMemoryCachedProvider` as singleton which contains an isolated `MemoryCache` object.
+> `AddHttpUserAgentMemoryCachedParser` registers `HttpUserAgentParserMemoryCachedProvider` as singleton which contains an isolated `MemoryCache` object.
 
 ### ASP.NET Core
 
