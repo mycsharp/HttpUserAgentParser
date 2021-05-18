@@ -121,6 +121,8 @@ AMD Ryzen 9 5950X, 1 CPU, 32 logical and 16 physical cores
 |    UserAgentService |   391.11 us |  5.126 us |  4.795 us | 35.1563 | 3.4180 |     - |  589664 B |
 | HttpUserAgentParser |    67.07 us |  0.740 us |  0.693 us |       - |      - |     - |     848 B |
 
+More benchmark results can be found [in this comment](https://github.com/mycsharp/HttpUserAgentParser/issues/2#issuecomment-842188532).
+
 ## Disclaimer
 
 This library is inspired by [UserAgentService by DannyBoyNg](https://github.com/DannyBoyNg/UserAgentService) and contains optimizations for our requirements on [myCSharp.de](https://mycsharp.de).
