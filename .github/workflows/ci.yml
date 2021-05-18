@@ -45,3 +45,15 @@ jobs:
                 --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
                 --source https://api.nuget.org/v3/index.json
                 --no-symbols 1
+
+      - uses: nikeee/docfx-action@v1.0.0
+        name: Build Documentation
+        #if: github.ref == 'refs/heads/main'        commented to test CI
+        with:
+          args: api-doc/docfx.json
+
+      # - uses: maxheld83/ghpages@master
+        # name: Publish Documentation on GitHub Pages
+        # env:
+          # BUILD_DIR: api-doc/_site # docfx's default output directory is _site
+          # GH_PAT: ${{ secrets.GH_PAT }} # See https://github.com/maxheld83/ghpages
