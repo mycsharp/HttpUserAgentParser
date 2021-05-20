@@ -94,7 +94,10 @@ For ASP.NET Core applications, an accessor pattern (`IHttpUserAgentParserAccesso
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-    services.AddHttpUserAgentParserAccessor(); // registers IHttpUserAgentParserAccessor
+    services
+        .AddHttpUserAgentMemoryCachedParser() // registers Parser, returns HttpUserAgentParserDependencyInjectionOptions
+        // or use any other Parser registration like services.AddHttpUserAgentParser<TParser>(); above
+        .AddHttpUserAgentParserAccessor(); // registers IHttpUserAgentParserAccessor, uses IHttpUserAgentParserProvider
 }
 ```
 
