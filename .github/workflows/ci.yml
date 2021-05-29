@@ -1,4 +1,4 @@
-name: NETCore
+name: NET
 
 on:
     push:
