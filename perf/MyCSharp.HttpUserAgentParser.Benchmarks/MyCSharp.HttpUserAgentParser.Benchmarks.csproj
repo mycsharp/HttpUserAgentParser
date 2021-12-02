@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <Nullable>disable</Nullable>
     </PropertyGroup>
 
@@ -15,8 +15,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-        <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.12.1" Condition="'$(OS)' == 'Windows_NT'" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+        <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.1" Condition="'$(OS)' == 'Windows_NT'" />
     </ItemGroup>
 
     <ItemGroup>
@@ -24,8 +24,8 @@
     </ItemGroup>
 
     <ItemGroup Label="Libraries for comparison">
-        <PackageReference Include="UAParser" Version="3.1.46" />
-        <PackageReference Include="DeviceDetector.NET" Version="4.2.0" />
+        <PackageReference Include="UAParser" Version="3.1.47" />
+        <PackageReference Include="DeviceDetector.NET" Version="4.3.0" />
         <PackageReference Include="Ng.UserAgentService" Version="1.0.3" />
     </ItemGroup>
 

@@ -20,7 +20,7 @@ namespace MyCSharp.HttpUserAgentParser.UnitTests
         [InlineData(HttpUserAgentPlatformType.Symbian, 9)]
         public void TestValue(HttpUserAgentPlatformType type, byte value)
         {
-            type.Should().BeEquivalentTo(value);
+            ((byte)type == value).Should().Be(true);
         }
     }
 }
