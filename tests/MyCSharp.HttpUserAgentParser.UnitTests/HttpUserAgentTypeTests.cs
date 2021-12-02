@@ -13,7 +13,7 @@ namespace MyCSharp.HttpUserAgentParser.UnitTests
         [InlineData(HttpUserAgentType.Robot, 2)]
         public void TestValue(HttpUserAgentType type, byte value)
         {
-            type.Should().BeEquivalentTo(value);
+            ((byte)type == value).Should().Be(true);
         }
     }
 }

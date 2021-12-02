@@ -10,6 +10,8 @@ on:
 
 env:
   BuildConfig: Release
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_VERSION: '6.0.100'  # https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/6.0/releases.json
 
 jobs:
     build:
@@ -25,11 +27,18 @@ jobs:
         with:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
 
-      - uses: dotnet/nbgv@master # https://github.com/dotnet/nbgv
-        id: nbgv
+      - name: 'Install .NET SDK'
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Versioning
-        run: echo ${{ steps.nbgv.outputs.SemVer2 }}
+        uses: dotnet/nbgv@master
+        id: nbgv
+
+      - name: Version Info
+        run: |
+          echo 'SemVer2: ${{ steps.nbgv.outputs.SemVer2 }}'
 
       - name: Build with dotnet
         run: dotnet build
