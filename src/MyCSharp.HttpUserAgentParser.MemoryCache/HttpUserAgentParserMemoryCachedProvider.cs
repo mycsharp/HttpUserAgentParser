@@ -1,4 +1,4 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2022, all rights reserved
 
 using System;
 using Microsoft.Extensions.Caching.Memory;
@@ -15,10 +15,11 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
         /// <summary>
         /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProvider"/>.
         /// </summary>
+        /// <param name="memoryCache">The memory cache instance to use</param>
         /// <param name="options">The options used to set expiration and size limit</param>
-        public HttpUserAgentParserMemoryCachedProvider(HttpUserAgentParserMemoryCachedProviderOptions options)
+        public HttpUserAgentParserMemoryCachedProvider(IMemoryCache memoryCache, HttpUserAgentParserMemoryCachedProviderOptions options)
         {
-            _memoryCache = new Microsoft.Extensions.Caching.Memory.MemoryCache(options.CacheOptions);
+            _memoryCache = memoryCache;
             _options = options;
         }
 

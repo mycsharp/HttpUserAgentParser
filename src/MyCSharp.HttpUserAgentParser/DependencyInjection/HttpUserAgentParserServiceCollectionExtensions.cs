@@ -1,4 +1,4 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2022, all rights reserved
 
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;

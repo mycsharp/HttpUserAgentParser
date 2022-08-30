@@ -1,6 +1,7 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp 2020-2022, all rights reserved
 
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests
@@ -11,8 +12,9 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests
         public void Parse()
         {
             HttpUserAgentParserMemoryCachedProviderOptions cachedProviderOptions = new();
+            IMemoryCache memoryCache = new Microsoft.Extensions.Caching.Memory.MemoryCache(cachedProviderOptions.CacheOptions);
 
-            HttpUserAgentParserMemoryCachedProvider provider = new(cachedProviderOptions);
+            HttpUserAgentParserMemoryCachedProvider provider = new(memoryCache, cachedProviderOptions);
 
             // create first
             string userAgentOne =
