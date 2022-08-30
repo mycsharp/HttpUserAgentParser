@@ -1,7 +1,6 @@
-// Copyright © myCSharp 2020-2022, all rights reserved
+// Copyright © myCSharp.de - all rights reserved
 
 using FluentAssertions;
-using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests

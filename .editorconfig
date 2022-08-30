@@ -19,7 +19,7 @@ trim_trailing_whitespace = true
 # C# files
 [*.cs]
 
-file_header_template = Copyright © myCSharp 2020-2022, all rights reserved
+file_header_template = Copyright © myCSharp.de - all rights reserved
 
 #### .NET Coding Conventions ####
 
