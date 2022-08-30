@@ -35,7 +35,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{FAAD18A0-E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.Benchmarks", "perf\MyCSharp.HttpUserAgentParser.Benchmarks\MyCSharp.HttpUserAgentParser.Benchmarks.csproj", "{A0D213E9-6408-46D1-AFAF-5096C2F6E027}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyCSharp.HttpUserAgentParser.TestHelpers", "test\MyCSharp.HttpUserAgentParser.TestHelpers\MyCSharp.HttpUserAgentParser.TestHelpers.csproj", "{165EE915-1A4F-4875-90CE-1A2AE1540AE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyCSharp.HttpUserAgentParser.TestHelpers", "tests\MyCSharp.HttpUserAgentParser.TestHelpers\MyCSharp.HttpUserAgentParser.TestHelpers.csproj", "{165EE915-1A4F-4875-90CE-1A2AE1540AE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
