@@ -1,4 +1,4 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp.de - all rights reserved
 
 namespace MyCSharp.HttpUserAgentParser
 {

@@ -15,8 +15,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
-        <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.1" Condition="'$(OS)' == 'Windows_NT'" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
+        <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.2" Condition="'$(OS)' == 'Windows_NT'" />
     </ItemGroup>
 
     <ItemGroup>
@@ -26,7 +26,7 @@
     <ItemGroup Label="Libraries for comparison">
         <PackageReference Include="UAParser" Version="3.1.47" />
         <PackageReference Include="DeviceDetector.NET" Version="4.3.0" />
-        <PackageReference Include="Ng.UserAgentService" Version="1.0.3" />
+        <PackageReference Include="Ng.UserAgentService" Version="1.1.0" />
     </ItemGroup>
 
 </Project>

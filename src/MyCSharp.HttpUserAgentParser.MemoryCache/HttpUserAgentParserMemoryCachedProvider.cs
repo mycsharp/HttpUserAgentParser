@@ -1,4 +1,4 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp.de - all rights reserved
 
 using System;
 using Microsoft.Extensions.Caching.Memory;
@@ -9,7 +9,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache
     /// <inheritdoc/>
     public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvider
     {
-        private readonly IMemoryCache _memoryCache;
+        private readonly Microsoft.Extensions.Caching.Memory.MemoryCache _memoryCache;
         private readonly HttpUserAgentParserMemoryCachedProviderOptions _options;
 
         /// <summary>
