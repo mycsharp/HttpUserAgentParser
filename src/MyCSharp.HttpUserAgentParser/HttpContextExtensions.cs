@@ -1,6 +1,7 @@
 // Copyright © myCSharp 2020-2022, all rights reserved
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 
 namespace MyCSharp.HttpUserAgentParser;
 
