@@ -23,6 +23,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\MyCSharp.HttpUserAgentParser.AspNetCore\MyCSharp.HttpUserAgentParser.AspNetCore.csproj" />
+        <ProjectReference Include="..\..\test\MyCSharp.HttpUserAgentParser.TestHelpers\MyCSharp.HttpUserAgentParser.TestHelpers.csproj" />
     </ItemGroup>
 
 </Project>
