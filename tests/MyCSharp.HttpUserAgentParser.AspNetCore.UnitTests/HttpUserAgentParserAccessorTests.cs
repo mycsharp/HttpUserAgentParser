@@ -1,9 +1,10 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp.de - all rights reserved
 
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using MyCSharp.HttpUserAgentParser.Providers;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests
@@ -16,20 +17,17 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests
         {
             HttpUserAgentInformation userAgentInformation = HttpUserAgentInformation.Parse(userAgent);
 
-            Mock<IHttpContextAccessor> httpMock = new();
-            {
-                DefaultHttpContext context = new DefaultHttpContext();
-                context.Request.Headers["User-Agent"] = userAgent;
-                httpMock.Setup(_ => _.HttpContext).Returns(context);
-            }
             Mock<IHttpUserAgentParserProvider> parserMock = new();
             {
                 parserMock.Setup(x => x.Parse(userAgent)).Returns(userAgentInformation);
             }
 
-            HttpUserAgentParserAccessor accessor = new HttpUserAgentParserAccessor(httpMock.Object, parserMock.Object);
-            HttpUserAgentInformation info = accessor.Get();
+            HttpContext httpContext = HttpContextTestHelpers.GetHttpContext(userAgent);
 
+            HttpUserAgentParserAccessor accessor = new HttpUserAgentParserAccessor(parserMock.Object);
+            HttpUserAgentInformation? info = accessor.Get(httpContext);
+
+            info.Should().NotBeNull();
             info.Should().Be(userAgentInformation);
             parserMock.Verify(x => x.Parse(userAgent), Times.Once);
         }

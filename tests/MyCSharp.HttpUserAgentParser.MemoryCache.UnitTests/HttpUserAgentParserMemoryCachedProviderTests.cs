@@ -1,4 +1,4 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp.de - all rights reserved
 
 using FluentAssertions;
 using Xunit;
@@ -11,7 +11,6 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests
         public void Parse()
         {
             HttpUserAgentParserMemoryCachedProviderOptions cachedProviderOptions = new();
-
             HttpUserAgentParserMemoryCachedProvider provider = new(cachedProviderOptions);
 
             // create first

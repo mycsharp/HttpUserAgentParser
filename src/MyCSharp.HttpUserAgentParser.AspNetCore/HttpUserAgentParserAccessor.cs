@@ -1,4 +1,4 @@
-// Copyright © myCSharp 2020-2021, all rights reserved
+// Copyright © myCSharp.de - all rights reserved
 
 using Microsoft.AspNetCore.Http;
 using MyCSharp.HttpUserAgentParser.Providers;
@@ -13,12 +13,12 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore
         /// <summary>
         /// User agent value
         /// </summary>
-        string HttpContextUserAgent { get; }
+        string? GetHttpContextUserAgent(HttpContext httpContext);
 
         /// <summary>
         /// Returns current <see cref="HttpUserAgentInformation"/>
         /// </summary>
-        HttpUserAgentInformation Get();
+        HttpUserAgentInformation? Get(HttpContext httpContext);
     }
 
     /// <summary>
@@ -26,28 +26,34 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore
     /// </summary>
     public class HttpUserAgentParserAccessor : IHttpUserAgentParserAccessor
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHttpUserAgentParserProvider _httpUserAgentParser;
 
         /// <summary>
         /// Creates a new instance of <see cref="HttpUserAgentParserAccessor"/>
         /// </summary>
-        public HttpUserAgentParserAccessor(IHttpContextAccessor httpContextAccessor, IHttpUserAgentParserProvider httpUserAgentParser)
+        public HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAgentParser)
         {
-            _httpContextAccessor = httpContextAccessor;
             _httpUserAgentParser = httpUserAgentParser;
         }
 
         /// <summary>
         /// User agent of current <see cref="IHttpContextAccessor"/>
         /// </summary>
-        public string HttpContextUserAgent =>
-            _httpContextAccessor.HttpContext?.Request?.Headers["User-Agent"].ToString()!;
+        public string? GetHttpContextUserAgent(HttpContext httpContext)
+            => httpContext.GetUserAgentString();
 
         /// <summary>
         /// Returns current <see cref="HttpUserAgentInformation"/> of current <see cref="IHttpContextAccessor"/>
         /// </summary>
-        public HttpUserAgentInformation Get()
-            => _httpUserAgentParser.Parse(this.HttpContextUserAgent);
+        public HttpUserAgentInformation? Get(HttpContext httpContext)
+        {
+            string? httpUserAgent = GetHttpContextUserAgent(httpContext);
+            if (string.IsNullOrEmpty(httpUserAgent))
+            {
+                return null;
+            }
+
+            return _httpUserAgentParser.Parse(httpUserAgent);
+        }
     }
 }
