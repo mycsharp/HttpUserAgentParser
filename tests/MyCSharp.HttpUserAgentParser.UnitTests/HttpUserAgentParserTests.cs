@@ -33,10 +33,10 @@ namespace MyCSharp.HttpUserAgentParser.UnitTests
         [InlineData("Mozilla/5.0 (Linux; Android 10; SM-A205U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36", "Chrome", "90.0.4430.210", "Android", HttpUserAgentPlatformType.Android, "Android")]
         [InlineData("Mozilla/5.0 (Linux; Android 10; LM-Q720) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36", "Chrome", "90.0.4430.210", "Android", HttpUserAgentPlatformType.Android, "Android")]
         // Safari
-        [InlineData("Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/11.0 Safari/605.1.15", "Safari", "605.1.15", "Windows 10", HttpUserAgentPlatformType.Windows, null)]
-        [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15", "Safari", "605.1.15", "Mac OS X", HttpUserAgentPlatformType.MacOS, null)]
-        [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1", "Safari", "604.1", "iOS", HttpUserAgentPlatformType.IOS, "Apple iPhone")]
-        [InlineData("Mozilla/5.0 (iPod touch; CPU iPhone 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1", "Safari", "604.1", "iOS", HttpUserAgentPlatformType.IOS, "Apple iPod")]
+        [InlineData("Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/11.0 Safari/605.1.15", "Safari", "11.0", "Windows 10", HttpUserAgentPlatformType.Windows, null)]
+        [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15", "Safari", "14.1", "Mac OS X", HttpUserAgentPlatformType.MacOS, null)]
+        [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1", "Safari", "14.0", "iOS", HttpUserAgentPlatformType.IOS, "Apple iPhone")]
+        [InlineData("Mozilla/5.0 (iPod touch; CPU iPhone 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1", "Safari", "14.0", "iOS", HttpUserAgentPlatformType.IOS, "Apple iPod")]
         // Edge
         [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.51", "Edge", "90.0.818.51", "Windows 10", HttpUserAgentPlatformType.Windows, null)]
         [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.51", "Edge", "90.0.818.51", "Mac OS X", HttpUserAgentPlatformType.MacOS, null)]

@@ -106,7 +106,7 @@ namespace MyCSharp.HttpUserAgentParser
             { CreateDefaultBrowserRegex("Camino"), "Camino" },
             { CreateDefaultBrowserRegex("Netscape"), "Netscape" },
             { CreateDefaultBrowserRegex("OmniWeb"), "OmniWeb" },
-            { CreateDefaultBrowserRegex("Safari"), "Safari" },
+            { CreateDefaultBrowserRegex("Version"), "Safari" }, // https://github.com/mycsharp/HttpUserAgentParser/issues/34
             { CreateDefaultBrowserRegex("Mozilla"), "Mozilla" },
             { CreateDefaultBrowserRegex("Konqueror"), "Konqueror" },
             { CreateDefaultBrowserRegex("icab"), "iCab" },
