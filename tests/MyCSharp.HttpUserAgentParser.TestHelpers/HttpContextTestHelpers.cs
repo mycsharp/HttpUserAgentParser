@@ -8,7 +8,7 @@ public static class HttpContextTestHelpers
 {
     public static HttpContext GetHttpContext(string userAgent)
     {
-        DefaultHttpContext context = new DefaultHttpContext();
+        DefaultHttpContext context = new();
         context.Request.Headers["User-Agent"] = userAgent;
 
         return context;

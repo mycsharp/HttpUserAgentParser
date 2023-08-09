@@ -2,34 +2,36 @@
 
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Moq;
 using MyCSharp.HttpUserAgentParser.Providers;
 using MyCSharp.HttpUserAgentParser.TestHelpers;
+using NSubstitute;
 using Xunit;
 
-namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests
+namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests;
+
+public class HttpUserAgentParserAccessorTests
 {
-    public class HttpUserAgentParserAccessorTests
+    private readonly IHttpUserAgentParserProvider _parserMock = Substitute.For<IHttpUserAgentParserProvider>();
+
+    [Theory]
+    [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.62")]
+    public void Get(string userAgent)
     {
-        [Theory]
-        [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.62")]
-        public void Get(string userAgent)
-        {
-            HttpUserAgentInformation userAgentInformation = HttpUserAgentInformation.Parse(userAgent);
+        // arrange
+        HttpUserAgentInformation userAgentInformation = HttpUserAgentInformation.Parse(userAgent);
+        _parserMock.Parse(userAgent).Returns(userAgentInformation);
 
-            Mock<IHttpUserAgentParserProvider> parserMock = new();
-            {
-                parserMock.Setup(x => x.Parse(userAgent)).Returns(userAgentInformation);
-            }
+        // act
+        HttpContext httpContext = HttpContextTestHelpers.GetHttpContext(userAgent);
 
-            HttpContext httpContext = HttpContextTestHelpers.GetHttpContext(userAgent);
+        HttpUserAgentParserAccessor accessor = new(_parserMock);
+        HttpUserAgentInformation? info = accessor.Get(httpContext);
 
-            HttpUserAgentParserAccessor accessor = new HttpUserAgentParserAccessor(parserMock.Object);
-            HttpUserAgentInformation? info = accessor.Get(httpContext);
+        // assert
+        info.Should().NotBeNull();
+        info.Should().Be(userAgentInformation);
 
-            info.Should().NotBeNull();
-            info.Should().Be(userAgentInformation);
-            parserMock.Verify(x => x.Parse(userAgent), Times.Once);
-        }
+        // verify
+        _parserMock.Received(1).Parse(userAgent);
     }
 }

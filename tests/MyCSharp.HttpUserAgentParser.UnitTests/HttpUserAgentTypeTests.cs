@@ -3,17 +3,16 @@
 using FluentAssertions;
 using Xunit;
 
-namespace MyCSharp.HttpUserAgentParser.UnitTests
+namespace MyCSharp.HttpUserAgentParser.UnitTests;
+
+public class HttpUserAgentTypeTests
 {
-    public class HttpUserAgentTypeTests
+    [Theory]
+    [InlineData(HttpUserAgentType.Unknown, 0)]
+    [InlineData(HttpUserAgentType.Browser, 1)]
+    [InlineData(HttpUserAgentType.Robot, 2)]
+    public void TestValue(HttpUserAgentType type, byte value)
     {
-        [Theory]
-        [InlineData(HttpUserAgentType.Unknown, 0)]
-        [InlineData(HttpUserAgentType.Browser, 1)]
-        [InlineData(HttpUserAgentType.Robot, 2)]
-        public void TestValue(HttpUserAgentType type, byte value)
-        {
-            ((byte)type == value).Should().Be(true);
-        }
+        ((byte)type == value).Should().Be(true);
     }
 }
