@@ -7,32 +7,31 @@ using MyCSharp.HttpUserAgentParser.TestHelpers;
 using NSubstitute;
 using Xunit;
 
-namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests
+namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests;
+
+public class HttpUserAgentParserAccessorTests
 {
-    public class HttpUserAgentParserAccessorTests
+    private readonly IHttpUserAgentParserProvider _parserMock = Substitute.For<IHttpUserAgentParserProvider>();
+
+    [Theory]
+    [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.62")]
+    public void Get(string userAgent)
     {
-        private readonly IHttpUserAgentParserProvider _parserMock = Substitute.For<IHttpUserAgentParserProvider>();
+        // arrange
+        HttpUserAgentInformation userAgentInformation = HttpUserAgentInformation.Parse(userAgent);
+        _parserMock.Parse(userAgent).Returns(userAgentInformation);
 
-        [Theory]
-        [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.62")]
-        public void Get(string userAgent)
-        {
-            // arrange
-            HttpUserAgentInformation userAgentInformation = HttpUserAgentInformation.Parse(userAgent);
-            _parserMock.Parse(userAgent).Returns(userAgentInformation);
+        // act
+        HttpContext httpContext = HttpContextTestHelpers.GetHttpContext(userAgent);
 
-            // act
-            HttpContext httpContext = HttpContextTestHelpers.GetHttpContext(userAgent);
+        HttpUserAgentParserAccessor accessor = new(_parserMock);
+        HttpUserAgentInformation? info = accessor.Get(httpContext);
 
-            HttpUserAgentParserAccessor accessor = new(_parserMock);
-            HttpUserAgentInformation? info = accessor.Get(httpContext);
+        // assert
+        info.Should().NotBeNull();
+        info.Should().Be(userAgentInformation);
 
-            // assert
-            info.Should().NotBeNull();
-            info.Should().Be(userAgentInformation);
-
-            // verify
-            _parserMock.Received(1).Parse(userAgent);
-        }
+        // verify
+        _parserMock.Received(1).Parse(userAgent);
     }
 }

@@ -4,51 +4,50 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
-namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests
+namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests;
+
+public class HttpUserAgentParserMemoryCachedProviderOptionsTests
 {
-    public class HttpUserAgentParserMemoryCachedProviderOptionsTests
+    [Fact]
+    public void Ctor()
     {
-        [Fact]
-        public void Ctor()
-        {
-            MemoryCacheOptions cacheOptions = new();
-            MemoryCacheEntryOptions cacheEntryOptions = new();
+        MemoryCacheOptions cacheOptions = new();
+        MemoryCacheEntryOptions cacheEntryOptions = new();
 
-            HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheOptions, cacheEntryOptions);
+        HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheOptions, cacheEntryOptions);
 
-            options.CacheOptions.Should().Be(cacheOptions);
-            options.CacheEntryOptions.Should().Be(cacheEntryOptions);
-        }
+        options.CacheOptions.Should().Be(cacheOptions);
+        options.CacheEntryOptions.Should().Be(cacheEntryOptions);
+    }
 
-        [Fact]
-        public void Ctor_MemoryCacheOptions()
-        {
-            MemoryCacheOptions cacheOptions = new();
+    [Fact]
+    public void Ctor_MemoryCacheOptions()
+    {
+        MemoryCacheOptions cacheOptions = new();
 
-            HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheOptions);
+        HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheOptions);
 
-            options.CacheOptions.Should().Be(cacheOptions);
-            options.CacheEntryOptions.Should().NotBeNull();
-        }
+        options.CacheOptions.Should().Be(cacheOptions);
+        options.CacheEntryOptions.Should().NotBeNull();
+    }
 
-        [Fact]
-        public void Ctor_MemoryCacheEntryOptions()
-        {
-            MemoryCacheEntryOptions cacheEntryOptions = new();
+    [Fact]
+    public void Ctor_MemoryCacheEntryOptions()
+    {
+        MemoryCacheEntryOptions cacheEntryOptions = new();
 
-            HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheEntryOptions);
+        HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheEntryOptions);
 
-            options.CacheOptions.Should().NotBeNull();
-            options.CacheEntryOptions.Should().Be(cacheEntryOptions);
-        }
+        options.CacheOptions.Should().NotBeNull();
+        options.CacheEntryOptions.Should().Be(cacheEntryOptions);
+    }
 
-        [Fact]
-        public void Ctor_Empty()
-        {
-            HttpUserAgentParserMemoryCachedProviderOptions options = new();
+    [Fact]
+    public void Ctor_Empty()
+    {
+        HttpUserAgentParserMemoryCachedProviderOptions options = new();
 
-            options.CacheOptions.Should().NotBeNull();
-            options.CacheEntryOptions.Should().NotBeNull();
-        }
+        options.CacheOptions.Should().NotBeNull();
+        options.CacheEntryOptions.Should().NotBeNull();
     }
 }

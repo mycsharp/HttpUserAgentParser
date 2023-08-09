@@ -2,22 +2,21 @@
 
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
+using NSubstitute;
 using Xunit;
 
-namespace MyCSharp.HttpUserAgentParser.UnitTests.DependencyInjection
+namespace MyCSharp.HttpUserAgentParser.UnitTests.DependencyInjection;
+
+public class UserAgentParserDependencyInjectionOptionsTests
 {
-    public class UserAgentParserDependencyInjectionOptionsTests
+    private readonly IServiceCollection scMock = Substitute.For<IServiceCollection>();
+
+    [Fact]
+    public void Ctor_Should_Set_Property()
     {
-        [Fact]
-        public void Ctor_Should_Set_Property()
-        {
-            Mock<IServiceCollection> scMock = new();
+        HttpUserAgentParserDependencyInjectionOptions options = new(scMock);
 
-            HttpUserAgentParserDependencyInjectionOptions options = new(scMock.Object);
-
-            options.Services.Should().BeEquivalentTo(scMock.Object);
-        }
+        options.Services.Should().BeEquivalentTo(scMock);
     }
 }
