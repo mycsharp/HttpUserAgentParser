@@ -55,7 +55,7 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 OPR/76.0.4017.107", "Opera", "76.0.4017.107", "Mac OS X", HttpUserAgentPlatformType.MacOS, null)]
     [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 OPR/76.0.4017.107", "Opera", "76.0.4017.107", "Linux", HttpUserAgentPlatformType.Linux, null)]
     [InlineData("Mozilla/5.0 (Linux; Android 10; VOG-L29) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36 OPR/63.0.3216.58473", "Opera", "63.0.3216.58473", "Android", HttpUserAgentPlatformType.Android, "Android")]
-    public void BrowserTests(string ua, string name, string version, string platformName, HttpUserAgentPlatformType platformType, string mobileDeviceType)
+    public void BrowserTests(string ua, string name, string version, string platformName, HttpUserAgentPlatformType platformType, string? mobileDeviceType)
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);
 

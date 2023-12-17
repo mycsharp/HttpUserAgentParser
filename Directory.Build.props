@@ -1,21 +1,33 @@
 <Project>
 
     <PropertyGroup>
-        <MinClientVersion>2.12</MinClientVersion>
         <Authors>MyCSharp.de, Benjamin Abt, Günther Foidl and Contributors</Authors>
-        <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Product>MyCSharp.HttpUserAgentParser</Product>
         <DefaultLanguage>en-US</DefaultLanguage>
-        <Description>HTTP User Agent Parser for .NET</Description>
         <NoPackageAnalysis>true</NoPackageAnalysis>
-        <LangVersion>preview</LangVersion>
-        <Nullable>enable</Nullable>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Env">
+
         <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
         <IsBenchmarkProject>$(MsBuildProjectName.Contains('Benchmark'))</IsBenchmarkProject>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Package">
+        <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <Description>HTTP User Agent Parser for .NET</Description>
+        <MinClientVersion>2.12</MinClientVersion>
         <IsPackable>false</IsPackable>
+        <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    </PropertyGroup>
+
+    <PropertyGroup Label="C#">
+        <LangVersion>12.0</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
@@ -35,5 +47,5 @@
         <Error Code="420" Text="Blocked package dependency detected: %(PackageDependencies.Identity)"
              Condition="'%(PackageDependencies.Identity)' == 'Devlooped.SponsorLink'" />
     </Target>
-    
+
 </Project>

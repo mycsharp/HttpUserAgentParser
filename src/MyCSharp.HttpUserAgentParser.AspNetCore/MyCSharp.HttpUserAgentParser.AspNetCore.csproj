@@ -3,10 +3,20 @@
     <PropertyGroup>
         <Product>HTTP User Agent Parser Extensions for ASP.NET Core</Product>
         <Description>HTTP User Agent Parser Extensions for ASP.NET Core</Description>
-        <TargetFramework>net6.0</TargetFramework>
-        <IsPackable>true</IsPackable>
+        <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     </PropertyGroup>
 
+    <PropertyGroup Label="Package">
+        <IsPackable>true</IsPackable>
+        <PackageReadmeFile>readme.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="readme.md" Pack="true" PackagePath="" />
+        <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+    </ItemGroup>
+    
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>

@@ -11,7 +11,6 @@ on:
 env:
   BuildConfig: Release
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  DOTNET_VERSION: '6.0.100'  # https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/6.0/releases.json
 
 jobs:
     build:
@@ -19,7 +18,7 @@ jobs:
       steps:
       
       - name: Cancel previous builds in PR
-        uses: styfle/cancel-workflow-action@0.9.0
+        uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
           
@@ -28,9 +27,9 @@ jobs:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
 
       - name: 'Install .NET SDK'
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          global-json-file: ./global.json
 
       - name: Versioning
         uses: dotnet/nbgv@master
@@ -54,9 +53,8 @@ jobs:
               /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
 
       - name: Push to NuGet
-        ## push only stable packages
-        if: github.ref == 'refs/heads/main'
         run: dotnet nuget push **/*.nupkg
                 --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
                 --source https://api.nuget.org/v3/index.json
-                --no-symbols 1
+                --no-symbols
+                --skip-duplicate

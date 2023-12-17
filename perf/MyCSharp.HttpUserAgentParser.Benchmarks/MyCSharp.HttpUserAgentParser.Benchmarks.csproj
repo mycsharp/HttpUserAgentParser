@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
         <Nullable>disable</Nullable>
     </PropertyGroup>
 
@@ -15,18 +15,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
-        <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.2" Condition="'$(OS)' == 'Windows_NT'" />
+        <PackageReference Include="BenchmarkDotNet" />
+        <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Condition="'$(OS)' == 'Windows_NT'" />
+    </ItemGroup>
+
+    <ItemGroup Label="Libraries for comparison">
+        <PackageReference Include="UAParser" />
+        <PackageReference Include="DeviceDetector.NET" />
+        <PackageReference Include="Ng.UserAgentService" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\MyCSharp.HttpUserAgentParser\MyCSharp.HttpUserAgentParser.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Label="Libraries for comparison">
-        <PackageReference Include="UAParser" Version="3.1.47" />
-        <PackageReference Include="DeviceDetector.NET" Version="4.3.0" />
-        <PackageReference Include="Ng.UserAgentService" Version="1.1.0" />
     </ItemGroup>
 
 </Project>
