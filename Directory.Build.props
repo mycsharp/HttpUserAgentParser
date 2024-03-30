@@ -1,7 +1,7 @@
 <Project>
 
     <PropertyGroup>
-        <Authors>MyCSharp.de, Benjamin Abt, Günther Foidl and Contributors</Authors>
+        <Authors>MyCSharp.de, Benjamin Abt, Günther Foidl, Konstantin Stukov and Contributors</Authors>
         <Product>MyCSharp.HttpUserAgentParser</Product>
         <DefaultLanguage>en-US</DefaultLanguage>
         <NoPackageAnalysis>true</NoPackageAnalysis>
