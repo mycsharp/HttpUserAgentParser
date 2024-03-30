@@ -5,24 +5,27 @@
         <Product>MyCSharp.HttpUserAgentParser</Product>
         <DefaultLanguage>en-US</DefaultLanguage>
         <NoPackageAnalysis>true</NoPackageAnalysis>
-        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Label="Env">
-
         <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
         <IsBenchmarkProject>$(MsBuildProjectName.Contains('Benchmark'))</IsBenchmarkProject>
     </PropertyGroup>
 
     <PropertyGroup Label="Package">
         <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <Description>HTTP User Agent Parser for .NET</Description>
         <MinClientVersion>2.12</MinClientVersion>
         <IsPackable>false</IsPackable>
         <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>
+
+    <ItemGroup Label="Source Link">
+        <PackageReference Include="DotNet.ReproducibleBuilds">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
     <PropertyGroup Label="C#">
         <LangVersion>12.0</LangVersion>

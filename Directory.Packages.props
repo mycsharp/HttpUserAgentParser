@@ -8,6 +8,10 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
     <PackageVersion Include="NaughtyStrings" Version="2.4.1" />
+    <PackageVersion Include="DotNet.ReproducibleBuilds" Version="1.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageVersion>
   </ItemGroup>
   <ItemGroup Label="ASP.NET Core Dependencies">
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
