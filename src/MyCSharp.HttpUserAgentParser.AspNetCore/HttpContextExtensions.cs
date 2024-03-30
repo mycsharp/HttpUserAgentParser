@@ -3,7 +3,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 
-namespace MyCSharp.HttpUserAgentParser;
+namespace MyCSharp.HttpUserAgentParser.AspNetCore;
 
 /// <summary>
 /// Static extensions for <see cref="HttpContext"/>

@@ -9,9 +9,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="Microsoft.AspNetCore.Http" />
-        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
     </ItemGroup>
 
 </Project>
