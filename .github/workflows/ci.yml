@@ -16,12 +16,12 @@ jobs:
     build:
       runs-on: ubuntu-latest
       steps:
-      
+
       - name: Cancel previous builds in PR
         uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
-          
+
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
@@ -50,6 +50,7 @@ jobs:
       - name: Pack NuGet
         run: dotnet pack
               --configuration ${{ env.BuildConfig }}
+              /p:ContinuousIntegrationBuild=true
               /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
 
       - name: Push to NuGet
