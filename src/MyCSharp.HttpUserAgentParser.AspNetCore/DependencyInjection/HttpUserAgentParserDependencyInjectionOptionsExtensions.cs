@@ -4,22 +4,21 @@ using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
 
-namespace MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection
+namespace MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection;
+
+/// <summary>
+/// Dependency injection extensions for ASP.NET Core environments
+/// </summary>
+public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
 {
     /// <summary>
-    /// Dependency injection extensions for ASP.NET Core environments
+    /// Registers <see cref="HttpUserAgentParserAccessor"/> as <see cref="IHttpUserAgentParserAccessor"/>.
+    ///  Requires a registered <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
-    public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
+    public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParserAccessor(
+        this HttpUserAgentParserDependencyInjectionOptions options)
     {
-        /// <summary>
-        /// Registers <see cref="HttpUserAgentParserAccessor"/> as <see cref="IHttpUserAgentParserAccessor"/>.
-        ///  Requires a registered <see cref="IHttpUserAgentParserProvider"/>
-        /// </summary>
-        public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParserAccessor(
-            this HttpUserAgentParserDependencyInjectionOptions options)
-        {
-            options.Services.AddSingleton<IHttpUserAgentParserAccessor, HttpUserAgentParserAccessor>();
-            return options;
-        }
+        options.Services.AddSingleton<IHttpUserAgentParserAccessor, HttpUserAgentParserAccessor>();
+        return options;
     }
 }

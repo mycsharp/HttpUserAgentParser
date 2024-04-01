@@ -1,41 +1,55 @@
 <Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-  <ItemGroup Label=".NET Dependencies">
-    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-    <PackageVersion Include="NaughtyStrings" Version="2.4.1" />
-  </ItemGroup>
-  <ItemGroup Label="ASP.NET Core Dependencies">
-    <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-  </ItemGroup>
-  <ItemGroup Label="Libraries for comparison">
-    <PackageVersion Include="UAParser" Version="3.1.47" />
-    <PackageVersion Include="DeviceDetector.NET" Version="4.3.0" />
-    <PackageVersion Include="Ng.UserAgentService" Version="1.1.0" />
-  </ItemGroup>
-  <ItemGroup Label="Tests / Performance">
-    <PackageVersion Include="BenchmarkDotNet" Version="0.13.11" />
-    <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.11" />
-    <PackageVersion Include="NSubstitute" Version="5.1.0" />
-    <PackageVersion Include="FluentAssertions" Version="7.0.0-alpha.2" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0-preview-23503-02" />
-    <PackageVersion Include="xunit" Version="2.6.3" />
-    <PackageVersion Include="xunit.runner.console" Version="2.6.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageVersion>
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageVersion>
-    <PackageVersion Include="coverlet.msbuild" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageVersion>
-  </ItemGroup>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup Label=".NET Dependencies">
+        <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
+        <PackageVersion Include="NaughtyStrings" Version="2.4.1" />
+    </ItemGroup>
+
+    <ItemGroup Label="Libraries for comparison">
+        <PackageVersion Include="UAParser" Version="3.1.47" />
+        <PackageVersion Include="DeviceDetector.NET" Version="6.3.3" />
+        <PackageVersion Include="Ng.UserAgentService" Version="3.0.0" />
+    </ItemGroup>
+
+    <ItemGroup Label="Tests / Performance">
+        <PackageVersion Include="BenchmarkDotNet" Version="0.13.12" />
+        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.12" />
+        <PackageVersion Include="NSubstitute" Version="5.1.0" />
+        <PackageVersion Include="FluentAssertions" Version="7.0.0-alpha.2" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+        <PackageVersion Include="xunit" Version="2.7.0" />
+        <PackageVersion Include="xunit.runner.console" Version="2.7.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageVersion>
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageVersion>
+        <PackageVersion Include="coverlet.msbuild" Version="6.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageVersion>
+    </ItemGroup>
+    
+    <ItemGroup Label="Roslyn">
+        <PackageVersion Include="Roslynator.Analyzers" Version="4.12.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageVersion>
+        <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="4.12.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageVersion>
+        <PackageVersion Include="Roslynator.CodeAnalysis.Analyzers" Version="4.12.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageVersion>
+    </ItemGroup>
 </Project>

@@ -2,36 +2,28 @@
 
 using System.Text.RegularExpressions;
 
-namespace MyCSharp.HttpUserAgentParser
+namespace MyCSharp.HttpUserAgentParser;
+
+/// <summary>
+/// Information about the user agent platform
+/// </summary>
+/// <remarks>
+/// Creates a new instance of <see cref="HttpUserAgentPlatformInformation"/>
+/// </remarks>
+public readonly struct HttpUserAgentPlatformInformation(Regex regex, string name, HttpUserAgentPlatformType platformType)
 {
     /// <summary>
-    /// Information about the user agent platform
+    /// Regex-pattern that matches this user agent string
     /// </summary>
-    public readonly struct HttpUserAgentPlatformInformation
-    {
-        /// <summary>
-        /// Regex-pattern that matches this user agent string
-        /// </summary>
-        public Regex Regex { get; }
+    public Regex Regex { get; } = regex;
 
-        /// <summary>
-        /// Name of the platform
-        /// </summary>
-        public string Name { get; }
+    /// <summary>
+    /// Name of the platform
+    /// </summary>
+    public string Name { get; } = name;
 
-        /// <summary>
-        /// Specific platform type aka family
-        /// </summary>
-        public HttpUserAgentPlatformType PlatformType { get; }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="HttpUserAgentPlatformInformation"/>
-        /// </summary>
-        public HttpUserAgentPlatformInformation(Regex regex, string name, HttpUserAgentPlatformType platformType)
-        {
-            Regex = regex;
-            Name = name;
-            PlatformType = platformType;
-        }
-    }
+    /// <summary>
+    /// Specific platform type aka family
+    /// </summary>
+    public HttpUserAgentPlatformType PlatformType { get; } = platformType;
 }

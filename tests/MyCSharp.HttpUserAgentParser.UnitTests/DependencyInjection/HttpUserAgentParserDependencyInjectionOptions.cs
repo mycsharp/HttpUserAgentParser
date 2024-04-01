@@ -10,13 +10,13 @@ namespace MyCSharp.HttpUserAgentParser.UnitTests.DependencyInjection;
 
 public class UserAgentParserDependencyInjectionOptionsTests
 {
-    private readonly IServiceCollection scMock = Substitute.For<IServiceCollection>();
+    private readonly IServiceCollection _scMock = Substitute.For<IServiceCollection>();
 
     [Fact]
     public void Ctor_Should_Set_Property()
     {
-        HttpUserAgentParserDependencyInjectionOptions options = new(scMock);
+        HttpUserAgentParserDependencyInjectionOptions options = new(_scMock);
 
-        options.Services.Should().BeEquivalentTo(scMock);
+        options.Services.Should().BeEquivalentTo(_scMock);
     }
 }

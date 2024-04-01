@@ -1,65 +1,58 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using System;
 using Microsoft.Extensions.Caching.Memory;
 using MyCSharp.HttpUserAgentParser.Providers;
 
-namespace MyCSharp.HttpUserAgentParser.MemoryCache
+namespace MyCSharp.HttpUserAgentParser.MemoryCache;
+
+/// <inheritdoc/>
+/// <summary>
+/// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProvider"/>.
+/// </summary>
+/// <param name="options">The options used to set expiration and size limit</param>
+public class HttpUserAgentParserMemoryCachedProvider(
+    HttpUserAgentParserMemoryCachedProviderOptions options) : IHttpUserAgentParserProvider
 {
+    private readonly Microsoft.Extensions.Caching.Memory.MemoryCache _memoryCache = new(options.CacheOptions);
+    private readonly HttpUserAgentParserMemoryCachedProviderOptions _options = options;
+
     /// <inheritdoc/>
-    public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvider
+    public HttpUserAgentInformation Parse(string userAgent)
     {
-        private readonly Microsoft.Extensions.Caching.Memory.MemoryCache _memoryCache;
-        private readonly HttpUserAgentParserMemoryCachedProviderOptions _options;
+        CacheKey key = this.GetKey(userAgent);
 
-        /// <summary>
-        /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProvider"/>.
-        /// </summary>
-        /// <param name="options">The options used to set expiration and size limit</param>
-        public HttpUserAgentParserMemoryCachedProvider(HttpUserAgentParserMemoryCachedProviderOptions options)
+        return _memoryCache.GetOrCreate(key, static entry =>
         {
-            _memoryCache = new Microsoft.Extensions.Caching.Memory.MemoryCache(options.CacheOptions);
-            _options = options;
-        }
+            CacheKey key = (entry.Key as CacheKey)!;
+            entry.SlidingExpiration = key.Options.CacheEntryOptions.SlidingExpiration;
+            entry.SetSize(1);
 
-        /// <inheritdoc/>
-        public HttpUserAgentInformation Parse(string userAgent)
-        {
-            CacheKey key = this.GetKey(userAgent);
+            return HttpUserAgentParser.Parse(key.UserAgent);
+        });
+    }
 
-            return _memoryCache.GetOrCreate(key, static entry =>
-            {
-                CacheKey key = (entry.Key as CacheKey)!;
-                entry.SlidingExpiration = key.Options.CacheEntryOptions.SlidingExpiration;
-                entry.SetSize(1);
+    [ThreadStatic]
+    private static CacheKey? s_tKey;
 
-                return HttpUserAgentParser.Parse(key.UserAgent);
-            });
-        }
+    private CacheKey GetKey(string userAgent)
+    {
+        CacheKey key = s_tKey ??= new CacheKey();
 
-        [ThreadStatic]
-        private static CacheKey? s_tKey;
+        key.UserAgent = userAgent;
+        key.Options = _options;
 
-        private CacheKey GetKey(string userAgent)
-        {
-            CacheKey key = s_tKey ??= new CacheKey();
+        return key;
+    }
 
-            key.UserAgent = userAgent;
-            key.Options = _options;
+    private class CacheKey : IEquatable<CacheKey> // required for IMemoryCache
+    {
+        public string UserAgent { get; set; } = null!;
 
-            return key;
-        }
+        public HttpUserAgentParserMemoryCachedProviderOptions Options { get; set; } = null!;
 
-        private class CacheKey : IEquatable<CacheKey> // required for IMemoryCache
-        {
-            public string UserAgent { get; set; } = null!;
+        public bool Equals(CacheKey? other) => this.UserAgent == other?.UserAgent;
+        public override bool Equals(object? obj) => this.Equals(obj as CacheKey);
 
-            public HttpUserAgentParserMemoryCachedProviderOptions Options { get; set; } = null!;
-
-            public bool Equals(CacheKey? other) => this.UserAgent == other?.UserAgent;
-            public override bool Equals(object? obj) => this.Equals(obj as CacheKey);
-
-            public override int GetHashCode() => this.UserAgent.GetHashCode();
-        }
+        public override int GetHashCode() => this.UserAgent.GetHashCode();
     }
 }
