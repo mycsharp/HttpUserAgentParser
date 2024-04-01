@@ -3,7 +3,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 
-namespace MyCSharp.HttpUserAgentParser;
+namespace MyCSharp.HttpUserAgentParser.AspNetCore;
 
 /// <summary>
 /// Static extensions for <see cref="HttpContext"/>
@@ -16,9 +16,7 @@ public static class HttpContextExtensions
     public static string? GetUserAgentString(this HttpContext httpContext)
     {
         if (httpContext.Request.Headers.TryGetValue("User-Agent", out StringValues value))
-        {
             return value;
-        }
 
         return null;
     }
