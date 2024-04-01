@@ -5,7 +5,7 @@
         <Description>HTTP User Agent Parser Extensions for IMemoryCache</Description>
         <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     </PropertyGroup>
-    
+
     <PropertyGroup Label="Package">
         <IsPackable>true</IsPackable>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
@@ -17,9 +17,24 @@
         <None Include="LICENSE.txt" Pack="true" PackagePath="" />
     </ItemGroup>
 
-    <ItemGroup>
+    <ItemGroup Label="NuGet">
         <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    </ItemGroup>
+
+    <ItemGroup Label="NuGet Roslyn">
+        <PackageReference Include="Roslynator.Analyzers">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Roslynator.CodeAnalysis.Analyzers">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Roslynator.Formatting.Analyzers">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>

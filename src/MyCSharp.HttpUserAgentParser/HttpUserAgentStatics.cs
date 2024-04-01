@@ -22,8 +22,8 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Platforms
     /// </summary>
-    public static readonly HashSet<HttpUserAgentPlatformInformation> Platforms = new()
-    {
+    public static readonly HashSet<HttpUserAgentPlatformInformation> Platforms =
+    [
         new(CreateDefaultPlatformRegex("windows nt 10.0"), "Windows 10", HttpUserAgentPlatformType.Windows),
         new(CreateDefaultPlatformRegex("windows nt 6.3"), "Windows 8.1", HttpUserAgentPlatformType.Windows),
         new(CreateDefaultPlatformRegex("windows nt 6.2"), "Windows 8", HttpUserAgentPlatformType.Windows),
@@ -66,7 +66,7 @@ public static class HttpUserAgentStatics
         new(CreateDefaultPlatformRegex("gnu"), "GNU/Linux", HttpUserAgentPlatformType.Linux),
         new(CreateDefaultPlatformRegex("unix"), "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
         new(CreateDefaultPlatformRegex("symbian"), "Symbian OS", HttpUserAgentPlatformType.Symbian),
-    };
+    ];
 
     /// <summary>
     /// Regex defauls for browser mappings
@@ -211,7 +211,7 @@ public static class HttpUserAgentStatics
     /// Robots
     /// </summary>
     public static readonly (string Key, string Value)[] Robots =
-    {
+    [
         ( "googlebot", "Googlebot" ),
         ( "googleweblight", "Google Web Light" ),
         ( "PetalBot", "PetalBot"),
@@ -254,7 +254,7 @@ public static class HttpUserAgentStatics
         ( "SEOkicks", "SEOkicks"),
         ( "seoscanners.net", "SEO Scanners"),
         ( "Sistrix", "Sistrix" )
-    };
+    ];
 
     /// <summary>
     /// Tools

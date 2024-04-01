@@ -27,12 +27,10 @@ public readonly struct HttpUserAgentInformation
     /// </summary>
     public string? Name { get; }
 
-
     /// <summary>
     /// Version of Browser or Bot Name of user agent e.g. "79.0", "83.0.125.4"
     /// </summary>
     public string? Version { get; }
-
 
     /// <summary>
     /// Device Type of user agent, e.g. "Android", "Apple iPhone"
