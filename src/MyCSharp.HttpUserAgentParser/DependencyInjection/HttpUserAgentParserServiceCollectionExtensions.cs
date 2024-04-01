@@ -3,44 +3,43 @@
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
 
-namespace MyCSharp.HttpUserAgentParser.DependencyInjection
+namespace MyCSharp.HttpUserAgentParser.DependencyInjection;
+
+/// <summary>
+/// Dependency injection extensions
+/// </summary>
+public static class HttpUserAgentParserServiceCollectionExtensions
 {
     /// <summary>
-    /// Dependency injection extensions
+    /// Registers <see cref="HttpUserAgentParserDefaultProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
-    public static class HttpUserAgentParserServiceCollectionExtensions
+    public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser(
+        this IServiceCollection services)
     {
-        /// <summary>
-        /// Registers <see cref="HttpUserAgentParserDefaultProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
-        /// </summary>
-        public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser(
-            this IServiceCollection services)
-        {
-            return AddHttpUserAgentParser<HttpUserAgentParserDefaultProvider>(services);
-        }
+        return AddHttpUserAgentParser<HttpUserAgentParserDefaultProvider>(services);
+    }
 
-        /// <summary>
-        /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
-        /// </summary>
-        public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentCachedParser(
-            this IServiceCollection services)
-        {
-            return AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>(services);
-        }
+    /// <summary>
+    /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+    /// </summary>
+    public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentCachedParser(
+        this IServiceCollection services)
+    {
+        return AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>(services);
+    }
 
-        /// <summary>
-        /// Registers <typeparam name="TProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
-        /// </summary>
-        public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser<TProvider>(
-            this IServiceCollection services) where TProvider : class, IHttpUserAgentParserProvider
-        {
-            // create options
-            HttpUserAgentParserDependencyInjectionOptions options = new(services);
+    /// <summary>
+    /// Registers <typeparam name="TProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+    /// </summary>
+    public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser<TProvider>(
+        this IServiceCollection services) where TProvider : class, IHttpUserAgentParserProvider
+    {
+        // create options
+        HttpUserAgentParserDependencyInjectionOptions options = new(services);
 
-            // add provider
-            services.AddSingleton<IHttpUserAgentParserProvider, TProvider>();
+        // add provider
+        services.AddSingleton<IHttpUserAgentParserProvider, TProvider>();
 
-            return options;
-        }
+        return options;
     }
 }

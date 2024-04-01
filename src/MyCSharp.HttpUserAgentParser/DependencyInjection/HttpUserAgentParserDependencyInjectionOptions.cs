@@ -2,25 +2,24 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MyCSharp.HttpUserAgentParser.DependencyInjection
+namespace MyCSharp.HttpUserAgentParser.DependencyInjection;
+
+/// <summary>
+/// Options for dependency injection
+/// </summary>
+public class HttpUserAgentParserDependencyInjectionOptions
 {
     /// <summary>
-    /// Options for dependency injection
+    /// Services container
     /// </summary>
-    public class HttpUserAgentParserDependencyInjectionOptions
-    {
-        /// <summary>
-        /// Services container
-        /// </summary>
-        public IServiceCollection Services { get; }
+    public IServiceCollection Services { get; }
 
-        /// <summary>
-        /// Creates a new instance of <see cref="HttpUserAgentParserDependencyInjectionOptions"/>
-        /// </summary>
-        /// <param name="services"></param>
-        public HttpUserAgentParserDependencyInjectionOptions(IServiceCollection services)
-        {
-            Services = services;
-        }
+    /// <summary>
+    /// Creates a new instance of <see cref="HttpUserAgentParserDependencyInjectionOptions"/>
+    /// </summary>
+    /// <param name="services"></param>
+    public HttpUserAgentParserDependencyInjectionOptions(IServiceCollection services)
+    {
+        Services = services;
     }
 }
