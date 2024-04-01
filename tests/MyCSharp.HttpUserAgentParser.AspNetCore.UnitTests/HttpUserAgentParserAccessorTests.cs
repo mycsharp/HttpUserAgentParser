@@ -3,7 +3,6 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using MyCSharp.HttpUserAgentParser.Providers;
-using MyCSharp.HttpUserAgentParser.TestHelpers;
 using NSubstitute;
 using Xunit;
 

@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Http;
 
-namespace MyCSharp.HttpUserAgentParser.TestHelpers;
+namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests;
 
 public static class HttpContextTestHelpers
 {
