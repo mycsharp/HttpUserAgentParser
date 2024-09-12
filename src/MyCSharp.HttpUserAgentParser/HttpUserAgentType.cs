@@ -18,5 +18,5 @@ public enum HttpUserAgentType : byte
     /// <summary>
     /// Robot
     /// </summary>
-    Robot,
+    Robot
 }

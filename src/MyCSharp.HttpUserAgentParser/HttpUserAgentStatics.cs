@@ -1,7 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using System.Text.RegularExpressions;
-
 namespace MyCSharp.HttpUserAgentParser;
 
 /// <summary>
@@ -17,8 +15,7 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Creates default platform mapping regex
     /// </summary>
-    private static Regex CreateDefaultPlatformRegex(string key)
-        => new(Regex.Escape($"{key}"), DefaultPlatformsRegexFlags);
+    private static Regex CreateDefaultPlatformRegex(string key) => new(Regex.Escape($"{key}"), DefaultPlatformsRegexFlags);
 
     /// <summary>
     /// Platforms
@@ -66,7 +63,6 @@ public static class HttpUserAgentStatics
         new(CreateDefaultPlatformRegex("openbsd"), "OpenBSD", HttpUserAgentPlatformType.Unix),
         new(CreateDefaultPlatformRegex("gnu"), "GNU/Linux", HttpUserAgentPlatformType.Linux),
         new(CreateDefaultPlatformRegex("unix"), "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
-        new(CreateDefaultPlatformRegex("symbian"), "Symbian OS", HttpUserAgentPlatformType.Symbian),
         new(CreateDefaultPlatformRegex("symbian"), "Symbian OS", HttpUserAgentPlatformType.Symbian),
     ];
 
