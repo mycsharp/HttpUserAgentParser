@@ -1,10 +1,10 @@
 // Copyright © myCSharp.de - all rights reserved
 
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 
 #if OS_WIN
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
-using BenchmarkDotNet.Jobs;
 #endif
 
 namespace MyCSharp.HttpUserAgentParser.Benchmarks;
