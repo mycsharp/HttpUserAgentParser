@@ -17,7 +17,8 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Creates default platform mapping regex
     /// </summary>
-    private static Regex CreateDefaultPlatformRegex(string key) => new(Regex.Escape($"{key}"), DefaultPlatformsRegexFlags);
+    private static Regex CreateDefaultPlatformRegex(string key)
+        => new(Regex.Escape($"{key}"), DefaultPlatformsRegexFlags);
 
     /// <summary>
     /// Platforms
@@ -66,6 +67,7 @@ public static class HttpUserAgentStatics
         new(CreateDefaultPlatformRegex("gnu"), "GNU/Linux", HttpUserAgentPlatformType.Linux),
         new(CreateDefaultPlatformRegex("unix"), "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
         new(CreateDefaultPlatformRegex("symbian"), "Symbian OS", HttpUserAgentPlatformType.Symbian),
+        new(CreateDefaultPlatformRegex("symbian"), "Symbian OS", HttpUserAgentPlatformType.Symbian),
     ];
 
     /// <summary>
@@ -75,7 +77,8 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Creates default browser mapping regex
     /// </summary>
-    private static Regex CreateDefaultBrowserRegex(string key) => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
+    private static Regex CreateDefaultBrowserRegex(string key)
+        => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
 
     /// <summary>
     /// Browsers
@@ -253,7 +256,8 @@ public static class HttpUserAgentStatics
         ( "SemrushBot", "SEMRush"),
         ( "SEOkicks", "SEOkicks"),
         ( "seoscanners.net", "SEO Scanners"),
-        ( "Sistrix", "Sistrix" )
+        ( "Sistrix", "Sistrix" ),
+        ( "WhatsApp", "WhatsApp" )
     ];
 
     /// <summary>

@@ -46,5 +46,9 @@ public enum HttpUserAgentPlatformType : byte
     /// <summary>
     /// Symbian
     /// </summary>
-    Symbian
+    Symbian,
+    /// <summary>
+    /// Web
+    /// </summary>
+    Web
 }
