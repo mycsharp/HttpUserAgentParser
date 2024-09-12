@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
