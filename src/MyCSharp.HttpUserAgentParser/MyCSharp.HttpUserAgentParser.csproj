@@ -3,7 +3,6 @@
     <PropertyGroup>
         <Product>HTTP User Agent Parser</Product>
         <Description>Parses user agents for Browser, Platform and Bots.</Description>
-        <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup Label="Package">
