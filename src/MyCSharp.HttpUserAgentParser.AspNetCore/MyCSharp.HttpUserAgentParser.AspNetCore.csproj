@@ -3,7 +3,6 @@
     <PropertyGroup>
         <Product>HTTP User Agent Parser Extensions for ASP.NET Core</Product>
         <Description>HTTP User Agent Parser Extensions for ASP.NET Core</Description>
-        <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup Label="Package">
