@@ -1,5 +1,7 @@
 // Copyright © myCSharp.de - all rights reserved
 
+using System.Text.RegularExpressions;
+
 namespace MyCSharp.HttpUserAgentParser;
 
 /// <summary>
