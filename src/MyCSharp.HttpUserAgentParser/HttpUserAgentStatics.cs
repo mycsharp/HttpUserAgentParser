@@ -75,7 +75,8 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Creates default browser mapping regex
     /// </summary>
-    private static Regex CreateDefaultBrowserRegex(string key) => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
+    private static Regex CreateDefaultBrowserRegex(string key)
+        => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
 
     /// <summary>
     /// Browsers
@@ -253,7 +254,8 @@ public static class HttpUserAgentStatics
         ( "SemrushBot", "SEMRush"),
         ( "SEOkicks", "SEOkicks"),
         ( "seoscanners.net", "SEO Scanners"),
-        ( "Sistrix", "Sistrix" )
+        ( "Sistrix", "Sistrix" ),
+        ( "WhatsApp", "WhatsApp" )
     ];
 
     /// <summary>
