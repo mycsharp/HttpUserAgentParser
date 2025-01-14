@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;

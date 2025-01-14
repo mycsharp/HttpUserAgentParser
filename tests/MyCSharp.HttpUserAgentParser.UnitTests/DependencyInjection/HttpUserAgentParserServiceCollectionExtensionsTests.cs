@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
@@ -22,10 +21,10 @@ public class HttpUserAgentParserMemoryCacheServiceCollectionExtensions
 
         services.AddHttpUserAgentParser();
 
-        services.Count.Should().Be(1);
-        services[0].ServiceType.Should().Be<IHttpUserAgentParserProvider>();
-        services[0].ImplementationType.Should().Be<HttpUserAgentParserDefaultProvider>();
-        services[0].Lifetime.Should().Be(ServiceLifetime.Singleton);
+        Assert.Single(services);
+        Assert.Equal(typeof(IHttpUserAgentParserProvider), services[0].ServiceType);
+        Assert.Equal(typeof(HttpUserAgentParserDefaultProvider), services[0].ImplementationType);
+        Assert.Equal(ServiceLifetime.Singleton, services[0].Lifetime);
     }
 
     [Fact]
@@ -35,10 +34,10 @@ public class HttpUserAgentParserMemoryCacheServiceCollectionExtensions
 
         services.AddHttpUserAgentCachedParser();
 
-        services.Count.Should().Be(1);
-        services[0].ServiceType.Should().Be<IHttpUserAgentParserProvider>();
-        services[0].ImplementationType.Should().Be<HttpUserAgentParserCachedProvider>();
-        services[0].Lifetime.Should().Be(ServiceLifetime.Singleton);
+        Assert.Single(services);
+        Assert.Equal(typeof(IHttpUserAgentParserProvider), services[0].ServiceType);
+        Assert.Equal(typeof(HttpUserAgentParserCachedProvider), services[0].ImplementationType);
+        Assert.Equal(ServiceLifetime.Singleton, services[0].Lifetime);
     }
 
     [Fact]
@@ -48,9 +47,9 @@ public class HttpUserAgentParserMemoryCacheServiceCollectionExtensions
 
         services.AddHttpUserAgentParser<TestHttpUserAgentParserProvider>();
 
-        services.Count.Should().Be(1);
-        services[0].ServiceType.Should().Be<IHttpUserAgentParserProvider>();
-        services[0].ImplementationType.Should().Be<TestHttpUserAgentParserProvider>();
-        services[0].Lifetime.Should().Be(ServiceLifetime.Singleton);
+        Assert.Single(services);
+        Assert.Equal(typeof(IHttpUserAgentParserProvider), services[0].ServiceType);
+        Assert.Equal(typeof(TestHttpUserAgentParserProvider), services[0].ImplementationType);
+        Assert.Equal(ServiceLifetime.Singleton, services[0].Lifetime);
     }
 }

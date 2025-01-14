@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
@@ -18,10 +17,10 @@ public class HttpUserAgentParserDependencyInjectionOptionsExtensionsTests
 
         options.AddHttpUserAgentParserAccessor();
 
-        services.Count.Should().Be(1);
+        Assert.Single(services);
 
-        services[0].ServiceType.Should().Be<IHttpUserAgentParserAccessor>();
-        services[0].ImplementationType.Should().Be<HttpUserAgentParserAccessor>();
-        services[0].Lifetime.Should().Be(ServiceLifetime.Singleton);
+        Assert.Equal(typeof(IHttpUserAgentParserAccessor), services[0].ServiceType);
+        Assert.Equal(typeof(HttpUserAgentParserAccessor), services[0].ImplementationType);
+        Assert.Equal(ServiceLifetime.Singleton, services[0].Lifetime);
     }
 }

@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using MyCSharp.HttpUserAgentParser.Providers;
 using Xunit;
 
@@ -17,6 +16,6 @@ public class HttpUserAgentParserDefaultProviderTests
         HttpUserAgentInformation providerUserAgentInfo = provider.Parse(userAgent);
         HttpUserAgentInformation userAgentInfo = HttpUserAgentInformation.Parse(userAgent);
 
-        providerUserAgentInfo.Should().BeEquivalentTo(userAgentInfo);
+        Assert.Equal(userAgentInfo, providerUserAgentInfo);
     }
 }

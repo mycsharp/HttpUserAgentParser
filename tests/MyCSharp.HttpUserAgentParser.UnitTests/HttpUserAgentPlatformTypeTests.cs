@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -20,6 +19,6 @@ public class HttpUserAgentPlatformTypeTests
     [InlineData(HttpUserAgentPlatformType.Symbian, 9)]
     public void TestValue(HttpUserAgentPlatformType type, byte value)
     {
-        ((byte)type == value).Should().Be(true);
+        Assert.True((byte)type == value);
     }
 }

@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -13,6 +12,6 @@ public class HttpUserAgentTypeTests
     [InlineData(HttpUserAgentType.Robot, 2)]
     public void TestValue(HttpUserAgentType type, byte value)
     {
-        ((byte)type == value).Should().Be(true);
+        Assert.True((byte)type == value);
     }
 }

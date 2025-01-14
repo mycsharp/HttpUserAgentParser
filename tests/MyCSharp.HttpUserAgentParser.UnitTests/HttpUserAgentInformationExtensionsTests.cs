@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -22,32 +21,32 @@ public class HttpUserAgentInformationExtensionsTests
 
         if (expectedType == HttpUserAgentType.Browser)
         {
-            info.IsType(HttpUserAgentType.Browser).Should().Be(true);
-            info.IsType(HttpUserAgentType.Robot).Should().Be(false);
-            info.IsType(HttpUserAgentType.Unknown).Should().Be(false);
+            Assert.True(info.IsType(HttpUserAgentType.Browser));
+            Assert.False(info.IsType(HttpUserAgentType.Robot));
+            Assert.False(info.IsType(HttpUserAgentType.Unknown));
 
-            info.IsBrowser().Should().Be(true);
-            info.IsRobot().Should().Be(false);
+            Assert.True(info.IsBrowser());
+            Assert.False(info.IsRobot());
         }
         else if (expectedType == HttpUserAgentType.Robot)
         {
-            info.IsType(HttpUserAgentType.Browser).Should().Be(false);
-            info.IsType(HttpUserAgentType.Robot).Should().Be(true);
-            info.IsType(HttpUserAgentType.Unknown).Should().Be(false);
+            Assert.False(info.IsType(HttpUserAgentType.Browser));
+            Assert.True(info.IsType(HttpUserAgentType.Robot));
+            Assert.False(info.IsType(HttpUserAgentType.Unknown));
 
-            info.IsBrowser().Should().Be(false);
-            info.IsRobot().Should().Be(true);
+            Assert.False(info.IsBrowser());
+            Assert.True(info.IsRobot());
         }
         else if (expectedType == HttpUserAgentType.Unknown)
         {
-            info.IsType(HttpUserAgentType.Browser).Should().Be(false);
-            info.IsType(HttpUserAgentType.Robot).Should().Be(false);
-            info.IsType(HttpUserAgentType.Unknown).Should().Be(true);
+            Assert.False(info.IsType(HttpUserAgentType.Browser));
+            Assert.False(info.IsType(HttpUserAgentType.Robot));
+            Assert.True(info.IsType(HttpUserAgentType.Unknown));
 
-            info.IsBrowser().Should().Be(false);
-            info.IsRobot().Should().Be(false);
+            Assert.False(info.IsBrowser());
+            Assert.False(info.IsRobot());
         }
 
-        info.IsMobile().Should().Be(isMobile);
+        Assert.Equal(isMobile, info.IsMobile());
     }
 }
