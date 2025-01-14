@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using NSubstitute;
@@ -17,6 +16,6 @@ public class UserAgentParserDependencyInjectionOptionsTests
     {
         HttpUserAgentParserDependencyInjectionOptions options = new(_scMock);
 
-        options.Services.Should().BeEquivalentTo(_scMock);
+        Assert.Equal(_scMock, options.Services);
     }
 }

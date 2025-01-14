@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -58,21 +57,21 @@ public class HttpUserAgentParserTests
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);
 
-        uaInfo.Name.Should().Be(name);
-        uaInfo.Version.Should().Be(version);
-        uaInfo.UserAgent.Should().Be(ua);
+        Assert.Equal(name, uaInfo.Name);
+        Assert.Equal(version, uaInfo.Version);
+        Assert.Equal(ua, uaInfo.UserAgent);
 
-        uaInfo.Type.Should().Be(HttpUserAgentType.Browser);
+        Assert.Equal(HttpUserAgentType.Browser, uaInfo.Type);
 
         HttpUserAgentPlatformInformation platform = uaInfo.Platform.GetValueOrDefault();
-        platform.PlatformType.Should().Be(platformType);
-        platform.Name.Should().Be(platformName);
+        Assert.Equal(platformType, platform.PlatformType);
+        Assert.Equal(platformName, platform.Name);
 
-        uaInfo.MobileDeviceType.Should().Be(mobileDeviceType);
+        Assert.Equal(mobileDeviceType, uaInfo.MobileDeviceType);
 
-        uaInfo.IsBrowser().Should().Be(true);
-        uaInfo.IsMobile().Should().Be(mobileDeviceType is not null);
-        uaInfo.IsRobot().Should().Be(false);
+        Assert.True(uaInfo.IsBrowser());
+        Assert.Equal(mobileDeviceType is not null, uaInfo.IsMobile());
+        Assert.False(uaInfo.IsRobot());
     }
 
     [Theory]
@@ -137,17 +136,17 @@ public class HttpUserAgentParserTests
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);
 
-        uaInfo.Name.Should().Be(name);
-        uaInfo.Version.Should().Be(null);
-        uaInfo.UserAgent.Should().Be(ua);
+        Assert.Equal(name, uaInfo.Name);
+        Assert.Null(uaInfo.Version);
+        Assert.Equal(ua, uaInfo.UserAgent);
 
-        uaInfo.Type.Should().Be(HttpUserAgentType.Robot);
+        Assert.Equal(HttpUserAgentType.Robot, uaInfo.Type);
 
-        uaInfo.Platform.Should().Be(null);
-        uaInfo.MobileDeviceType.Should().Be(null);
+        Assert.Null(uaInfo.Platform);
+        Assert.Null(uaInfo.MobileDeviceType);
 
-        uaInfo.IsBrowser().Should().Be(false);
-        uaInfo.IsMobile().Should().Be(false);
-        uaInfo.IsRobot().Should().Be(true);
+        Assert.False(uaInfo.IsBrowser());
+        Assert.False(uaInfo.IsMobile());
+        Assert.True(uaInfo.IsRobot());
     }
 }

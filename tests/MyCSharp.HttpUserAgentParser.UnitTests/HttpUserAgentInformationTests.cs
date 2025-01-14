@@ -1,7 +1,6 @@
 // Copyright © myCSharp.de - all rights reserved
 
 using System.Text.RegularExpressions;
-using FluentAssertions;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -15,7 +14,7 @@ public class HttpUserAgentInformationTests
         HttpUserAgentInformation ua1 = HttpUserAgentParser.Parse(userAgent);
         HttpUserAgentInformation ua2 = HttpUserAgentInformation.Parse(userAgent);
 
-        ua1.Should().BeEquivalentTo(ua2);
+        Assert.Equal(ua2, ua1);
     }
 
     [Theory]
@@ -24,12 +23,12 @@ public class HttpUserAgentInformationTests
     {
         HttpUserAgentInformation ua = HttpUserAgentInformation.CreateForRobot(userAgent, "Chrome");
 
-        ua.UserAgent.Should().Be(userAgent);
-        ua.Type.Should().Be(HttpUserAgentType.Robot);
-        ua.Platform.Should().Be(null);
-        ua.Name.Should().Be("Chrome");
-        ua.Version.Should().Be(null);
-        ua.MobileDeviceType.Should().Be(null);
+        Assert.Equal(userAgent, ua.UserAgent);
+        Assert.Equal(HttpUserAgentType.Robot, ua.Type);
+        Assert.Null(ua.Platform);
+        Assert.Equal("Chrome", ua.Name);
+        Assert.Null(ua.Version);
+        Assert.Null(ua.MobileDeviceType);
     }
 
     [Theory]
@@ -37,17 +36,17 @@ public class HttpUserAgentInformationTests
     public void CreateForBrowser(string userAgent)
     {
         HttpUserAgentPlatformInformation platformInformation =
-            new HttpUserAgentPlatformInformation(new Regex(""), "Android", HttpUserAgentPlatformType.Android);
+            new(new Regex(""), "Android", HttpUserAgentPlatformType.Android);
 
         HttpUserAgentInformation ua = HttpUserAgentInformation.CreateForBrowser(userAgent,
             platformInformation, "Edge", "46.3.4.5155", "Android");
 
-        ua.UserAgent.Should().Be(userAgent);
-        ua.Type.Should().Be(HttpUserAgentType.Browser);
-        ua.Platform.Should().Be(platformInformation);
-        ua.Name.Should().Be("Edge");
-        ua.Version.Should().Be("46.3.4.5155");
-        ua.MobileDeviceType.Should().Be("Android");
+        Assert.Equal(userAgent, ua.UserAgent);
+        Assert.Equal(HttpUserAgentType.Browser, ua.Type);
+        Assert.Equal(platformInformation, ua.Platform);
+        Assert.Equal("Edge", ua.Name);
+        Assert.Equal("46.3.4.5155", ua.Version);
+        Assert.Equal("Android", ua.MobileDeviceType);
     }
 
     [Theory]
@@ -60,11 +59,11 @@ public class HttpUserAgentInformationTests
         HttpUserAgentInformation ua =
           HttpUserAgentInformation.CreateForUnknown(userAgent, platformInformation, null);
 
-        ua.UserAgent.Should().Be(userAgent);
-        ua.Type.Should().Be(HttpUserAgentType.Unknown);
-        ua.Platform.Should().Be(platformInformation);
-        ua.Name.Should().Be(null);
-        ua.Version.Should().Be(null);
-        ua.MobileDeviceType.Should().Be(null);
+        Assert.Equal(userAgent, ua.UserAgent);
+        Assert.Equal(HttpUserAgentType.Unknown, ua.Type);
+        Assert.Equal(platformInformation, ua.Platform);
+        Assert.Null(ua.Name);
+        Assert.Null(ua.Version);
+        Assert.Null(ua.MobileDeviceType);
     }
 }

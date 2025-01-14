@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
@@ -16,8 +15,8 @@ public class HttpUserAgentParserMemoryCachedProviderOptionsTests
 
         HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheOptions, cacheEntryOptions);
 
-        options.CacheOptions.Should().Be(cacheOptions);
-        options.CacheEntryOptions.Should().Be(cacheEntryOptions);
+        Assert.Equal(cacheOptions, options.CacheOptions);
+        Assert.Equal(cacheEntryOptions, options.CacheEntryOptions);
     }
 
     [Fact]
@@ -27,8 +26,8 @@ public class HttpUserAgentParserMemoryCachedProviderOptionsTests
 
         HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheOptions);
 
-        options.CacheOptions.Should().Be(cacheOptions);
-        options.CacheEntryOptions.Should().NotBeNull();
+        Assert.Equal(cacheOptions, options.CacheOptions);
+        Assert.NotNull(options.CacheEntryOptions);
     }
 
     [Fact]
@@ -38,8 +37,8 @@ public class HttpUserAgentParserMemoryCachedProviderOptionsTests
 
         HttpUserAgentParserMemoryCachedProviderOptions options = new(cacheEntryOptions);
 
-        options.CacheOptions.Should().NotBeNull();
-        options.CacheEntryOptions.Should().Be(cacheEntryOptions);
+        Assert.NotNull(options.CacheOptions);
+        Assert.Equal(cacheEntryOptions, options.CacheEntryOptions);
     }
 
     [Fact]
@@ -47,7 +46,7 @@ public class HttpUserAgentParserMemoryCachedProviderOptionsTests
     {
         HttpUserAgentParserMemoryCachedProviderOptions options = new();
 
-        options.CacheOptions.Should().NotBeNull();
-        options.CacheEntryOptions.Should().NotBeNull();
+        Assert.NotNull(options.CacheOptions);
+        Assert.NotNull(options.CacheEntryOptions);
     }
 }

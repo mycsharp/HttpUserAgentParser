@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
@@ -17,13 +16,13 @@ public class HttpUserAgentParserMemoryCacheServiceCollectionExtensionssTests
 
         services.AddHttpUserAgentMemoryCachedParser();
 
-        services.Count.Should().Be(2);
+        Assert.Equal(2, services.Count);
 
-        services[0].ImplementationInstance.Should().BeOfType<HttpUserAgentParserMemoryCachedProviderOptions>();
-        services[0].Lifetime.Should().Be(ServiceLifetime.Singleton);
+        Assert.IsType<HttpUserAgentParserMemoryCachedProviderOptions>(services[0].ImplementationInstance);
+        Assert.Equal(ServiceLifetime.Singleton, services[0].Lifetime);
 
-        services[1].ServiceType.Should().Be<IHttpUserAgentParserProvider>();
-        services[1].ImplementationType.Should().Be<HttpUserAgentParserMemoryCachedProvider>();
-        services[1].Lifetime.Should().Be(ServiceLifetime.Singleton);
+        Assert.Equal(typeof(IHttpUserAgentParserProvider), services[1].ServiceType);
+        Assert.Equal(typeof(HttpUserAgentParserMemoryCachedProvider), services[1].ImplementationType);
+        Assert.Equal(ServiceLifetime.Singleton, services[1].Lifetime);
     }
 }

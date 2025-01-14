@@ -1,6 +1,5 @@
 // Copyright © myCSharp.de - all rights reserved
 
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using MyCSharp.HttpUserAgentParser.Providers;
 using NSubstitute;
@@ -27,8 +26,8 @@ public class HttpUserAgentParserAccessorTests
         HttpUserAgentInformation? info = accessor.Get(httpContext);
 
         // assert
-        info.Should().NotBeNull();
-        info.Should().Be(userAgentInformation);
+        Assert.NotNull(info);
+        Assert.Equal(userAgentInformation, info);
 
         // verify
         _parserMock.Received(1).Parse(userAgent);

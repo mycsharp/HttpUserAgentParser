@@ -1,7 +1,6 @@
 // Copyright © myCSharp.de - all rights reserved
 
 using System.Text.RegularExpressions;
-using FluentAssertions;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -17,8 +16,8 @@ public class HttpUserAgentPlatformInformationTests
 
         HttpUserAgentPlatformInformation info = new(regex, name, platform);
 
-        info.Regex.Should().Be(regex);
-        info.Name.Should().Be(name);
-        info.PlatformType.Should().Be(platform);
+        Assert.Equal(regex, info.Regex);
+        Assert.Equal(name, info.Name);
+        Assert.Equal(platform, info.PlatformType);
     }
 }
