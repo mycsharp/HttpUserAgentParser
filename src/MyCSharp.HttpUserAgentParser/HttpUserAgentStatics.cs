@@ -270,7 +270,8 @@ public static class HttpUserAgentStatics
         ( "SEOkicks", "SEOkicks"),
         ( "seoscanners.net", "SEO Scanners"),
         ( "Sistrix", "Sistrix" ),
-        ( "WhatsApp", "WhatsApp" )
+        ( "WhatsApp", "WhatsApp" ),
+        ( "CensysInspect", "CensysInspect" )
     ];
 
     /// <summary>

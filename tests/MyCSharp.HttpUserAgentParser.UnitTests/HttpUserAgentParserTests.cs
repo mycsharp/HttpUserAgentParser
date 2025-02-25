@@ -146,6 +146,7 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36; compatible; OAI-SearchBot/1.0; +openai.com/searchbot", "OAI-SearchBot")]
     [InlineData("Mozilla/5.0 (compatible; archive.org_bot +http://archive.org/details/archive.org_bot)", "archive.org")]
     [InlineData("Mozilla/5.0 (compatible; MojeekBot/0.11; +mojeek.com/bot.html)", "MojeekBot")]
+    [InlineData("Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)", "CensysInspect")]
     public void BotTests(string ua, string name)
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);
