@@ -66,6 +66,7 @@ jobs:
 
     # the deploy job runs only when the build job is successful and the event is a release
     deploy:
+      if: github.event_name == 'release'
       name: Publish Package
       needs: build
       runs-on: ubuntu-latest
