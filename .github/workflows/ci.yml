@@ -51,27 +51,18 @@ jobs:
       - name: Test with dotnet
         run: dotnet test
               --no-build --configuration ${{ env.BuildConfig }}
-              --logger "trx;LogFileName=test-results.trx" --results-directory ./artifacts/testResults
+              --logger "trx;LogFileName=test-results.trx" --results-directory ./artifacts/test-results
         continue-on-error: true
-
-      # - name: Test Report
-      #   uses: dorny/test-reporter@v1
-      #   if: always()
-      #   with:
-      #     name: DotNET Tests
-      #     path: "./artifacts/testResults/test-results.trx"
-      #     reporter: dotnet-trx
-      #     fail-on-error: true
 
       - name: Pack NuGet
         run: dotnet pack
               --configuration ${{ env.BuildConfig }}
+              --output ./artifacts/nuget
               /p:ContinuousIntegrationBuild=true
               /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
 
-      - name: Push to NuGet
-        run: dotnet nuget push **/*.nupkg
-                --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
-                --source https://api.nuget.org/v3/index.json
-                --no-symbols
-                --skip-duplicate
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: ./artifacts/**/*
