@@ -15,3 +15,5 @@ jobs:
     uses: mycsharp/github-actions/.github/workflows/dotnet-nuget-build.yml@main
     with:
       configuration: Release
+    secrets:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
