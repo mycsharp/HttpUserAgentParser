@@ -10,84 +10,8 @@ on:
     release:
       types: [published]
 
-env:
-  BuildConfig: Release
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-
 jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: ./global.json
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Setup Git Versioning
-        uses: dotnet/nbgv@master
-        id: nbgv
-
-      - name: Show Version Info
-        run: |
-          echo 'SemVer2: ${{ steps.nbgv.outputs.SemVer2 }}'
-
-      - name: Build with dotnet
-        run: dotnet build
-              --no-restore --configuration ${{ env.BuildConfig }}
-              /p:Version=${{ steps.nbgv.outputs.AssemblyVersion }}
-
-      - name: Test with dotnet
-        run: dotnet test
-              --no-build --configuration ${{ env.BuildConfig }}
-              --logger "trx;LogFileName=test-results.trx" --results-directory ./artifacts/test-results
-        continue-on-error: true
-
-      - name: Pack NuGet
-        run: dotnet pack
-              --configuration ${{ env.BuildConfig }}
-              --output ./artifacts/nuget-packages
-              /p:ContinuousIntegrationBuild=true
-              /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts
-          path: ./artifacts/**/*
-
-    # the deploy job runs only when the build job is successful and the event is a release
-    deploy:
-      if: github.event_name == 'release'
-      name: Publish Package
-      needs: build
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-
-        - name: Download build artifacts
-          uses: actions/download-artifact@v4
-
-        - name: Upload release asset
-          run: gh release upload ${{ github.event.release.tag_name }}
-                ${{ github.workspace }}/artifacts/nuget-packages/*.*nupkg
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-        - name: Publish package
-          run: dotnet nuget push
-                ${{github.workspace}}/artifacts/nuget-packages/*.nupkg
-                --source https://api.nuget.org/v3/index.json
-                --api-key ${{ secrets.NUGET_API_KEY }}
-                --skip-duplicate
+  build:
+    uses: mycsharp/github-actions/.github/workflows/dotnet-nuget-build.yml@main
+    with:
+      configuration: Release
