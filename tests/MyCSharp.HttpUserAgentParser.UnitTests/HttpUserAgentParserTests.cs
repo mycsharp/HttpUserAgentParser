@@ -31,7 +31,7 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36", "Chrome", "90.0.4430.210", "Android", HttpUserAgentPlatformType.Android, "Android")]
     [InlineData("Mozilla/5.0 (Linux; Android 10; SM-A205U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36", "Chrome", "90.0.4430.210", "Android", HttpUserAgentPlatformType.Android, "Android")]
     [InlineData("Mozilla/5.0 (Linux; Android 10; LM-Q720) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36", "Chrome", "90.0.4430.210", "Android", HttpUserAgentPlatformType.Android, "Android")]
-    [InlineData("Mozilla/5.0 (X11; CrOS x86_64 15917.71.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.132 Safari/537.36", "Chrome", "127.0.6533.132", "ChromeOS", HttpUserAgentPlatformType.Linux, null)]
+    [InlineData("Mozilla/5.0 (X11; CrOS x86_64 15917.71.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.132 Safari/537.36", "Chrome", "127.0.6533.132", "ChromeOS", HttpUserAgentPlatformType.ChromeOS, null)]
     // Safari
     [InlineData("Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/11.0 Safari/605.1.15", "Safari", "11.0", "Windows 10", HttpUserAgentPlatformType.Windows, null)]
     [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15", "Safari", "14.1", "Mac OS X", HttpUserAgentPlatformType.MacOS, null)]
