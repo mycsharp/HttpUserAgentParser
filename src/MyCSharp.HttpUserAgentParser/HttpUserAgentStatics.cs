@@ -47,6 +47,7 @@ public static class HttpUserAgentStatics
         new(CreateDefaultPlatformRegex("iphone"), "iOS", HttpUserAgentPlatformType.IOS),
         new(CreateDefaultPlatformRegex("ipad"), "iOS", HttpUserAgentPlatformType.IOS),
         new(CreateDefaultPlatformRegex("ipod"), "iOS", HttpUserAgentPlatformType.IOS),
+        new(CreateDefaultPlatformRegex("cros"), "ChromeOS", HttpUserAgentPlatformType.ChromeOS),
         new(CreateDefaultPlatformRegex("os x"), "Mac OS X", HttpUserAgentPlatformType.MacOS),
         new(CreateDefaultPlatformRegex("ppc mac"), "Power PC Mac", HttpUserAgentPlatformType.MacOS),
         new(CreateDefaultPlatformRegex("freebsd"), "FreeBSD", HttpUserAgentPlatformType.Linux),
