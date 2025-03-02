@@ -271,7 +271,8 @@ public static class HttpUserAgentStatics
         ( "seoscanners.net", "SEO Scanners"),
         ( "Sistrix", "Sistrix" ),
         ( "WhatsApp", "WhatsApp" ),
-        ( "CensysInspect", "CensysInspect" )
+        ( "CensysInspect", "CensysInspect" ),
+        ( "InternetMeasurement", "InternetMeasurement" )
     ];
 
     /// <summary>
