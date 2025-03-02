@@ -10,10 +10,6 @@ on:
     release:
       types: [published]
 
-env:
-  BuildConfig: Release
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-
 jobs:
   build:
     uses: mycsharp/github-actions/.github/workflows/dotnet-nuget-build.yml@main
