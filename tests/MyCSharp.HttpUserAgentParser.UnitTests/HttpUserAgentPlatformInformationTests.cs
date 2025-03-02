@@ -5,14 +5,14 @@ using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
 
-public class HttpUserAgentPlatformInformationTests
+public partial class HttpUserAgentPlatformInformationTests
 {
     [Theory]
     [InlineData("Batman", HttpUserAgentPlatformType.Android)]
     [InlineData("Robin", HttpUserAgentPlatformType.Windows)]
     public void Ctor(string name, HttpUserAgentPlatformType platform)
     {
-        Regex regex = new("");
+        Regex regex = EmptyRegex();
 
         HttpUserAgentPlatformInformation info = new(regex, name, platform);
 
@@ -20,4 +20,7 @@ public class HttpUserAgentPlatformInformationTests
         Assert.Equal(name, info.Name);
         Assert.Equal(platform, info.PlatformType);
     }
+
+    [GeneratedRegex("")]
+    private static partial Regex EmptyRegex();
 }

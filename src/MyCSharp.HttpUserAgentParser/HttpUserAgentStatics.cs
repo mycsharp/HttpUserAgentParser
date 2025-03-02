@@ -215,6 +215,21 @@ public static class HttpUserAgentStatics
     public static readonly (string Key, string Value)[] Robots =
     [
         ( "googlebot", "Googlebot" ),
+        ( "meta-externalagent", "meta-externalagent" ),
+        ( "openai.com/searchbot", "OAI-SearchBot" ),
+        ( "CCBot", "CCBot" ),
+        ( "archive.org/details/archive.org_bot", "archive.org" ),
+        ( "opensiteexplorer.org/dotbot", "DotBot" ),
+        ( "awario.com/bots.html", "AwarioBot" ),
+        ( "Turnitin", "Turnitin" ),
+        ( "openai.com/gptbot", "GPTBot" ),
+        ( "perplexity.ai/perplexitybot", "PerplexityBot" ),
+        ( "developer.amazon.com/support/amazonbot", "Amazonbot" ),
+        ( "trendictionbot", "trendictionbot" ),
+        ( "openai.com/searchbot", "OAI-SearchBot" ),
+        ( "Bytespider", "Bytespider" ),
+        ( "MojeekBot", "MojeekBot" ),
+        ( "SeekportBot", "SeekportBot" ),
         ( "googleweblight", "Google Web Light" ),
         ( "PetalBot", "PetalBot"),
         ( "DuplexWeb-Google", "DuplexWeb-Google"),
@@ -256,7 +271,9 @@ public static class HttpUserAgentStatics
         ( "SEOkicks", "SEOkicks"),
         ( "seoscanners.net", "SEO Scanners"),
         ( "Sistrix", "Sistrix" ),
-        ( "WhatsApp", "WhatsApp" )
+        ( "WhatsApp", "WhatsApp" ),
+        ( "CensysInspect", "CensysInspect" ),
+        ( "InternetMeasurement", "InternetMeasurement" )
     ];
 
     /// <summary>

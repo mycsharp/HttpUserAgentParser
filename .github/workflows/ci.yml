@@ -7,71 +7,11 @@ on:
     pull_request:
       branches:
         - main
-
-env:
-  BuildConfig: Release
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    release:
+      types: [published]
 
 jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-
-      - name: Cancel previous builds in PR
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: ./global.json
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Setup Git Versioning
-        uses: dotnet/nbgv@master
-        id: nbgv
-
-      - name: Show Version Info
-        run: |
-          echo 'SemVer2: ${{ steps.nbgv.outputs.SemVer2 }}'
-
-      - name: Build with dotnet
-        run: dotnet build
-              --no-restore --configuration ${{ env.BuildConfig }}
-              /p:Version=${{ steps.nbgv.outputs.AssemblyVersion }}
-
-      - name: Test with dotnet
-        run: dotnet test
-              --no-build --configuration ${{ env.BuildConfig }}
-              --logger "trx;LogFileName=test-results.trx" --results-directory ./artifacts/testResults
-        continue-on-error: true
-
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: DotNET Tests
-          path: "./artifacts/testResults/test-results.trx"
-          reporter: dotnet-trx
-          fail-on-error: true
-
-      - name: Pack NuGet
-        run: dotnet pack
-              --configuration ${{ env.BuildConfig }}
-              /p:ContinuousIntegrationBuild=true
-              /p:Version=${{ steps.nbgv.outputs.NuGetPackageVersion }}
-
-      - name: Push to NuGet
-        run: dotnet nuget push **/*.nupkg
-                --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
-                --source https://api.nuget.org/v3/index.json
-                --no-symbols
-                --skip-duplicate
+  build:
+    uses: mycsharp/github-actions/.github/workflows/dotnet-nuget-build.yml@main
+    with:
+      configuration: Release
