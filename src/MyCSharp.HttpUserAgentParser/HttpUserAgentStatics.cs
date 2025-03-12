@@ -274,7 +274,8 @@ public static class HttpUserAgentStatics
         ( "WhatsApp", "WhatsApp" ),
         ( "CensysInspect", "CensysInspect" ),
         ( "InternetMeasurement", "InternetMeasurement" ),
-        ( "Barkrowler", "Barkrowler" )
+        ( "Barkrowler", "Barkrowler" ),
+        ( "BrightEdge", "BrightEdge" )
     ];
 
     /// <summary>
