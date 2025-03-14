@@ -275,7 +275,9 @@ public static class HttpUserAgentStatics
         ( "CensysInspect", "CensysInspect" ),
         ( "InternetMeasurement", "InternetMeasurement" ),
         ( "Barkrowler", "Barkrowler" ),
-        ( "BrightEdge", "BrightEdge" )
+        ( "BrightEdge", "BrightEdge" ),
+        ( "ImagesiftBot", "ImagesiftBot" ),
+        ( "Cotoyogi", "Cotoyogi" )
     ];
 
     /// <summary>
