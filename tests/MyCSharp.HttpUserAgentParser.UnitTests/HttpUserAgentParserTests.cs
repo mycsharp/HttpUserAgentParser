@@ -149,6 +149,10 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 (compatible; MojeekBot/0.11; +mojeek.com/bot.html)", "MojeekBot")]
     [InlineData("Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)", "CensysInspect")]
     [InlineData("Mozilla/5.0 (compatible; InternetMeasurement/1.0; +https://internet-measurement.com/)", "InternetMeasurement")]
+    [InlineData("Mozilla/5.0 (compatible; Barkrowler/0.9; +https://babbar.tech/crawler)", "Barkrowler")]
+    [InlineData("BrightEdge Crawler/1.0 (crawler@brightedge.com)", "BrightEdge")]
+    [InlineData("Mozilla/5.0 (compatible; ImagesiftBot; +imagesift.com)", "ImagesiftBot")]
+    [InlineData("Mozilla/5.0 (compatible; Cotoyogi/4.0; +https://ds.rois.ac.jp/center8/crawler/)", "Cotoyogi")]
     public void BotTests(string ua, string name)
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);

@@ -273,7 +273,11 @@ public static class HttpUserAgentStatics
         ( "Sistrix", "Sistrix" ),
         ( "WhatsApp", "WhatsApp" ),
         ( "CensysInspect", "CensysInspect" ),
-        ( "InternetMeasurement", "InternetMeasurement" )
+        ( "InternetMeasurement", "InternetMeasurement" ),
+        ( "Barkrowler", "Barkrowler" ),
+        ( "BrightEdge", "BrightEdge" ),
+        ( "ImagesiftBot", "ImagesiftBot" ),
+        ( "Cotoyogi", "Cotoyogi" )
     ];
 
     /// <summary>
