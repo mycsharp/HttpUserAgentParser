@@ -277,7 +277,8 @@ public static class HttpUserAgentStatics
         ( "Barkrowler", "Barkrowler" ),
         ( "BrightEdge", "BrightEdge" ),
         ( "ImagesiftBot", "ImagesiftBot" ),
-        ( "Cotoyogi", "Cotoyogi" )
+        ( "Cotoyogi", "Cotoyogi" ),
+        ( "Applebot", "Applebot" )
     ];
 
     /// <summary>

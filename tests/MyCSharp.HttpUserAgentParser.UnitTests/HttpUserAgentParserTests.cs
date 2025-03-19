@@ -153,6 +153,7 @@ public class HttpUserAgentParserTests
     [InlineData("BrightEdge Crawler/1.0 (crawler@brightedge.com)", "BrightEdge")]
     [InlineData("Mozilla/5.0 (compatible; ImagesiftBot; +imagesift.com)", "ImagesiftBot")]
     [InlineData("Mozilla/5.0 (compatible; Cotoyogi/4.0; +https://ds.rois.ac.jp/center8/crawler/)", "Cotoyogi")]
+    [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)", "Applebot")]
     public void BotTests(string ua, string name)
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);
