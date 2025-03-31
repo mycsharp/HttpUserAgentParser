@@ -278,7 +278,8 @@ public static class HttpUserAgentStatics
         ( "BrightEdge", "BrightEdge" ),
         ( "ImagesiftBot", "ImagesiftBot" ),
         ( "Cotoyogi", "Cotoyogi" ),
-        ( "Applebot", "Applebot" )
+        ( "Applebot", "Applebot" ),
+        ( "360Spider", "360Spider" )
     ];
 
     /// <summary>
