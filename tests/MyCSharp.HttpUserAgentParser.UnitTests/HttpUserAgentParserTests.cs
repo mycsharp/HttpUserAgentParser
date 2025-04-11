@@ -155,6 +155,7 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 (compatible; Cotoyogi/4.0; +https://ds.rois.ac.jp/center8/crawler/)", "Cotoyogi")]
     [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)", "Applebot")]
     [InlineData("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36; 360Spider", "360Spider")]
+    [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; GeedoProductSearch; +https://geedo.com/product-search.html) Chrome/134.0.0.0 Safari/537.36", "GeedoProductSearch")]
     public void BotTests(string ua, string name)
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);
