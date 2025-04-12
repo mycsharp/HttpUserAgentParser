@@ -1,25 +1,28 @@
+# EditorConfig is awesome:http://EditorConfig.org
+# From https://raw.githubusercontent.com/dotnet/roslyn/master/.editorconfig
+# https://github.com/BenjaminAbt/templates/blob/main/editorconfig/.editorconfig
+
 ###############################
 # Core EditorConfig Options   #
 ###############################
 
+# top-most EditorConfig file
 root = true                               # stop .editorconfig files search on current file.
 
 # All files
+# Don't use tabs for indentation.
 [*]
-charset = utf-8
 indent_style = space
-indent_size = 4
 trim_trailing_whitespace = true           # Remove trailing whitespace
 insert_final_newline = true               # Ensure file ends with a newline
 max_line_length = 120                     # Maximum line length for readability
-end_of_line = lf
-tab_width = 4
 
 ###############################
 # Markdown                    #
 ###############################
 
 [*.md]
+indent_size = 4
 trim_trailing_whitespace = false
 max_line_length = off
 
@@ -84,10 +87,42 @@ indent_size = 2
 max_line_length = off
 
 ###############################
+# PowerShell                  #
+###############################
+
+[*.ps1]
+indent_size = 2
+
+###############################
+# Shell                       #
+###############################
+
+[*.sh]
+end_of_line = lf
+
+[*.{cmd,bat}]
+end_of_line = crlf
+
+###############################
+# .NET project files          #
+###############################
+
+# Xml project files
+[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
+indent_size = 2
+
+# Xml config files
+[*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+indent_size = 2
+
+###############################
 # C# / VB                     #
 ###############################
 
-[*.{cs,vb}]
+# Code files
+[*.{cs,csx,vb,vbx}]
+indent_size = 4
+
 # Organize usings
 dotnet_sort_system_directives_first = true
 
@@ -98,8 +133,8 @@ dotnet_style_qualification_for_method = false:silent
 dotnet_style_qualification_for_event = false:silent
 
 # Language keywords vs BCL types preferences
-dotnet_style_predefined_type_for_locals_parameters_members = true:silent
-dotnet_style_predefined_type_for_member_access = true:silent
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
 
 # Parentheses preferences
 dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity:silent
@@ -124,11 +159,7 @@ dotnet_style_prefer_auto_properties = true:suggestion
 dotnet_style_prefer_conditional_expression_over_assignment = true:silent
 dotnet_style_prefer_conditional_expression_over_return = true:silent
 
-###############################
-# Naming Conventions          #
-###############################
 # Style Definitions
-
 dotnet_naming_rule.interface_should_be_begins_with_i.severity = warning
 dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
 dotnet_naming_rule.interface_should_be_begins_with_i.style = begins_with_i
@@ -230,10 +261,8 @@ csharp_preferred_modifier_order = public,private,protected,internal,static,exter
 csharp_prefer_braces = true:suggestion
 csharp_style_deconstructed_variable_declaration = true:suggestion
 csharp_prefer_simple_default_expression = true:suggestion
-csharp_style_prefer_local_over_anonymous_function = true:suggestion
 csharp_style_inlined_variable_declaration = true:suggestion
 
-# ------------------------------------------------------
 # New line preferences
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
@@ -243,13 +272,11 @@ csharp_new_line_before_members_in_object_initializers = true
 csharp_new_line_before_members_in_anonymous_types = true
 csharp_new_line_between_query_expression_clauses = true
 
-# ------------------------------------------------------
 # Indentation preferences
 csharp_indent_case_contents = true
 csharp_indent_switch_labels = true
 csharp_indent_labels = one_less_than_current
 
-# ------------------------------------------------------
 # Space preferences
 csharp_space_after_cast = false
 csharp_space_after_keywords_in_control_flow_statements = true
@@ -263,7 +290,6 @@ csharp_space_between_method_declaration_empty_parameter_list_parentheses = false
 csharp_space_between_method_call_name_and_opening_parenthesis = false
 csharp_space_between_method_call_empty_parameter_list_parentheses = false
 
-# ------------------------------------------------------
 # Wrapping preferences
 csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
@@ -295,162 +321,135 @@ csharp_style_prefer_not_pattern = true:suggestion
 csharp_style_prefer_extended_property_pattern = true:suggestion
 
 # ------------------------------------------------------
-# Naming rules
-
-dotnet_naming_rule.interface_should_be_begins_with_i.severity = suggestion
-dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
-dotnet_naming_rule.interface_should_be_begins_with_i.style = begins_with_i
-
-dotnet_naming_rule.types_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.types_should_be_pascal_case.symbols = types
-dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
-
-dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
-dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
-
-# ------------------------------------------------------
-# Symbol specifications
-
-dotnet_naming_symbols.interface.applicable_kinds = interface
-dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.interface.required_modifiers =
-
-dotnet_naming_symbols.types.applicable_kinds = class, struct, interface, enum
-dotnet_naming_symbols.types.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.types.required_modifiers =
-
-dotnet_naming_symbols.non_field_members.applicable_kinds = property, event, method
-dotnet_naming_symbols.non_field_members.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.non_field_members.required_modifiers =
-
-# ------------------------------------------------------
-# Naming styles
-
-dotnet_naming_style.begins_with_i.required_prefix = I
-dotnet_naming_style.begins_with_i.required_suffix =
-dotnet_naming_style.begins_with_i.word_separator =
-dotnet_naming_style.begins_with_i.capitalization = pascal_case
-
-dotnet_naming_style.pascal_case.required_prefix =
-dotnet_naming_style.pascal_case.required_suffix =
-dotnet_naming_style.pascal_case.word_separator =
-dotnet_naming_style.pascal_case.capitalization = pascal_case
-
-dotnet_naming_style.pascal_case.required_prefix =
-dotnet_naming_style.pascal_case.required_suffix =
-dotnet_naming_style.pascal_case.word_separator =
-dotnet_naming_style.pascal_case.capitalization = pascal_case
-
-# ------------------------------------------------------
 # CA Style
 
 # CA1050: Types are declared in namespaces to prevent name collisions and as a way to organize related types in an object hierarchy.
 dotnet_diagnostic.CA1050.severity = warning
 
 # CA1507: Use nameof in place of string
+#         Avoiding hard-coded strings in code improves maintainability and reduces the risk of errors during refactoring.
 dotnet_diagnostic.CA1507.severity = warning
 
-# CA1825: Avoid unnecessary zero-length array allocations.  Use Array.Empty<Abc>() instead.
+# CA1825: Avoid unnecessary zero-length array allocations. Use Array.Empty<Abc>() instead.
+#         Array.Empty<T>() is more memory-efficient as it reuses a single cached empty array instance rather than creating new ones.
 dotnet_diagnostic.CA1825.severity = warning
 
 # CA1850: It is more efficient to use the static 'HashData' method over creating and managing a HashAlgorithm instance to call 'ComputeHash'.
+#         This improves performance by avoiding unnecessary instance creation and lifecycle management of HashAlgorithm objects.
 dotnet_diagnostic.CA1850.severity = warning
 
 # CA1860: Prefer using 'IsEmpty', 'Count' or 'Length' properties whichever available, rather than calling 'Enumerable.Any()'.
-#         The intent is clearer and it is more performant than using 'Enumerable.Any()' extension method.
-dotnet_diagnostic.CA1860.severity = warning
-
-# CA1860: Prefer using 'IsEmpty', 'Count' or 'Length' properties whichever available, rather than calling 'Enumerable.Any()'.
-#         The intent is clearer and it is more performant than using 'Enumerable.Any()' extension method.
+#         These direct property accesses are more performant and communicate intent more clearly than using LINQ extension methods.
 dotnet_diagnostic.CA1860.severity = warning
 
 # CS1998: This async method lacks 'await' operators and will run synchronously.
-#         Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread.
+#         Setting this to error prevents misleading code that suggests asynchronous behavior but actually runs synchronously.
 dotnet_diagnostic.CS1998.severity = error
 
 # CA2016: Forward the CancellationToken parameter to methods that take one
+#         Ensuring proper propagation of cancellation tokens throughout the call chain is critical for responsive and cancellable operations.
 dotnet_diagnostic.CA2016.severity = error
-
-
-# CA2211: Static fields that are neither constants nor read-only are not thread-safe.
-#         Access to such a field must be carefully controlled and requires advanced programming techniques to synchronize access to the class object.
-dotnet_diagnostic.CA2211.severity = silent
 
 # ------------------------------------------------------
 # IDE
 
 # IDE0060: Avoid unused parameters in your code.
-#          If the parameter cannot be removed, then change its name so it starts with an underscore and is optionally followed by an
-#          integer, such as '_', '_1', '_2', etc. These are treated as special discard symbol names.
+#          Silenced to allow for interface implementations where not all parameters may be needed in every implementation or like URL design in ASP.NET Core.
 dotnet_diagnostic.IDE0060.severity = silent
 
 # IDE0130: Namespace does not match folder structure
+#          Enforces consistent organization where namespaces reflect folder structure, improving code discoverability.
 dotnet_diagnostic.IDE0130.severity = warning
 
-# IDE0290: Use primary constructor
-dotnet_diagnostic.IDE0290.severity = none
-csharp_style_prefer_primary_constructors = false:suggestion
+# IDE0039: Use local function instead of lambda
+#          Local functions improve readability and performance over lambdas for method-local callable code.
+dotnet_diagnostic.IDE0039.severity = warning
 
-# IDE1006: Naming rule violation: These words must begin with upper case characters: accessToken
+# IDE0270: Null check can be simplified
+#          Disabled to allow developers to choose their preferred null-checking style based on context and readability.
+dotnet_diagnostic.IDE0270.severity = none
+
+# IDE0305: Use collection expression for fluent
+#          Silenced because collection expression style is often a matter of preference and readability context.
+dotnet_diagnostic.IDE0305.severity = silent
+
+# IDE1006: Naming rule violation: These words must begin with upper case characters
+#          Enforces consistent naming conventions across the codebase for better readability and maintainability.
 dotnet_diagnostic.IDE1006.severity = warning
 
 # ------------------------------------------------------
 # Roslyn
 
+# RCS0063: Remove unnecessary blank line
+#          Promotes cleaner, more consistent code formatting by eliminating superfluous whitespace.
+dotnet_diagnostic.RCS0063.severity = warning
+
 # RCS1021: Use expression-bodied lambda.
+#          Silenced to allow both statement and expression-bodied lambda syntax based on complexity and readability.
 dotnet_diagnostic.RCS1021.severity = silent
 
-# RCS1036: Remove unnecessary blank line
-dotnet_diagnostic.RCS1036.severity = warning
-
 # RCS1049: Simplify boolean comparison
-# we usually prefer is vs !
+#          Silenced to allow explicit boolean comparisons (e.g., x == true) when they improve readability.
 dotnet_diagnostic.RCS1049.severity = silent
 
 # RCS1123: Add parentheses when necessary
+#          Enforces explicit operator precedence through parentheses, preventing subtle bugs and improving readability.
 dotnet_diagnostic.RCS1123.severity = warning
 
 # RCS1163: Unused parameter
-#          Often this warning comes also from parameters we want to have for readability
+#          Silenced because parameters may be kept for API consistency or documentation purposes even when unused or URL design in ASP.NET Core.
 dotnet_diagnostic.RCS1163.severity = silent
 
 # RCS1194: Implement exception constructors
+#          Silenced to allow custom exception classes with only the constructors needed for the specific use case.
 dotnet_diagnostic.RCS1194.severity = silent
 
 # ------------------------------------------------------
 # Meziantou.Analyzer
 
+# MA0007: Add a comma after the last value
+#         Disabled as trailing commas in C# are not conventional and would make the code less familiar to most developers.
+dotnet_diagnostic.MA0007.severity = none
+
 # MA0016: Prefer using collection abstraction instead of implementation
+#         Disabled to allow direct use of concrete collection types when their specific capabilities are needed.
 dotnet_diagnostic.MA0016.severity = none
 
 # MA0017: Abstract types should not have public or internal constructors
+#         Disabled to permit protected constructors in abstract classes which are valid for inheritance scenarios.
 dotnet_diagnostic.MA0017.severity = none
 
-# MA0018: Do not declare static members on generic types (deprecated; use CA1000 instead)
+# MA0018: Do not declare static members on generic types
+#         Disabled in favor of using the standard CA1000 (Do not declare static members on generic types) rule to handle this case.
 dotnet_diagnostic.MA0018.severity = none
 
 # MA0029: Combine LINQ methods
-#         Often these recommendations have a performance impact, so it is recommended to review them before applying them.
+#         Disabled because LINQ method chaining can be more readable and potential performance impacts need case-by-case review.
 dotnet_diagnostic.MA0029.severity = none
 
 # MA0040: Forward the CancellationToken parameter to methods that take one
+#         Enforces proper cancellation token propagation for responsive applications and services.
 dotnet_diagnostic.MA0040.severity = warning
 
 # MA0048: File name must match type name
+#         Silenced to allow flexibility in file naming, particularly for partial classes or multiple types in one file.
 dotnet_diagnostic.MA0048.severity = silent
 
-# MA0051: Method is too long (80 lines; maximum allowed: 60)
+# MA0051: Method is too long
+#         Set as suggestion to encourage smaller, more focused methods while allowing flexibility for complex logic.
 dotnet_diagnostic.MA0051.severity = suggestion
 
 # MA0154: Use langword in XML comment
+#         Disabled to allow flexibility in documentation style and format.
 dotnet_diagnostic.MA0154.severity = none
 
 # ------------------------------------------------------
 # Xunit
 
 # xUnit1006: Theory methods should have parameters
+#            Silenced to allow theories that might dynamically generate test cases without explicit parameters.
 dotnet_diagnostic.xUnit1006.severity = silent
 
-# xUnit1048: Support for 'async void' unit tests is being removed from xUnit.net v3. To simplify upgrading, convert the test to 'async Task' instead.
+# xUnit1048: Support for 'async void' unit tests is being removed
+#            Set as error to ensure future compatibility with xUnit v3 by requiring proper async Task signatures.
 dotnet_diagnostic.xUnit1048.severity = error

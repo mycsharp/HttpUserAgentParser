@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Product>HTTP User Agent Parser</Product>
+        <Description>Parses user agents for Browser, Platform and Bots.</Description>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Package">
+        <IsPackable>true</IsPackable>
+        <PackageReadmeFile>readme.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="readme.md" Pack="true" PackagePath="" />
+        <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="MyCSharp.HttpUserAgentParser.UnitTests" />
+    </ItemGroup>
+
+</Project>

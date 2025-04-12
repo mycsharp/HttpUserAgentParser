@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Product>HTTP User Agent Parser Extensions for IMemoryCache</Product>
+        <Description>HTTP User Agent Parser Extensions for IMemoryCache</Description>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Package">
+        <IsPackable>true</IsPackable>
+        <PackageReadmeFile>readme.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="readme.md" Pack="true" PackagePath="" />
+        <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup Label="NuGet">
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\HttpUserAgentParser\HttpUserAgentParser.csproj" />
+    </ItemGroup>
+
+</Project>
