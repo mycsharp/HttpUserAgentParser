@@ -41,13 +41,13 @@ public class HttpUserAgentParserMemoryCachedProviderOptions
     public HttpUserAgentParserMemoryCachedProviderOptions(
         MemoryCacheOptions? cacheOptions = null, MemoryCacheEntryOptions? cacheEntryOptions = null)
     {
-        this.CacheEntryOptions = cacheEntryOptions ?? new MemoryCacheEntryOptions
+        CacheEntryOptions = cacheEntryOptions ?? new MemoryCacheEntryOptions
         {
             // defaults
             SlidingExpiration = TimeSpan.FromDays(1)
         };
 
-        this.CacheOptions = cacheOptions ?? new MemoryCacheOptions
+        CacheOptions = cacheOptions ?? new MemoryCacheOptions
         {
             // defaults
             SizeLimit = 256
