@@ -17,7 +17,8 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Creates default platform mapping regex
     /// </summary>
-    private static Regex CreateDefaultPlatformRegex(string key) => new(Regex.Escape($"{key}"), DefaultPlatformsRegexFlags);
+    private static Regex CreateDefaultPlatformRegex(string key) => new(Regex.Escape($"{key}"),
+        DefaultPlatformsRegexFlags, matchTimeout: TimeSpan.FromMilliseconds(1000));
 
     /// <summary>
     /// Platforms
@@ -77,12 +78,12 @@ public static class HttpUserAgentStatics
     /// Creates default browser mapping regex
     /// </summary>
     private static Regex CreateDefaultBrowserRegex(string key)
-        => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags);
+        => new($@"{key}.*?([0-9\.]+)", DefaultBrowserRegexFlags, matchTimeout: TimeSpan.FromMilliseconds(1000));
 
     /// <summary>
     /// Browsers
     /// </summary>
-    public static Dictionary<Regex, string> Browsers = new()
+    public static readonly Dictionary<Regex, string> Browsers = new()
     {
         { CreateDefaultBrowserRegex("OPR"), "Opera" },
         { CreateDefaultBrowserRegex("Flock"), "Flock" },
@@ -124,7 +125,7 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Mobiles
     /// </summary>
-    public static readonly Dictionary<string, string> Mobiles = new()
+    public static readonly Dictionary<string, string> Mobiles = new(StringComparer.InvariantCultureIgnoreCase)
     {
         // Legacy
         { "mobileexplorer", "Mobile Explorer" },
@@ -286,7 +287,7 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Tools
     /// </summary>
-    public static readonly Dictionary<string, string> Tools = new()
+    public static readonly Dictionary<string, string> Tools = new(StringComparer.OrdinalIgnoreCase)
     {
         { "curl", "curl" }
     };

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
 
-public class HttpUserAgentInformationTests
+public partial class HttpUserAgentInformationTests
 {
     [Theory]
     [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.62")]
@@ -35,8 +35,7 @@ public class HttpUserAgentInformationTests
     [InlineData("Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36 EdgA/46.3.4.5155")]
     public void CreateForBrowser(string userAgent)
     {
-        HttpUserAgentPlatformInformation platformInformation =
-            new(new Regex(""), "Android", HttpUserAgentPlatformType.Android);
+        HttpUserAgentPlatformInformation platformInformation = new(TextRegex(), "Android", HttpUserAgentPlatformType.Android);
 
         HttpUserAgentInformation ua = HttpUserAgentInformation.CreateForBrowser(userAgent,
             platformInformation, "Edge", "46.3.4.5155", "Android");
@@ -53,11 +52,10 @@ public class HttpUserAgentInformationTests
     [InlineData("Invalid user agent")]
     public void CreateForUnknown(string userAgent)
     {
-        HttpUserAgentPlatformInformation platformInformation =
-            new(new Regex(""), "Batman", HttpUserAgentPlatformType.Linux);
+        HttpUserAgentPlatformInformation platformInformation = new(TextRegex(), "Batman", HttpUserAgentPlatformType.Linux);
 
         HttpUserAgentInformation ua =
-          HttpUserAgentInformation.CreateForUnknown(userAgent, platformInformation, null);
+          HttpUserAgentInformation.CreateForUnknown(userAgent, platformInformation, deviceName: null);
 
         Assert.Equal(userAgent, ua.UserAgent);
         Assert.Equal(HttpUserAgentType.Unknown, ua.Type);
@@ -66,4 +64,7 @@ public class HttpUserAgentInformationTests
         Assert.Null(ua.Version);
         Assert.Null(ua.MobileDeviceType);
     }
+
+    [GeneratedRegex("", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex TextRegex();
 }

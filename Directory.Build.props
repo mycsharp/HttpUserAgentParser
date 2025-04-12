@@ -1,55 +1,121 @@
 <Project>
+  <PropertyGroup Label="Project">
+    <Product>MyCSharp.HttpUserAgentParser</Product>
+    <Authors>MyCSharp.de, Benjamin Abt, Günther Foidl and Contributors</Authors>
+    <Company>MyCSharp.de</Company>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <Authors>MyCSharp.de, Benjamin Abt, Günther Foidl and Contributors</Authors>
-        <Product>MyCSharp.HttpUserAgentParser</Product>
-        <DefaultLanguage>en-US</DefaultLanguage>
-        <NoPackageAnalysis>true</NoPackageAnalysis>
-        <DebugType>embedded</DebugType>
-    </PropertyGroup>
+  <PropertyGroup Label="Vars">
+    <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
+    <IsOSX Condition="$([MSBuild]::IsOSPlatform('OSX'))">true</IsOSX>
+    <IsLinux Condition="$([MSBuild]::IsOSPlatform('Linux'))">true</IsLinux>
 
-    <PropertyGroup Label="Env">
+    <IsTestProject>$(MSBuildProjectName.EndsWith('Tests'))</IsTestProject>
+    <IsUnitTestProject>$(MSBuildProjectName.EndsWith('UnitTests'))</IsUnitTestProject>
+    <IsIntegrationTestProject>$(MSBuildProjectName.EndsWith('IntegrationTests'))</IsIntegrationTestProject>
+    <IsBenchmarkProject>$(MsBuildProjectName.EndsWith('Benchmarks'))</IsBenchmarkProject>
+  </PropertyGroup>
 
-        <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
-        <IsBenchmarkProject>$(MsBuildProjectName.Contains('Benchmark'))</IsBenchmarkProject>
-    </PropertyGroup>
+  <PropertyGroup Label="Assembly">
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>MyCSharp.$(MSBuildProjectName)</RootNamespace>
+    <AssemblyName>MyCSharp.$(MSBuildProjectName)</AssemblyName>
+  </PropertyGroup>
 
-    <PropertyGroup Label="Package">
-        <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <Description>HTTP User Agent Parser for .NET</Description>
-        <MinClientVersion>2.12</MinClientVersion>
-        <IsPackable>false</IsPackable>
-        <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)MyCSharp.HttpUserAgentParser.snk</AssemblyOriginatorKeyFile>
 
-    <PropertyGroup Label="Project Defaults">
-        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-    </PropertyGroup>
+    <PublicKey>
+      00240000048000009400000006020000002400005253413100040000010001003d5c022c088a46d41d5a5bf7591f3a3dcba30f76b0f43a312b6e45bb419d32283175cbd8bfd83134b123da6db83479e50596fb6bbe0e8c6cef50c01c64a0861c963daaf6905920f44ffe1ce44b3cfcb9c23779f34bc90c7b04e74e36a19bb58af3a69456d49b56993969dba9f8e9e935c2757844a11066d1091477f10cd923b7
+    </PublicKey>
+  </PropertyGroup>
 
-    <PropertyGroup Label="C#">
-        <LangVersion>12.0</LangVersion>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    </PropertyGroup>
+  <PropertyGroup Label="Compiler">
+    <LangVersion>preview</LangVersion>
+    <DebugType>embedded</DebugType>
+    <Nullable>enable</Nullable>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
-        <GenerateDocumentationFile Condition="'$(Configuration)' == 'Release'">true</GenerateDocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup Label="Package">
+    <IsPackable>false</IsPackable>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <MinClientVersion>2.12</MinClientVersion>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
-    <PropertyGroup>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)MyCSharp.HttpUserAgentParser.snk</AssemblyOriginatorKeyFile>
+    <Description>HTTP User Agent Parser for .NET</Description>
+    <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mycsharp/HttpUserAgentParser</RepositoryUrl>
+    <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
+  </PropertyGroup>
 
-        <PublicKey>00240000048000009400000006020000002400005253413100040000010001003d5c022c088a46d41d5a5bf7591f3a3dcba30f76b0f43a312b6e45bb419d32283175cbd8bfd83134b123da6db83479e50596fb6bbe0e8c6cef50c01c64a0861c963daaf6905920f44ffe1ce44b3cfcb9c23779f34bc90c7b04e74e36a19bb58af3a69456d49b56993969dba9f8e9e935c2757844a11066d1091477f10cd923b7</PublicKey>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
 
-    <!-- Block Projects with Privacy/Security Concerns -->
-    <Target Name="CheckBlockedPackages" AfterTargets="ResolvePackageDependenciesForBuild">
-        <Error Code="420" Text="Blocked package dependency detected: %(PackageDependencies.Identity)"
-             Condition="'%(PackageDependencies.Identity)' == 'Devlooped.SponsorLink'" />
-    </Target>
+  <PropertyGroup Label="Visual Studio">
+    <!-- https://devblogs.microsoft.com/visualstudio/visual-studio-2022-17-5-performance-enhancements/ -->
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet Audit">
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+  </PropertyGroup>
+
+  <ItemGroup Label="Default Test Dependencies" Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="NSubstitute.Analyzers.CSharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.v3.extensibility.core"/>
+    <PackageReference Include="xunit.v3.assert" />
+    <PackageReference Include="xunit.runner.console">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Label="Default Analyzers">
+    <PackageReference Include="Roslynator.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.Formatting.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.CodeAnalysis.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Meziantou.Analyzer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Block Projects with Privacy/Security/License Concerns -->
+  <Target Name="CheckBlockedPackages" AfterTargets="ResolvePackageDependenciesForBuild">
+    <Error Code="420" Text="Blocked package dependency detected: %(PackageDependencies.Identity)"
+         Condition="'%(PackageDependencies.Identity)' == 'Devlooped.SponsorLink'" />
+    <Error Code="420" Text="Blocked package dependency detected: %(PackageDependencies.Identity)"
+         Condition="'%(PackageDependencies.Identity)' == 'FluentAssertions'" />
+  </Target>
 
 </Project>

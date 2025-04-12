@@ -12,7 +12,7 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     /// <summary>
     /// internal cache
     /// </summary>
-    private readonly ConcurrentDictionary<string, HttpUserAgentInformation> _cache = new();
+    private readonly ConcurrentDictionary<string, HttpUserAgentInformation> _cache = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Parses the user agent or uses the internal cached information

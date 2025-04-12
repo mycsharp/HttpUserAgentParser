@@ -5,19 +5,19 @@ VisualStudioVersion = 17.4.32804.182
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{008A2BAB-78B4-42EB-A5D4-DE434438CEF0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.AspNetCore", "src\MyCSharp.HttpUserAgentParser.AspNetCore\MyCSharp.HttpUserAgentParser.AspNetCore.csproj", "{45927CF7-1BF4-479B-BBAA-8AD9CA901AE4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.AspNetCore", "src\HttpUserAgentParser.AspNetCore\HttpUserAgentParser.AspNetCore.csproj", "{45927CF7-1BF4-479B-BBAA-8AD9CA901AE4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser", "src\MyCSharp.HttpUserAgentParser\MyCSharp.HttpUserAgentParser.csproj", "{3357BEC0-8216-409E-A539-F9A71DBACB81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser", "src\HttpUserAgentParser\HttpUserAgentParser.csproj", "{3357BEC0-8216-409E-A539-F9A71DBACB81}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.UnitTests", "tests\MyCSharp.HttpUserAgentParser.UnitTests\MyCSharp.HttpUserAgentParser.UnitTests.csproj", "{F16697F7-74B4-441D-A0C0-1A0572AC3AB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.UnitTests", "tests\HttpUserAgentParser.UnitTests\HttpUserAgentParser.UnitTests.csproj", "{F16697F7-74B4-441D-A0C0-1A0572AC3AB0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests", "tests\MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests\MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests.csproj", "{75960783-8BF9-479C-9ECF-E9653B74C9A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.AspNetCore.UnitTests", "tests\HttpUserAgentParser.AspNetCore.UnitTests\HttpUserAgentParser.AspNetCore.UnitTests.csproj", "{75960783-8BF9-479C-9ECF-E9653B74C9A2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F54C9296-4EF7-40F0-9F20-F23A2270ABC9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.MemoryCache", "src\MyCSharp.HttpUserAgentParser.MemoryCache\MyCSharp.HttpUserAgentParser.MemoryCache.csproj", "{3C8CCD44-F47C-4624-8997-54C42F02E376}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.MemoryCache", "src\HttpUserAgentParser.MemoryCache\HttpUserAgentParser.MemoryCache.csproj", "{3C8CCD44-F47C-4624-8997-54C42F02E376}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests", "tests\MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests\MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.csproj", "{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.MemoryCache.UnitTests", "tests\HttpUserAgentParser.MemoryCache.UnitTests\HttpUserAgentParser.MemoryCache.UnitTests.csproj", "{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{5738CE0D-5E6E-47CB-BFF5-08F45A2C33AD}"
 	ProjectSection(SolutionItems) = preProject
@@ -35,9 +35,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{5738CE0D-5E6E-47
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{FAAD18A0-E1B8-448D-B611-AFBDA8A89808}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.Benchmarks", "perf\MyCSharp.HttpUserAgentParser.Benchmarks\MyCSharp.HttpUserAgentParser.Benchmarks.csproj", "{A0D213E9-6408-46D1-AFAF-5096C2F6E027}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.Benchmarks", "perf\HttpUserAgentParser.Benchmarks\HttpUserAgentParser.Benchmarks.csproj", "{A0D213E9-6408-46D1-AFAF-5096C2F6E027}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyCSharp.HttpUserAgentParser.TestHelpers", "tests\MyCSharp.HttpUserAgentParser.TestHelpers\MyCSharp.HttpUserAgentParser.TestHelpers.csproj", "{165EE915-1A4F-4875-90CE-1A2AE1540AE7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.TestHelpers", "tests\HttpUserAgentParser.TestHelpers\HttpUserAgentParser.TestHelpers.csproj", "{165EE915-1A4F-4875-90CE-1A2AE1540AE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -59,7 +59,7 @@ public readonly struct HttpUserAgentInformation
     /// Creates <see cref="HttpUserAgentInformation"/> for a robot
     /// </summary>
     internal static HttpUserAgentInformation CreateForRobot(string userAgent, string robotName)
-        => new(userAgent, null, HttpUserAgentType.Robot, robotName, null, null);
+        => new(userAgent, platform: null, HttpUserAgentType.Robot, robotName, version: null, deviceName: null);
 
     /// <summary>
     /// Creates <see cref="HttpUserAgentInformation"/> for a browser
@@ -71,5 +71,5 @@ public readonly struct HttpUserAgentInformation
     /// Creates <see cref="HttpUserAgentInformation"/> for an unknown agent type
     /// </summary>
     internal static HttpUserAgentInformation CreateForUnknown(string userAgent, HttpUserAgentPlatformInformation? platform, string? deviceName)
-        => new(userAgent, platform, HttpUserAgentType.Unknown, null, null, deviceName);
+        => new(userAgent, platform, HttpUserAgentType.Unknown, name: null, version: null, deviceName);
 }

@@ -9,6 +9,5 @@ using BenchmarkDotNet.Running;
 ManualConfig config = ManualConfig.Create(DefaultConfig.Instance)
     .WithOptions(ConfigOptions.DisableOptimizationsValidator);
 
-
 // dotnet run -c Release --framework net80 net90 --runtimes net90
 BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args, config);

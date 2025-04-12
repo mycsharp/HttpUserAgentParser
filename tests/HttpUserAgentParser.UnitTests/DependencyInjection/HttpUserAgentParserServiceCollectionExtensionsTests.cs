@@ -11,7 +11,7 @@ public class HttpUserAgentParserMemoryCacheServiceCollectionExtensions
 {
     public class TestHttpUserAgentParserProvider : IHttpUserAgentParserProvider
     {
-        public HttpUserAgentInformation Parse(string userAgent) => throw new System.NotImplementedException();
+        public HttpUserAgentInformation Parse(string userAgent) => throw new NotSupportedException();
     }
 
     [Fact]

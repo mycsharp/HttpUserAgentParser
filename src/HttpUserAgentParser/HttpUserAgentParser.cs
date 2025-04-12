@@ -5,10 +5,13 @@ using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser;
 
+#pragma warning disable MA0049 // Type name should not match containing namespace
+
 /// <summary>
 /// Parser logic for user agents
 /// </summary>
 public static class HttpUserAgentParser
+
 {
     /// <summary>
     /// Parses given <param name="userAgent">user agent</param>

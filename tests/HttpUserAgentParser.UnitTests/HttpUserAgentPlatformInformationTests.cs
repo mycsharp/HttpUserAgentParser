@@ -21,6 +21,6 @@ public partial class HttpUserAgentPlatformInformationTests
         Assert.Equal(platform, info.PlatformType);
     }
 
-    [GeneratedRegex("")]
+    [GeneratedRegex("", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex EmptyRegex();
 }

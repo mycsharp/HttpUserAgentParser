@@ -19,7 +19,7 @@ public class HttpUserAgentParserMemoryCachedProvider(
     /// <inheritdoc/>
     public HttpUserAgentInformation Parse(string userAgent)
     {
-        CacheKey key = this.GetKey(userAgent);
+        CacheKey key = GetKey(userAgent);
 
         return _memoryCache.GetOrCreate(key, static entry =>
         {
@@ -50,9 +50,9 @@ public class HttpUserAgentParserMemoryCachedProvider(
 
         public HttpUserAgentParserMemoryCachedProviderOptions Options { get; set; } = null!;
 
-        public bool Equals(CacheKey? other) => this.UserAgent == other?.UserAgent;
-        public override bool Equals(object? obj) => this.Equals(obj as CacheKey);
+        public bool Equals(CacheKey? other) => string.Equals(UserAgent, other?.UserAgent, StringComparison.OrdinalIgnoreCase);
+        public override bool Equals(object? obj) => Equals(obj as CacheKey);
 
-        public override int GetHashCode() => this.UserAgent.GetHashCode();
+        public override int GetHashCode() => UserAgent.GetHashCode(StringComparison.Ordinal);
     }
 }
