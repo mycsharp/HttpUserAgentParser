@@ -122,6 +122,7 @@ indent_size = 2
 # Code files
 [*.{cs,csx,vb,vbx}]
 indent_size = 4
+file_header_template = Copyright © https://myCSharp.de - all rights reserved
 
 # Organize usings
 dotnet_sort_system_directives_first = true

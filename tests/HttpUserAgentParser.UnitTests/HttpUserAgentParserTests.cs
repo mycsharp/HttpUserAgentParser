@@ -1,4 +1,4 @@
-// Copyright © myCSharp.de - all rights reserved
+// Copyright © https://myCSharp.de - all rights reserved
 
 using Xunit;
 
