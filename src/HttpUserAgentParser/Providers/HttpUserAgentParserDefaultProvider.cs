@@ -8,7 +8,7 @@ namespace MyCSharp.HttpUserAgentParser.Providers;
 public class HttpUserAgentParserDefaultProvider : IHttpUserAgentParserProvider
 {
     /// <summary>
-    /// returns the result of <see cref="HttpUserAgentParser.Parse"/>
+    /// returns the result of <see cref="HttpUserAgentParser.Parse(string)"/>
     /// </summary>
     public HttpUserAgentInformation Parse(string userAgent)
         => HttpUserAgentParser.Parse(userAgent);

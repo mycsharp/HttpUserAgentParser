@@ -14,28 +14,26 @@ public static class HttpUserAgentParser
 
 {
     /// <summary>
-    /// Parses given <param name="userAgent">user agent</param>
+    /// Parses given user agent string without allocating a copy. Prefer this overload to avoid ToString() allocations.
     /// </summary>
-    public static HttpUserAgentInformation Parse(ReadOnlySpan<char> userAgent)
+    public static HttpUserAgentInformation Parse(string userAgent)
     {
-        // prepare
-        userAgent = Cleanup(userAgent);
+        ReadOnlySpan<char> span = Cleanup(userAgent.AsSpan());
 
-        // analyze
-        if (TryGetRobot(userAgent, out string? robotName))
+        if (TryGetRobot(span, out string? robotName))
         {
-            return HttpUserAgentInformation.CreateForRobot(userAgent.ToString(), robotName);
+            return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
         }
 
-        HttpUserAgentPlatformInformation? platform = GetPlatform(userAgent);
-        string? mobileDeviceType = GetMobileDevice(userAgent);
+        HttpUserAgentPlatformInformation? platform = GetPlatform(span);
+        string? mobileDeviceType = GetMobileDevice(span);
 
-        if (TryGetBrowser(userAgent, out (string Name, string? Version)? browser))
+        if (TryGetBrowser(span, out (string Name, string? Version)? browser))
         {
-            return HttpUserAgentInformation.CreateForBrowser(userAgent.ToString(), platform, browser?.Name, browser?.Version, mobileDeviceType);
+            return HttpUserAgentInformation.CreateForBrowser(userAgent, platform, browser?.Name, browser?.Version, mobileDeviceType);
         }
 
-        return HttpUserAgentInformation.CreateForUnknown(userAgent.ToString(), platform, mobileDeviceType);
+        return HttpUserAgentInformation.CreateForUnknown(userAgent, platform, mobileDeviceType);
     }
 
     /// <summary>
@@ -105,7 +103,8 @@ public static class HttpUserAgentParser
             string? version = null;
             if (TryExtractVersion(userAgent, versionSearchStart, out Range range))
             {
-                version = userAgent.ToString();
+                // Only allocate the version substring, not the whole user agent
+                version = userAgent[range].ToString();
             }
 
             return (rule.Name, version);
