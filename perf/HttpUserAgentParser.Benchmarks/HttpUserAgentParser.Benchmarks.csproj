@@ -5,6 +5,12 @@
         <Nullable>disable</Nullable>
     </PropertyGroup>
 
+      <!-- Use project build name as assembly name to satisfy benchmark.NET -->
+  <PropertyGroup>
+    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+  </PropertyGroup>
+
     <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
         <DefineConstants>$(DefineConstants);OS_WIN</DefineConstants>
     </PropertyGroup>

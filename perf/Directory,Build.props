@@ -1,9 +1,0 @@
-<Project>
-  <!-- Use project build name as assembly name to satisfy benchmark.NET -->
-  <PropertyGroup>
-    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
-    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
-  </PropertyGroup>
-
-  <Import Project="..\Directory.Build.props" />
-</Project>
