@@ -5,9 +5,10 @@ using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
 using DeviceDetectorNET;
+using MyCSharp.HttpUserAgentParser;
 using MyCSharp.HttpUserAgentParser.Providers;
 
-namespace MyCSharp.HttpUserAgentParser.Benchmarks.LibraryComparison;
+namespace HttpUserAgentParser.Benchmarks.LibraryComparison;
 
 [ShortRunJob]
 [MemoryDiagnoser]
@@ -33,7 +34,7 @@ public class LibraryComparisonBenchmarks
     [BenchmarkCategory("Basic")]
     public HttpUserAgentInformation MyCSharpBasic()
     {
-        HttpUserAgentInformation info = HttpUserAgentParser.Parse(Data.UserAgent);
+        HttpUserAgentInformation info = MyCSharp.HttpUserAgentParser.HttpUserAgentParser.Parse(Data.UserAgent);
         return info;
     }
 
