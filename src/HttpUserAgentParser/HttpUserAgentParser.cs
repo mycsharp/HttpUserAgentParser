@@ -14,21 +14,23 @@ public static class HttpUserAgentParser
 
 {
     /// <summary>
-    /// Parses given user agent string without allocating a copy. Prefer this overload to avoid ToString() allocations.
+    /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
     public static HttpUserAgentInformation Parse(string userAgent)
     {
-        ReadOnlySpan<char> span = Cleanup(userAgent.AsSpan());
+        // prepare
+        userAgent = Cleanup(userAgent);
 
-        if (TryGetRobot(span, out string? robotName))
+        // analyze
+        if (TryGetRobot(userAgent, out string? robotName))
         {
             return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
         }
 
-        HttpUserAgentPlatformInformation? platform = GetPlatform(span);
-        string? mobileDeviceType = GetMobileDevice(span);
+        HttpUserAgentPlatformInformation? platform = GetPlatform(userAgent);
+        string? mobileDeviceType = GetMobileDevice(userAgent);
 
-        if (TryGetBrowser(span, out (string Name, string? Version)? browser))
+        if (TryGetBrowser(userAgent, out (string Name, string? Version)? browser))
         {
             return HttpUserAgentInformation.CreateForBrowser(userAgent, platform, browser?.Name, browser?.Version, mobileDeviceType);
         }
@@ -39,21 +41,23 @@ public static class HttpUserAgentParser
     /// <summary>
     /// pre-cleanup of <param name="userAgent">user agent</param>
     /// </summary>
-    public static ReadOnlySpan<char> Cleanup(ReadOnlySpan<char> userAgent) => userAgent.Trim();
+    public static string Cleanup(string userAgent) => userAgent.Trim();
 
     /// <summary>
     /// returns the platform or null
     /// </summary>
-    public static HttpUserAgentPlatformInformation? GetPlatform(ReadOnlySpan<char> userAgent)
+    public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
-        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) p in HttpUserAgentStatics.s_platformRules)
+        // Fast, allocation-free token scan (keeps public statics untouched)
+        ReadOnlySpan<char> ua = userAgent.AsSpan();
+    foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) p in HttpUserAgentStatics.s_platformRules)
         {
-            if (ContainsIgnoreCase(userAgent, p.Token))
+            if (ContainsIgnoreCase(ua, p.Token))
             {
                 return new HttpUserAgentPlatformInformation(
-                regex: HttpUserAgentStatics.GetPlatformRegexForToken(p.Token),
-                name: p.Name,
-                platformType: p.PlatformType);
+            regex: HttpUserAgentStatics.GetPlatformRegexForToken(p.Token),
+            name: p.Name,
+            platformType: p.PlatformType);
             }
         }
 
@@ -63,7 +67,7 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns true if platform was found
     /// </summary>
-    public static bool TryGetPlatform(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out HttpUserAgentPlatformInformation? platform)
+    public static bool TryGetPlatform(string userAgent, [NotNullWhen(true)] out HttpUserAgentPlatformInformation? platform)
     {
         platform = GetPlatform(userAgent);
         return platform is not null;
@@ -72,11 +76,12 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns the browser or null
     /// </summary>
-    public static (string Name, string? Version)? GetBrowser(ReadOnlySpan<char> userAgent)
+    public static (string Name, string? Version)? GetBrowser(string userAgent)
     {
-        foreach ((string Name, string DetectToken, string? VersionToken) rule in HttpUserAgentStatics.s_browserRules)
+        ReadOnlySpan<char> ua = userAgent.AsSpan();
+    foreach ((string Name, string DetectToken, string? VersionToken) rule in HttpUserAgentStatics.s_browserRules)
         {
-            if (!TryIndexOf(userAgent, rule.DetectToken, out int detectIndex))
+            if (!TryIndexOf(ua, rule.DetectToken, out int detectIndex))
             {
                 continue;
             }
@@ -85,7 +90,7 @@ public static class HttpUserAgentParser
             int versionSearchStart = detectIndex;
             if (!string.IsNullOrEmpty(rule.VersionToken))
             {
-                if (TryIndexOf(userAgent, rule.VersionToken!, out int vtIndex))
+                if (TryIndexOf(ua, rule.VersionToken!, out int vtIndex))
                 {
                     versionSearchStart = vtIndex + rule.VersionToken!.Length;
                 }
@@ -101,10 +106,9 @@ public static class HttpUserAgentParser
             }
 
             string? version = null;
-            if (TryExtractVersion(userAgent, versionSearchStart, out Range range))
+            if (TryExtractVersion(ua, versionSearchStart, out Range range))
             {
-                // Only allocate the version substring, not the whole user agent
-                version = userAgent[range].ToString();
+                version = userAgent.AsSpan(range.Start.Value, range.End.Value - range.Start.Value).ToString();
             }
 
             return (rule.Name, version);
@@ -116,7 +120,7 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns true if browser was found
     /// </summary>
-    public static bool TryGetBrowser(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out (string Name, string? Version)? browser)
+    public static bool TryGetBrowser(string userAgent, [NotNullWhen(true)] out (string Name, string? Version)? browser)
     {
         browser = GetBrowser(userAgent);
         return browser is not null;
@@ -125,7 +129,7 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns the robot or null
     /// </summary>
-    public static string? GetRobot(ReadOnlySpan<char> userAgent)
+    public static string? GetRobot(string userAgent)
     {
         foreach ((string key, string value) in HttpUserAgentStatics.Robots)
         {
@@ -141,7 +145,7 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns true if robot was found
     /// </summary>
-    public static bool TryGetRobot(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out string? robotName)
+    public static bool TryGetRobot(string userAgent, [NotNullWhen(true)] out string? robotName)
     {
         robotName = GetRobot(userAgent);
         return robotName is not null;
@@ -150,7 +154,7 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns the device or null
     /// </summary>
-    public static string? GetMobileDevice(ReadOnlySpan<char> userAgent)
+    public static string? GetMobileDevice(string userAgent)
     {
         foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
         {
@@ -166,7 +170,7 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns true if device was found
     /// </summary>
-    public static bool TryGetMobileDevice(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out string? device)
+    public static bool TryGetMobileDevice(string userAgent, [NotNullWhen(true)] out string? device)
     {
         device = GetMobileDevice(userAgent);
         return device is not null;
