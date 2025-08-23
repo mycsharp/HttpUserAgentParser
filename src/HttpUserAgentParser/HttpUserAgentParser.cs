@@ -105,9 +105,10 @@ public static class HttpUserAgentParser
             }
 
             string? version = null;
-            if (TryExtractVersion(ua, versionSearchStart, out Range range))
+            ua = ua.Slice(versionSearchStart);
+            if (TryExtractVersion(ua, out Range range))
             {
-                version = userAgent.AsSpan(range.Start.Value, range.End.Value - range.Start.Value).ToString();
+                version = ua[range].ToString();
             }
 
             return (browserRule.Name, version);
@@ -176,60 +177,53 @@ public static class HttpUserAgentParser
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool ContainsIgnoreCase(ReadOnlySpan<char> haystack, string needle)
+    private static bool ContainsIgnoreCase(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle)
         => TryIndexOf(haystack, needle, out _);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryIndexOf(ReadOnlySpan<char> haystack, string needle, out int index)
+    private static bool TryIndexOf(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle, out int index)
     {
-        index = haystack.IndexOf(needle.AsSpan(), StringComparison.OrdinalIgnoreCase);
+        index = haystack.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
         return index >= 0;
     }
 
     /// <summary>
-    /// Extracts a dotted numeric version starting at or after <paramref name="startIndex"/>.
+    /// Extracts a dotted numeric version.
     /// Accepts digits and dots; skips common separators ('/', ' ', ':', '=') until first digit.
     /// Returns false if no version-like token is found.
     /// </summary>
-    private static bool TryExtractVersion(ReadOnlySpan<char> haystack, int startIndex, out Range range)
+    private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range)
     {
         range = default;
-        if ((uint)startIndex >= (uint)haystack.Length)
-        {
-            return false;
-        }
 
         // Limit search window to avoid scanning entire UA string unnecessarily
-        const int window = 128;
-        int end = Math.Min(haystack.Length, startIndex + window);
-        int i = startIndex;
+        const int Window = 128;
+        if (haystack.Length >= Window)
+        {
+            haystack = haystack.Slice(0, Window);
+        }
 
-        // Skip separators until we hit a digit
-        while (i < end)
+        int i = 0;
+        for (; i < haystack.Length; ++i)
         {
             char c = haystack[i];
-            if ((uint)(c - '0') <= 9)
+            if (char.IsBetween(c, '0', '9'))
             {
                 break;
             }
-            i++;
-        }
-
-        if (i >= end)
-        {
-            return false;
         }
 
         int s = i;
-        while (i < end)
+        haystack = haystack.Slice(i + 1);
+        for (i = 0; i < haystack.Length; ++i)
         {
             char c = haystack[i];
-            if (!((uint)(c - '0') <= 9 || c == '.'))
+            if (!(char.IsBetween(c, '0', '9') || c == '.'))
             {
                 break;
             }
-            i++;
         }
+        i += s + 1;     // shift back the previous domain
 
         if (i == s)
         {
