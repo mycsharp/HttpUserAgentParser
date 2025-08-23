@@ -1,7 +1,7 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
 using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace MyCSharp.HttpUserAgentParser;
 
@@ -48,11 +48,15 @@ public static class HttpUserAgentParser
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
-        foreach (HttpUserAgentPlatformInformation item in HttpUserAgentStatics.Platforms)
+        // Fast, allocation-free token scan (keeps public statics untouched)
+        ReadOnlySpan<char> ua = userAgent.AsSpan();
+        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentStatics.s_platformRules)
         {
-            if (item.Regex.IsMatch(userAgent))
+            if (ContainsIgnoreCase(ua, platform.Token))
             {
-                return item;
+                return new HttpUserAgentPlatformInformation(
+                    HttpUserAgentStatics.GetPlatformRegexForToken(platform.Token),
+                    platform.Name, platform.PlatformType);
             }
         }
 
@@ -73,13 +77,41 @@ public static class HttpUserAgentParser
     /// </summary>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
     {
-        foreach ((Regex key, string? value) in HttpUserAgentStatics.Browsers)
+        ReadOnlySpan<char> ua = userAgent.AsSpan();
+        foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentStatics.s_browserRules)
         {
-            Match match = key.Match(userAgent);
-            if (match.Success)
+            if (!TryIndexOf(ua, browserRule.DetectToken, out int detectIndex))
             {
-                return (value, match.Groups[1].Value);
+                continue;
             }
+
+            // Version token may differ (e.g., Safari uses "Version/")
+            int versionSearchStart = detectIndex;
+            if (!string.IsNullOrEmpty(browserRule.VersionToken))
+            {
+                if (TryIndexOf(ua, browserRule.VersionToken!, out int vtIndex))
+                {
+                    versionSearchStart = vtIndex + browserRule.VersionToken!.Length;
+                }
+                else
+                {
+                    // If specific version token wasn't found, fall back to detect token area
+                    versionSearchStart = detectIndex + browserRule.DetectToken.Length;
+                }
+            }
+            else
+            {
+                versionSearchStart = detectIndex + browserRule.DetectToken.Length;
+            }
+
+            string? version = null;
+            ua = ua.Slice(versionSearchStart);
+            if (TryExtractVersion(ua, out Range range))
+            {
+                version = ua[range].ToString();
+            }
+
+            return (browserRule.Name, version);
         }
 
         return null;
@@ -142,5 +174,63 @@ public static class HttpUserAgentParser
     {
         device = GetMobileDevice(userAgent);
         return device is not null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool ContainsIgnoreCase(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle)
+        => TryIndexOf(haystack, needle, out _);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryIndexOf(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle, out int index)
+    {
+        index = haystack.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
+        return index >= 0;
+    }
+
+    /// <summary>
+    /// Extracts a dotted numeric version.
+    /// Accepts digits and dots; skips common separators ('/', ' ', ':', '=') until first digit.
+    /// Returns false if no version-like token is found.
+    /// </summary>
+    private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range)
+    {
+        range = default;
+
+        // Limit search window to avoid scanning entire UA string unnecessarily
+        const int Window = 128;
+        if (haystack.Length >= Window)
+        {
+            haystack = haystack.Slice(0, Window);
+        }
+
+        int i = 0;
+        for (; i < haystack.Length; ++i)
+        {
+            char c = haystack[i];
+            if (char.IsBetween(c, '0', '9'))
+            {
+                break;
+            }
+        }
+
+        int s = i;
+        haystack = haystack.Slice(i + 1);
+        for (i = 0; i < haystack.Length; ++i)
+        {
+            char c = haystack[i];
+            if (!(char.IsBetween(c, '0', '9') || c == '.'))
+            {
+                break;
+            }
+        }
+        i += s + 1;     // shift back the previous domain
+
+        if (i == s)
+        {
+            return false;
+        }
+
+        range = new Range(s, i);
+        return true;
     }
 }

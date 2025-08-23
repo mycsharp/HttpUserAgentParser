@@ -2,12 +2,13 @@
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using MyCSharp.HttpUserAgentParser;
 
 #if OS_WIN
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
 #endif
 
-namespace MyCSharp.HttpUserAgentParser.Benchmarks;
+namespace HttpUserAgentParser.Benchmarks;
 
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net80)]
@@ -43,7 +44,7 @@ public class HttpUserAgentParserBenchmarks
 
         for (int i = 0; i < testUserAgentMix.Length; ++i)
         {
-            results[i] = HttpUserAgentParser.Parse(testUserAgentMix[i]);
+            results[i] = MyCSharp.HttpUserAgentParser.HttpUserAgentParser.Parse(testUserAgentMix[i]);
         }
     }
 }

@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser;
@@ -71,6 +72,62 @@ public static class HttpUserAgentStatics
     ];
 
     /// <summary>
+    /// Fast-path platform token rules for zero-allocation Contains checks
+    /// </summary>
+    internal static readonly (string Token, string Name, HttpUserAgentPlatformType PlatformType)[] s_platformRules =
+    [
+        ("windows nt 10.0", "Windows 10", HttpUserAgentPlatformType.Windows),
+        ("windows nt 6.3", "Windows 8.1", HttpUserAgentPlatformType.Windows),
+        ("windows nt 6.2", "Windows 8", HttpUserAgentPlatformType.Windows),
+        ("windows nt 6.1", "Windows 7", HttpUserAgentPlatformType.Windows),
+        ("windows nt 6.0", "Windows Vista", HttpUserAgentPlatformType.Windows),
+        ("windows nt 5.2", "Windows 2003", HttpUserAgentPlatformType.Windows),
+        ("windows nt 5.1", "Windows XP", HttpUserAgentPlatformType.Windows),
+        ("windows nt 5.0", "Windows 2000", HttpUserAgentPlatformType.Windows),
+        ("windows nt 4.0", "Windows NT 4.0", HttpUserAgentPlatformType.Windows),
+        ("winnt4.0", "Windows NT 4.0", HttpUserAgentPlatformType.Windows),
+        ("winnt 4.0", "Windows NT", HttpUserAgentPlatformType.Windows),
+        ("winnt", "Windows NT", HttpUserAgentPlatformType.Windows),
+        ("windows 98", "Windows 98", HttpUserAgentPlatformType.Windows),
+        ("win98", "Windows 98", HttpUserAgentPlatformType.Windows),
+        ("windows 95", "Windows 95", HttpUserAgentPlatformType.Windows),
+        ("win95", "Windows 95", HttpUserAgentPlatformType.Windows),
+        ("windows phone", "Windows Phone", HttpUserAgentPlatformType.Windows),
+        ("windows", "Unknown Windows OS", HttpUserAgentPlatformType.Windows),
+        ("android", "Android", HttpUserAgentPlatformType.Android),
+        ("blackberry", "BlackBerry", HttpUserAgentPlatformType.BlackBerry),
+        ("iphone", "iOS", HttpUserAgentPlatformType.IOS),
+        ("ipad", "iOS", HttpUserAgentPlatformType.IOS),
+        ("ipod", "iOS", HttpUserAgentPlatformType.IOS),
+        ("cros", "ChromeOS", HttpUserAgentPlatformType.ChromeOS),
+        ("os x", "Mac OS X", HttpUserAgentPlatformType.MacOS),
+        ("ppc mac", "Power PC Mac", HttpUserAgentPlatformType.MacOS),
+        ("freebsd", "FreeBSD", HttpUserAgentPlatformType.Linux),
+        ("ppc", "Macintosh", HttpUserAgentPlatformType.Linux),
+        ("linux", "Linux", HttpUserAgentPlatformType.Linux),
+        ("debian", "Debian", HttpUserAgentPlatformType.Linux),
+        ("sunos", "Sun Solaris", HttpUserAgentPlatformType.Generic),
+        ("beos", "BeOS", HttpUserAgentPlatformType.Generic),
+        ("apachebench", "ApacheBench", HttpUserAgentPlatformType.Generic),
+        ("aix", "AIX", HttpUserAgentPlatformType.Generic),
+        ("irix", "Irix", HttpUserAgentPlatformType.Generic),
+        ("osf", "DEC OSF", HttpUserAgentPlatformType.Generic),
+        ("hp-ux", "HP-UX", HttpUserAgentPlatformType.Windows),
+        ("netbsd", "NetBSD", HttpUserAgentPlatformType.Generic),
+        ("bsdi", "BSDi", HttpUserAgentPlatformType.Generic),
+        ("openbsd", "OpenBSD", HttpUserAgentPlatformType.Unix),
+        ("gnu", "GNU/Linux", HttpUserAgentPlatformType.Linux),
+        ("unix", "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
+        ("symbian", "Symbian OS", HttpUserAgentPlatformType.Symbian),
+    ];
+
+    // Precompiled platform regex map to attach to PlatformInformation without per-call allocations
+    private static readonly FrozenDictionary<string, Regex> s_platformRegexMap = s_platformRules
+        .ToFrozenDictionary(p => p.Token, p => CreateDefaultPlatformRegex(p.Token), StringComparer.OrdinalIgnoreCase);
+
+    internal static Regex GetPlatformRegexForToken(string token) => s_platformRegexMap[token];
+
+    /// <summary>
     /// Regex defauls for browser mappings
     /// </summary>
     private const RegexOptions DefaultBrowserRegexFlags = RegexOptions.IgnoreCase | RegexOptions.Compiled;
@@ -83,7 +140,7 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Browsers
     /// </summary>
-    public static readonly Dictionary<Regex, string> Browsers = new()
+    public static readonly FrozenDictionary<Regex, string> Browsers = new Dictionary<Regex, string>()
     {
         { CreateDefaultBrowserRegex("OPR"), "Opera" },
         { CreateDefaultBrowserRegex("Flock"), "Flock" },
@@ -120,12 +177,54 @@ public static class HttpUserAgentStatics
         { CreateDefaultBrowserRegex("Maxthon"), "Maxthon" },
         { CreateDefaultBrowserRegex("ipod touch"), "Apple iPod" },
         { CreateDefaultBrowserRegex("Ubuntu"), "Ubuntu Web Browser" },
-    };
+    }.ToFrozenDictionary();
+
+    /// <summary>
+    /// Fast-path browser token rules. If these fail to extract a version, code will fall back to regex rules.
+    /// </summary>
+    internal static readonly (string Name, string DetectToken, string? VersionToken)[] s_browserRules =
+    [
+        ("Opera", "OPR", null),
+        ("Flock", "Flock", null),
+        ("Edge", "Edge", null),
+        ("Edge", "EdgA", null),
+        ("Edge", "Edg", null),
+        ("Vivaldi", "Vivaldi", null),
+        ("Brave", "Brave Chrome", null),
+        ("Chrome", "Chrome", null),
+        ("Chrome", "CriOS", null),
+        ("Opera", "Opera", "Version/"),
+        ("Opera", "Opera", null),
+        ("Internet Explorer", "MSIE", "MSIE "),
+        ("Internet Explorer", "Internet Explorer", null),
+        ("Internet Explorer", "Trident", "rv:"),
+        ("Shiira", "Shiira", null),
+        ("Firefox", "Firefox", null),
+        ("Firefox", "FxiOS", null),
+        ("Chimera", "Chimera", null),
+        ("Phoenix", "Phoenix", null),
+        ("Firebird", "Firebird", null),
+        ("Camino", "Camino", null),
+        ("Netscape", "Netscape", null),
+        ("OmniWeb", "OmniWeb", null),
+        ("Safari", "Version/", "Version/"),
+        ("Mozilla", "Mozilla", null),
+        ("Konqueror", "Konqueror", null),
+        ("iCab", "icab", null),
+        ("Lynx", "Lynx", null),
+        ("Links", "Links", null),
+        ("HotJava", "hotjava", null),
+        ("Amaya", "amaya", null),
+        ("IBrowse", "IBrowse", null),
+        ("Maxthon", "Maxthon", null),
+        ("Apple iPod", "ipod touch", null),
+        ("Ubuntu Web Browser", "Ubuntu", null),
+    ];
 
     /// <summary>
     /// Mobiles
     /// </summary>
-    public static readonly Dictionary<string, string> Mobiles = new(StringComparer.InvariantCultureIgnoreCase)
+    public static readonly FrozenDictionary<string, string> Mobiles = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
     {
         // Legacy
         { "mobileexplorer", "Mobile Explorer" },
@@ -208,7 +307,7 @@ public static class HttpUserAgentStatics
         { "up.browser", "Generic Mobile" },
         { "smartphone", "Generic Mobile" },
         { "cellphone", "Generic Mobile" },
-    };
+    }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Robots
@@ -287,8 +386,9 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Tools
     /// </summary>
-    public static readonly Dictionary<string, string> Tools = new(StringComparer.OrdinalIgnoreCase)
+    public static readonly FrozenDictionary<string, string> Tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         { "curl", "curl" }
-    };
+    }
+    .ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 }

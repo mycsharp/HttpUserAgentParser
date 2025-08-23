@@ -141,7 +141,7 @@ by [@BenjaminAbt](https://github.com/BenjaminAbt) and [@gfoidl](https://github.c
 
 MIT License
 
-Copyright (c) 2021-2023 MyCSharp 
+Copyright (c) 2021-2025 MyCSharp 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
