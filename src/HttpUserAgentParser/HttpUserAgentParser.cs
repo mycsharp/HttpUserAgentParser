@@ -50,14 +50,13 @@ public static class HttpUserAgentParser
     {
         // Fast, allocation-free token scan (keeps public statics untouched)
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-    foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) p in HttpUserAgentStatics.s_platformRules)
+        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentStatics.s_platformRules)
         {
-            if (ContainsIgnoreCase(ua, p.Token))
+            if (ContainsIgnoreCase(ua, platform.Token))
             {
                 return new HttpUserAgentPlatformInformation(
-            regex: HttpUserAgentStatics.GetPlatformRegexForToken(p.Token),
-            name: p.Name,
-            platformType: p.PlatformType);
+                    HttpUserAgentStatics.GetPlatformRegexForToken(platform.Token),
+                    platform.Name, platform.PlatformType);
             }
         }
 
