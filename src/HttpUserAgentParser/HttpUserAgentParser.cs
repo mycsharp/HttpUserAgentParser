@@ -79,30 +79,30 @@ public static class HttpUserAgentParser
     public static (string Name, string? Version)? GetBrowser(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-    foreach ((string Name, string DetectToken, string? VersionToken) rule in HttpUserAgentStatics.s_browserRules)
+        foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentStatics.s_browserRules)
         {
-            if (!TryIndexOf(ua, rule.DetectToken, out int detectIndex))
+            if (!TryIndexOf(ua, browserRule.DetectToken, out int detectIndex))
             {
                 continue;
             }
 
             // Version token may differ (e.g., Safari uses "Version/")
             int versionSearchStart = detectIndex;
-            if (!string.IsNullOrEmpty(rule.VersionToken))
+            if (!string.IsNullOrEmpty(browserRule.VersionToken))
             {
-                if (TryIndexOf(ua, rule.VersionToken!, out int vtIndex))
+                if (TryIndexOf(ua, browserRule.VersionToken!, out int vtIndex))
                 {
-                    versionSearchStart = vtIndex + rule.VersionToken!.Length;
+                    versionSearchStart = vtIndex + browserRule.VersionToken!.Length;
                 }
                 else
                 {
                     // If specific version token wasn't found, fall back to detect token area
-                    versionSearchStart = detectIndex + rule.DetectToken.Length;
+                    versionSearchStart = detectIndex + browserRule.DetectToken.Length;
                 }
             }
             else
             {
-                versionSearchStart = detectIndex + rule.DetectToken.Length;
+                versionSearchStart = detectIndex + browserRule.DetectToken.Length;
             }
 
             string? version = null;
@@ -111,7 +111,7 @@ public static class HttpUserAgentParser
                 version = userAgent.AsSpan(range.Start.Value, range.End.Value - range.Start.Value).ToString();
             }
 
-            return (rule.Name, version);
+            return (browserRule.Name, version);
         }
 
         return null;

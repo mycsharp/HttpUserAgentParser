@@ -10,16 +10,4 @@
 				"$msCompile"
 			],
 			"group": "build"
-		},
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"problemMatcher": [
-				"$msCompile"
-			],
-			"group": "build"
 		}
-	]
-}
