@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 
 namespace MyCSharp.HttpUserAgentParser;
@@ -121,8 +122,8 @@ public static class HttpUserAgentStatics
     ];
 
     // Precompiled platform regex map to attach to PlatformInformation without per-call allocations
-    private static readonly Dictionary<string, Regex> s_platformRegexMap = s_platformRules
-        .ToDictionary(p => p.Token, p => CreateDefaultPlatformRegex(p.Token), StringComparer.OrdinalIgnoreCase);
+    private static readonly FrozenDictionary<string, Regex> s_platformRegexMap = s_platformRules
+        .ToFrozenDictionary(p => p.Token, p => CreateDefaultPlatformRegex(p.Token), StringComparer.OrdinalIgnoreCase);
 
     internal static Regex GetPlatformRegexForToken(string token) => s_platformRegexMap[token];
 
@@ -139,7 +140,7 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Browsers
     /// </summary>
-    public static readonly Dictionary<Regex, string> Browsers = new()
+    public static readonly FrozenDictionary<Regex, string> Browsers = new Dictionary<Regex, string>()
     {
         { CreateDefaultBrowserRegex("OPR"), "Opera" },
         { CreateDefaultBrowserRegex("Flock"), "Flock" },
@@ -176,7 +177,7 @@ public static class HttpUserAgentStatics
         { CreateDefaultBrowserRegex("Maxthon"), "Maxthon" },
         { CreateDefaultBrowserRegex("ipod touch"), "Apple iPod" },
         { CreateDefaultBrowserRegex("Ubuntu"), "Ubuntu Web Browser" },
-    };
+    }.ToFrozenDictionary();
 
     /// <summary>
     /// Fast-path browser token rules. If these fail to extract a version, code will fall back to regex rules.
@@ -223,7 +224,7 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Mobiles
     /// </summary>
-    public static readonly Dictionary<string, string> Mobiles = new(StringComparer.InvariantCultureIgnoreCase)
+    public static readonly FrozenDictionary<string, string> Mobiles = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
     {
         // Legacy
         { "mobileexplorer", "Mobile Explorer" },
@@ -306,7 +307,7 @@ public static class HttpUserAgentStatics
         { "up.browser", "Generic Mobile" },
         { "smartphone", "Generic Mobile" },
         { "cellphone", "Generic Mobile" },
-    };
+    }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Robots
@@ -385,8 +386,9 @@ public static class HttpUserAgentStatics
     /// <summary>
     /// Tools
     /// </summary>
-    public static readonly Dictionary<string, string> Tools = new(StringComparer.OrdinalIgnoreCase)
+    public static readonly FrozenDictionary<string, string> Tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         { "curl", "curl" }
-    };
+    }
+    .ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 }
