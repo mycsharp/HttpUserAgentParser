@@ -112,21 +112,32 @@ public void MyMethod(IHttpUserAgentParserAccessor parserAccessor)
 
 ## Benchmark
 
-```sh
-BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
-AMD Ryzen 9 5950X, 1 CPU, 32 logical and 16 physical cores
-.NET Core SDK=5.0.300-preview.21228.15
-  [Host]     : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
-  DefaultJob : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
+```shell
+BenchmarkDotNet v0.14.0, Windows 10 (10.0.19045.6216/22H2/2022Update)
+AMD Ryzen 9 9950X, 1 CPU, 32 logical and 16 physical cores
+.NET SDK 10.0.100-preview.7.25380.108
+  [Host]   : .NET 10.0.0 (10.0.25.38108), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+  ShortRun : .NET 10.0.0 (10.0.25.38108), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+
+Job=ShortRun  IterationCount=3  LaunchCount=1
+WarmupCount=3
+
+| Method             | Categories | Data         | Mean            | Error            | StdDev         | Ratio     | RatioSD | Gen0     | Gen1     | Gen2     | Allocated  | Alloc Ratio |
+|------------------- |----------- |------------- |----------------:|-----------------:|---------------:|----------:|--------:|---------:|---------:|---------:|-----------:|------------:|
+| MyCSharp           | Basic      | Chrome Win10 |       936.44 ns |       131.253 ns |       7.194 ns |      1.00 |    0.01 |   0.0029 |        - |        - |       48 B |        1.00 |
+| UAParser           | Basic      | Chrome Win10 | 9,512,347.40 ns | 3,961,045.109 ns | 217,118.249 ns | 10,158.42 |  211.89 | 656.2500 | 546.8750 | 109.3750 | 11523315 B |  240,069.06 |
+| DeviceDetector.NET | Basic      | Chrome Win10 | 5,428,530.73 ns | 5,276,988.556 ns | 289,249.550 ns |  5,797.23 |  270.29 | 296.8750 | 125.0000 |  31.2500 |  5002239 B |  104,213.31 |
+|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
+| MyCSharp           | Basic      | Google-Bot   |       165.66 ns |        21.926 ns |       1.202 ns |      1.00 |    0.01 |        - |        - |        - |          - |          NA |
+| UAParser           | Basic      | Google-Bot   | 9,737,403.12 ns | 2,336,698.462 ns | 128,082.328 ns | 58,781.92 |  764.74 | 671.8750 | 656.2500 | 109.3750 | 11877003 B |          NA |
+| DeviceDetector.NET | Basic      | Google-Bot   | 6,331,960.42 ns | 1,602,716.199 ns |  87,850.283 ns | 38,224.23 |  518.30 | 500.0000 |  62.5000 |        - |  8817013 B |          NA |
+|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
+| MyCSharp           | Cached     | Chrome Win10 |        26.75 ns |         3.749 ns |       0.205 ns |      1.00 |    0.01 |        - |        - |        - |          - |          NA |
+| UAParser           | Cached     | Chrome Win10 |   250,039.55 ns |     6,502.182 ns |     356.407 ns |  9,346.54 |   63.39 |   2.1973 |        - |        - |    37488 B |          NA |
+|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
+| MyCSharp           | Cached     | Google-Bot   |        19.66 ns |         4.312 ns |       0.236 ns |      1.00 |    0.01 |        - |        - |        - |          - |          NA |
+| UAParser           | Cached     | Google-Bot   |   184,991.85 ns |    46,235.986 ns |   2,534.350 ns |  9,408.77 |  148.82 |   2.6855 |        - |        - |    45857 B |          NA |
 ```
-
-|              Method |        Mean |     Error |    StdDev |   Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|-------------------- |------------:|----------:|----------:|--------:|-------:|------:|----------:|
-|         'UA Parser' | 3,238.59 us | 27.435 us | 25.663 us |  7.8125 |      - |     - |  168225 B |
-|    UserAgentService |   391.11 us |  5.126 us |  4.795 us | 35.1563 | 3.4180 |     - |  589664 B |
-| HttpUserAgentParser |    67.07 us |  0.740 us |  0.693 us |       - |      - |     - |     848 B |
-
-More benchmark results can be found [in this comment](https://github.com/mycsharp/HttpUserAgentParser/issues/2#issuecomment-842188532).
 
 ## Disclaimer
 
