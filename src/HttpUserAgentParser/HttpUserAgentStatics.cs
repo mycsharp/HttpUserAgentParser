@@ -165,8 +165,7 @@ public static class HttpUserAgentStatics
         { CreateDefaultBrowserRegex("Camino"), "Camino" },
         { CreateDefaultBrowserRegex("Netscape"), "Netscape" },
         { CreateDefaultBrowserRegex("OmniWeb"), "OmniWeb" },
-        { CreateDefaultBrowserRegex("Version"), "Safari" }, // https://github.com/mycsharp/HttpUserAgentParser/issues/34
-        { CreateDefaultBrowserRegex("Mozilla"), "Mozilla" },
+    { CreateDefaultBrowserRegex("Version"), "Safari" }, // https://github.com/mycsharp/HttpUserAgentParser/issues/34
         { CreateDefaultBrowserRegex("Konqueror"), "Konqueror" },
         { CreateDefaultBrowserRegex("icab"), "iCab" },
         { CreateDefaultBrowserRegex("Lynx"), "Lynx" },
@@ -207,8 +206,7 @@ public static class HttpUserAgentStatics
         ("Camino", "Camino", null),
         ("Netscape", "Netscape", null),
         ("OmniWeb", "OmniWeb", null),
-        ("Safari", "Version/", "Version/"),
-        ("Mozilla", "Mozilla", null),
+    ("Safari", "Version/", "Version/"),
         ("Konqueror", "Konqueror", null),
         ("iCab", "icab", null),
         ("Lynx", "Lynx", null),
