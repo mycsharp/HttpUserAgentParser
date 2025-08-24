@@ -77,11 +77,7 @@ public static class HttpUserAgentParser
     public static (string Name, string? Version)? GetBrowser(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        // Require a realistic browser UA prefix to avoid classifying truncated tokens as browsers
-        if (!ContainsIgnoreCase(ua, "Mozilla/"))
-        {
-            return null;
-        }
+
         foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentStatics.s_browserRules)
         {
             if (!TryIndexOf(ua, browserRule.DetectToken, out int detectIndex))
@@ -91,6 +87,7 @@ public static class HttpUserAgentParser
 
             // Version token may differ (e.g., Safari uses "Version/")
             // Keep full span immutable across iterations
+
             ReadOnlySpan<char> uaFull = userAgent.AsSpan();
             int versionSearchStart;
             // For rules without a specific version token, ensure pattern Token/<digits>
