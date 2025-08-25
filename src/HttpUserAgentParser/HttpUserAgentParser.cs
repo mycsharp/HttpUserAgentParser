@@ -88,13 +88,12 @@ public static class HttpUserAgentParser
             // Version token may differ (e.g., Safari uses "Version/")
             // Keep full span immutable across iterations
 
-            ReadOnlySpan<char> uaFull = userAgent.AsSpan();
             int versionSearchStart;
             // For rules without a specific version token, ensure pattern Token/<digits>
             if (string.IsNullOrEmpty(browserRule.VersionToken))
             {
                 int afterDetect = detectIndex + browserRule.DetectToken.Length;
-                if (afterDetect >= uaFull.Length || uaFull[afterDetect] != '/')
+                if (afterDetect >= ua.Length || ua[afterDetect] != '/')
                 {
                     // Likely a misspelling or partial token (e.g., Edgg, Oprea, Chromee)
                     continue;
@@ -118,13 +117,13 @@ public static class HttpUserAgentParser
             }
 
             // Work on a local slice to avoid mutating the main span for following rules
-            if (versionSearchStart < 0 || versionSearchStart >= uaFull.Length)
+            if (versionSearchStart < 0 || versionSearchStart >= ua.Length)
             {
                 // Nothing to search; try next rule
                 continue;
             }
 
-            ReadOnlySpan<char> search = uaFull.Slice(versionSearchStart);
+            ReadOnlySpan<char> search = ua.Slice(versionSearchStart);
             if (TryExtractVersion(search, out Range range))
             {
                 string? version = search[range].ToString();
@@ -132,7 +131,6 @@ public static class HttpUserAgentParser
             }
 
             // If we didn't find a version for this rule, try next rule
-            continue;
         }
 
         return null;
