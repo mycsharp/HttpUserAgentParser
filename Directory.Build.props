@@ -68,6 +68,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="Default Test Dependencies" Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="coverlet.msbuild" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="NSubstitute" />
@@ -87,6 +88,31 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <!-- Global coverage settings applied to all test projects -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'" Label="Coverage">
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>lcov,opencover,cobertura</CoverletOutputFormat>
+    <CoverletOutput>$(MSBuildThisFileDirectory)TestResults/coverage/$(MSBuildProjectName).</CoverletOutput>
+    <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <ExcludeByFile>**/*Program.cs;**/*Startup.cs;**/*GlobalUsings.cs</ExcludeByFile>
+    <UseSourceLink>true</UseSourceLink>
+    <!-- Enforce 100% line coverage; branch coverage is informative only -->
+    <Threshold>100</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+  </PropertyGroup>
+
+  <!-- Limit coverage to the target assemblies for each test project -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.UnitTests'" Label="CoverageFilter">
+    <Include>[MyCSharp.HttpUserAgentParser]*</Include>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.MemoryCache.UnitTests'" Label="CoverageFilter">
+    <Include>[MyCSharp.HttpUserAgentParser.MemoryCache]*</Include>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.AspNetCore.UnitTests'" Label="CoverageFilter">
+    <Include>[MyCSharp.HttpUserAgentParser.AspNetCore]*</Include>
+  </PropertyGroup>
 
   <ItemGroup Label="Default Analyzers">
     <PackageReference Include="Roslynator.Analyzers">
