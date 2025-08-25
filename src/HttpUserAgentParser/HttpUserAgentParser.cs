@@ -86,7 +86,6 @@ public static class HttpUserAgentParser
             }
 
             // Version token may differ (e.g., Safari uses "Version/")
-            // Keep full span immutable across iterations
 
             int versionSearchStart;
             // For rules without a specific version token, ensure pattern Token/<digits>
