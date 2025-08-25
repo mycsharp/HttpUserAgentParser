@@ -223,4 +223,79 @@ public class HttpUserAgentParserTests
         Assert.False(info.IsBrowser());
         Assert.False(info.IsRobot());
     }
+
+    [Fact]
+    public void Cleanup_Trims_Input()
+    {
+        string input = "  Mozilla/5.0  ";
+        Assert.Equal("Mozilla/5.0", HttpUserAgentParser.Cleanup(input));
+    }
+
+    [Fact]
+    public void TryGetPlatform_True_And_False()
+    {
+        bool ok = HttpUserAgentParser.TryGetPlatform("Mozilla/5.0 (Windows NT 10.0)", out HttpUserAgentPlatformInformation? platform);
+        Assert.True(ok);
+        Assert.NotNull(platform);
+        Assert.Equal(HttpUserAgentPlatformType.Windows, platform!.Value.PlatformType);
+
+        ok = HttpUserAgentParser.TryGetPlatform("UnknownAgent", out platform);
+        Assert.False(ok);
+        Assert.Null(platform);
+    }
+
+    [Fact]
+    public void TryGetRobot_True_And_False()
+    {
+        bool ok = HttpUserAgentParser.TryGetRobot("Googlebot/2.1 (+http://www.google.com/bot.html)", out string? robot);
+        Assert.True(ok);
+        Assert.Equal("Googlebot", robot);
+
+        ok = HttpUserAgentParser.TryGetRobot("NoBotHere", out robot);
+        Assert.False(ok);
+        Assert.Null(robot);
+    }
+
+    [Fact]
+    public void TryGetMobileDevice_True_And_False()
+    {
+        bool ok = HttpUserAgentParser.TryGetMobileDevice("(iPhone; CPU iPhone OS)", out string? device);
+        Assert.True(ok);
+        Assert.Equal("Apple iPhone", device);
+
+        ok = HttpUserAgentParser.TryGetMobileDevice("Desktop Machine", out device);
+        Assert.False(ok);
+        Assert.Null(device);
+    }
+
+    [Fact]
+    public void TryGetBrowser_False_When_Token_Without_Slash()
+    {
+        // Contains DetectToken (Edg) but not followed by '/', should be ignored by fast-path and no regex fallback here
+        (string Name, string? Version)? browser;
+        bool ok = HttpUserAgentParser.TryGetBrowser("Mozilla Edg 123 something", out browser);
+        Assert.False(ok);
+        Assert.Null(browser);
+    }
+
+    [Fact]
+    public void GetBrowser_Trident_Without_RV_Falls_Back_To_Detect_Token()
+    {
+        // Trident present but no rv:, fallback should extract version after DetectToken (Trident/7.0)
+        (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Trident/7.0 like Gecko");
+        Assert.NotNull(browser);
+        Assert.Equal("Internet Explorer", browser!.Value.Name);
+        Assert.Equal("7.0", browser.Value.Version);
+    }
+
+    [Fact]
+    public void GetBrowser_LongToken_NoDigits_Within_Window_Does_Not_Parse_Version()
+    {
+        // Build UA: Detect token present (Chrome), but after '/' there are no digits within first 200 chars
+        string longJunk = new('a', 200);
+        string ua = $"Mozilla/5.0 Chrome/{longJunk} versionafterwindow1.2";
+
+        (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(ua);
+        Assert.Null(browser); // Should fail to extract version and continue, ending with no browser match
+    }
 }
