@@ -11,7 +11,6 @@ namespace MyCSharp.HttpUserAgentParser;
 /// Parser logic for user agents
 /// </summary>
 public static class HttpUserAgentParser
-
 {
     /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
@@ -48,7 +47,6 @@ public static class HttpUserAgentParser
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
-        // Fast, allocation-free token scan (keeps public statics untouched)
         ReadOnlySpan<char> ua = userAgent.AsSpan();
         foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentStatics.s_platformRules)
         {
@@ -78,6 +76,7 @@ public static class HttpUserAgentParser
     public static (string Name, string? Version)? GetBrowser(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
+
         foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentStatics.s_browserRules)
         {
             if (!TryIndexOf(ua, browserRule.DetectToken, out int detectIndex))
@@ -86,7 +85,18 @@ public static class HttpUserAgentParser
             }
 
             // Version token may differ (e.g., Safari uses "Version/")
-            int versionSearchStart = detectIndex;
+
+            int versionSearchStart;
+            // For rules without a specific version token, ensure pattern Token/<digits>
+            if (string.IsNullOrEmpty(browserRule.VersionToken))
+            {
+                int afterDetect = detectIndex + browserRule.DetectToken.Length;
+                if (afterDetect >= ua.Length || ua[afterDetect] != '/')
+                {
+                    // Likely a misspelling or partial token (e.g., Edgg, Oprea, Chromee)
+                    continue;
+                }
+            }
             if (!string.IsNullOrEmpty(browserRule.VersionToken))
             {
                 if (TryIndexOf(ua, browserRule.VersionToken!, out int vtIndex))
@@ -104,14 +114,14 @@ public static class HttpUserAgentParser
                 versionSearchStart = detectIndex + browserRule.DetectToken.Length;
             }
 
-            string? version = null;
-            ua = ua.Slice(versionSearchStart);
-            if (TryExtractVersion(ua, out Range range))
+            ReadOnlySpan<char> search = ua.Slice(versionSearchStart);
+            if (TryExtractVersion(search, out Range range))
             {
-                version = ua[range].ToString();
+                string? version = search[range].ToString();
+                return (browserRule.Name, version);
             }
 
-            return (browserRule.Name, version);
+            // If we didn't find a version for this rule, try next rule
         }
 
         return null;
@@ -198,39 +208,43 @@ public static class HttpUserAgentParser
 
         // Limit search window to avoid scanning entire UA string unnecessarily
         const int Window = 128;
-        if (haystack.Length >= Window)
+        if (haystack.Length > Window)
         {
             haystack = haystack.Slice(0, Window);
         }
 
-        int i = 0;
-        for (; i < haystack.Length; ++i)
+        // Find first digit
+        int start = -1;
+        for (int i = 0; i < haystack.Length; i++)
         {
             char c = haystack[i];
-            if (char.IsBetween(c, '0', '9'))
+            if (c >= '0' && c <= '9')
             {
+                start = i;
                 break;
             }
         }
 
-        int s = i;
-        haystack = haystack.Slice(i + 1);
-        for (i = 0; i < haystack.Length; ++i)
+        if (start < 0)
         {
-            char c = haystack[i];
-            if (!(char.IsBetween(c, '0', '9') || c == '.'))
-            {
-                break;
-            }
-        }
-        i += s + 1;     // shift back the previous domain
-
-        if (i == s)
-        {
+            // No digit found => no version
             return false;
         }
 
-        range = new Range(s, i);
+        // Consume digits and dots after first digit
+        int end = start + 1;
+        while (end < haystack.Length)
+        {
+            char c = haystack[end];
+            if (!((c >= '0' && c <= '9') || c == '.'))
+            {
+                break;
+            }
+            end++;
+        }
+
+        // Create exclusive end range
+        range = new Range(start, end);
         return true;
     }
 }

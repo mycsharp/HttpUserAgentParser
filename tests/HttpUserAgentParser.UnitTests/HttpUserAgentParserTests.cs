@@ -173,4 +173,54 @@ public class HttpUserAgentParserTests
         Assert.False(uaInfo.IsMobile());
         Assert.True(uaInfo.IsRobot());
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("???")]
+    [InlineData("NotAUserAgent")]
+    [InlineData("Mozilla")]
+    [InlineData("Mozilla/")]
+    [InlineData("()")]
+    [InlineData("UserAgent/")]
+    [InlineData("Bot/123 (")]
+    [InlineData("123456")]
+    [InlineData("curl")]
+    [InlineData("invalid/useragent")]
+    [InlineData("Mozilla (Windows)")]
+    [InlineData("Chrome/ABC")]
+    [InlineData(";;!!##")]
+    [InlineData("Safari/ ")]
+    [InlineData("Opera( )")]
+    [InlineData("Mozilla/5.0 (X11; ) Gecko")]
+    [InlineData("FakeUA/1.0 (Test)???")]
+    [InlineData("Mozilla/ (iPhone; U; CPU iPhone OS like Mac OS X) AppleWebKit/ (KHTML, like Gecko) Version/ Mobile/ Safari/")]
+    [InlineData("Mozzila/5.0 (Windows NT 10.0; Win64; x64)")]
+    [InlineData("Chorme/91.0.4472.124 (Windows NT 10.0; Win64; x64)")]
+    [InlineData("FireFoxx/89.0 (Macintosh; Intel Mac OS X 10_15_7)")]
+    [InlineData("Safarii/14.1 (iPhone; CPU iPhone OS 14_6 like Mac OS X)")]
+    [InlineData("InternetExploder/11.0 (Windows NT 6.1; WOW64)")]
+    [InlineData("Bravee/1.25.72 (Windows NT 10.0; Win64; x64)")]
+    [InlineData("Mozzila/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0)")]
+    [InlineData("Chromee/99.0.4758.102 (X11; Linux x86_64)")]
+    [InlineData("FirreFox/100.0 (Windows NT 10.0; rv:100.0)")]
+    [InlineData("Saffari/605.1.15 (iPad; CPU OS 14_6 like Mac OS X)")]
+    [InlineData("Edgg/103.0.1264.37 (Macintosh; Intel Mac OS X 11_5_2)")]
+    [InlineData("Chorome/91.0.4472.124 (Linux; Android 10; SM-G973F)")]
+    [InlineData("Edgee/18.18363 (Windows 10 1909; Win64; x64)")]
+    public void InvalidUserAgent(string userAgent)
+    {
+        HttpUserAgentInformation info = HttpUserAgentInformation.Parse(userAgent);
+
+        // Invalid or malformed UAs must be classified as Unknown
+        Assert.Equal(HttpUserAgentType.Unknown, info.Type);
+        Assert.Null(info.Name);
+        Assert.Null(info.Version);
+
+        // Parser trims input via Cleanup, so compare to trimmed UA
+        Assert.Equal(userAgent.Trim(), info.UserAgent);
+
+        // Should not be considered a browser or a robot
+        Assert.False(info.IsBrowser());
+        Assert.False(info.IsRobot());
+    }
 }
