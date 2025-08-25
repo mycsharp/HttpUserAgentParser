@@ -116,13 +116,6 @@ public static class HttpUserAgentParser
                 versionSearchStart = detectIndex + browserRule.DetectToken.Length;
             }
 
-            // Work on a local slice to avoid mutating the main span for following rules
-            if (versionSearchStart < 0 || versionSearchStart >= ua.Length)
-            {
-                // Nothing to search; try next rule
-                continue;
-            }
-
             ReadOnlySpan<char> search = ua.Slice(versionSearchStart);
             if (TryExtractVersion(search, out Range range))
             {
