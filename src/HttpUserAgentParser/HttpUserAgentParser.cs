@@ -11,13 +11,13 @@ namespace MyCSharp.HttpUserAgentParser;
 /// Parser logic for user agents
 /// </summary>
 public static class HttpUserAgentParser
-
 {
     /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
     public static HttpUserAgentInformation Parse(string userAgent)
     {
+        // prepare
         userAgent = Cleanup(userAgent);
 
         // analyze
