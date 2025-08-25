@@ -47,7 +47,6 @@ public static class HttpUserAgentParser
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
-        // Fast, allocation-free token scan (keeps public statics untouched)
         ReadOnlySpan<char> ua = userAgent.AsSpan();
         foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentStatics.s_platformRules)
         {
