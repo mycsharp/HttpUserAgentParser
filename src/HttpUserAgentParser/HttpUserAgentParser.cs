@@ -209,6 +209,15 @@ public static class HttpUserAgentParser
     {
         range = default;
 
+        // Vectorization is used in a optimistic way and specialized to common (trimmed down) user agents.
+        // When the first two char-vectors don't yield any success, we fall back to the scalar path.
+        // This penalized not found versions, but has an advantage for found versions.
+        // Vector512 is left out, because there are no common inputs with length 128 or more.
+        //
+        // Two short (same size as char) vectors are read, then packed to byte vectors on which the
+        // operation is done. For short / chart the higher byte is not of interest and zero or outside
+        // the target characters, thus with bytes we can process twice as much elements at once.
+
         if (Vector256.IsHardwareAccelerated && haystack.Length >= 2 * Vector256<short>.Count)
         {
             ref char ptr = ref MemoryMarshal.GetReference(haystack);
