@@ -1,7 +1,10 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 namespace MyCSharp.HttpUserAgentParser;
 
@@ -206,45 +209,133 @@ public static class HttpUserAgentParser
     {
         range = default;
 
-        // Limit search window to avoid scanning entire UA string unnecessarily
-        const int Window = 128;
-        if (haystack.Length > Window)
-        {
-            haystack = haystack.Slice(0, Window);
-        }
+        // Vectorization is used in a optimistic way and specialized to common (trimmed down) user agents.
+        // When the first two char-vectors don't yield any success, we fall back to the scalar path.
+        // This penalized not found versions, but has an advantage for found versions.
+        // Vector512 is left out, because there are no common inputs with length 128 or more.
+        //
+        // Two short (same size as char) vectors are read, then packed to byte vectors on which the
+        // operation is done. For short / chart the higher byte is not of interest and zero or outside
+        // the target characters, thus with bytes we can process twice as much elements at once.
 
-        // Find first digit
-        int start = -1;
-        for (int i = 0; i < haystack.Length; i++)
+        if (Vector256.IsHardwareAccelerated && haystack.Length >= 2 * Vector256<short>.Count)
         {
-            char c = haystack[i];
-            if (c >= '0' && c <= '9')
+            ref char ptr = ref MemoryMarshal.GetReference(haystack);
+
+            Vector256<byte> vec = ptr.ReadVector256AsBytes(0);
+            Vector256<byte> between0and9 = Vector256.LessThan(vec - Vector256.Create((byte)'0'), Vector256.Create((byte)('9' - '0' + 1)));
+
+            if (between0and9 == Vector256<byte>.Zero)
             {
-                start = i;
-                break;
+                goto Scalar;
             }
-        }
 
-        if (start < 0)
-        {
-            // No digit found => no version
-            return false;
-        }
+            uint bitMask = between0and9.ExtractMostSignificantBits();
+            int idx = (int)uint.TrailingZeroCount(bitMask);
+            Debug.Assert(idx is >= 0 and <= 32);
+            int start = idx;
 
-        // Consume digits and dots after first digit
-        int end = start + 1;
-        while (end < haystack.Length)
-        {
-            char c = haystack[end];
-            if (!((c >= '0' && c <= '9') || c == '.'))
+            Vector256<byte> byteMask = between0and9 | Vector256.Equals(vec, Vector256.Create((byte)'.'));
+            byteMask = ~byteMask;
+
+            if (byteMask == Vector256<byte>.Zero)
             {
-                break;
+                goto Scalar;
             }
-            end++;
+
+            bitMask = byteMask.ExtractMostSignificantBits();
+            bitMask >>= start;
+
+            idx = start + (int)uint.TrailingZeroCount(bitMask);
+            Debug.Assert(idx is >= 0 and <= 32);
+            int end = idx;
+
+            range = new Range(start, end);
+            return true;
+        }
+        else if (Vector128.IsHardwareAccelerated && haystack.Length >= 2 * Vector128<short>.Count)
+        {
+            ref char ptr = ref MemoryMarshal.GetReference(haystack);
+
+            Vector128<byte> vec = ptr.ReadVector128AsBytes(0);
+            Vector128<byte> between0and9 = Vector128.LessThan(vec - Vector128.Create((byte)'0'), Vector128.Create((byte)('9' - '0' + 1)));
+
+            if (between0and9 == Vector128<byte>.Zero)
+            {
+                goto Scalar;
+            }
+
+            uint bitMask = between0and9.ExtractMostSignificantBits();
+            int idx = (int)uint.TrailingZeroCount(bitMask);
+            Debug.Assert(idx is >= 0 and <= 16);
+            int start = idx;
+
+            Vector128<byte> byteMask = between0and9 | Vector128.Equals(vec, Vector128.Create((byte)'.'));
+            byteMask = ~byteMask;
+
+            if (byteMask == Vector128<byte>.Zero)
+            {
+                goto Scalar;
+            }
+
+            bitMask = byteMask.ExtractMostSignificantBits();
+            bitMask >>= start;
+
+            idx = start + (int)uint.TrailingZeroCount(bitMask);
+            Debug.Assert(idx is >= 0 and <= 16);
+            int end = idx;
+
+            range = new Range(start, end);
+            return true;
         }
 
-        // Create exclusive end range
-        range = new Range(start, end);
-        return true;
+    Scalar:
+        {
+            // Limit search window to avoid scanning entire UA string unnecessarily
+            const int Windows = 128;
+            if (haystack.Length > Windows)
+            {
+                haystack = haystack.Slice(0, Windows);
+            }
+
+            int start = -1;
+            int i = 0;
+
+            for (; i < haystack.Length; ++i)
+            {
+                char c = haystack[i];
+                if (char.IsBetween(c, '0', '9'))
+                {
+                    start = i;
+                    break;
+                }
+            }
+
+            if (start < 0)
+            {
+                // No digit found => no version
+                return false;
+            }
+
+            haystack = haystack.Slice(i + 1);
+            for (i = 0; i < haystack.Length; ++i)
+            {
+                char c = haystack[i];
+                if (!(char.IsBetween(c, '0', '9') || c == '.'))
+                {
+                    break;
+                }
+            }
+
+            i += start + 1;     // shift back the previous domain
+
+            if (i == start)
+            {
+                return false;
+            }
+
+            range = new Range(start, i);
+            return true;
+        }
     }
 }
