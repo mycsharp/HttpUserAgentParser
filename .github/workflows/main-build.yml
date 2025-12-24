@@ -45,24 +45,18 @@ jobs:
             echo "✅ Tag $TAG does not exist yet"
           fi
 
-      - name: Remove old packages from existing draft
+      - name: Delete existing draft releases
         if: steps.check-tag.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v${{ needs.build-and-test.outputs.version }}"
-          # Check if draft release already exists
-          if gh release view "$TAG" &>/dev/null; then
-            echo "🗑️ Removing old NuGet packages from existing draft..."
-            gh release view "$TAG" --json assets -q '.assets[] | select(.name | endswith(".nupkg")) | "\(.id) \(.name)"' | while read -r asset_id asset_name; do
-              echo "Deleting old package: $asset_name (ID: $asset_id)"
-              gh api --method DELETE "/repos/${{ github.repository }}/releases/assets/$asset_id" || echo "Failed to delete $asset_name"
-            done
-          else
-            echo "No existing draft release found"
-          fi
+          echo "Checking for existing draft releases..."
+          gh release list --json isDraft,tagName --jq '.[] | select(.isDraft) | .tagName' | while read -r tag_name; do
+            echo "Deleting existing draft release: $tag_name"
+            gh release delete "$tag_name" --yes --cleanup-tag || echo "Failed to delete release $tag_name"
+          done
 
-      - name: Create/Update Draft Release
+      - name: Create Draft Release
         if: steps.check-tag.outputs.exists == 'false'
         uses: release-drafter/release-drafter@v6
         env:
@@ -81,7 +75,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ needs.build-and-test.outputs.version }}"
-          # Wait a moment for the release to be created/updated
+          # Wait a moment for the release to be created
           sleep 2
 
           # Upload new artifacts to the draft release
