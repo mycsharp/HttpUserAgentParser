@@ -69,9 +69,9 @@ jobs:
 
           # Remove old NuGet packages from the draft release
           echo "🗑️ Removing old NuGet packages..."
-          gh release view "$TAG" --json assets --jq '.assets[].name' | grep '\.nupkg$' | while read -r asset; do
-            echo "Deleting old package: $asset"
-            gh api --method DELETE "/repos/${{ github.repository }}/releases/assets/$(gh release view "$TAG" --json assets --jq ".assets[] | select(.name == \"$asset\") | .id")" || true
+          gh release view "$TAG" --json assets -q '.assets[] | select(.name | endswith(".nupkg")) | "\(.id) \(.name)"' | while read -r asset_id asset_name; do
+            echo "Deleting old package: $asset_name (ID: $asset_id)"
+            gh api --method DELETE "/repos/${{ github.repository }}/releases/assets/$asset_id" || echo "Failed to delete $asset_name"
           done
 
           # Upload new artifacts to the draft release
