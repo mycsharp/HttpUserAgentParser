@@ -1,0 +1,75 @@
+name: Publish Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-nuget:
+    name: Publish to NuGet.org
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Pack NuGet packages
+        run: dotnet pack --configuration Release --no-build --output ./artifacts
+
+      - name: Verify packages
+        run: |
+          echo "Packages to be published:"
+          ls -la ./artifacts/*.nupkg
+
+          # Verify package count
+          PACKAGE_COUNT=$(ls ./artifacts/*.nupkg | wc -l)
+          if [ "$PACKAGE_COUNT" -eq 0 ]; then
+            echo "Error: No packages found!"
+            exit 1
+          fi
+
+          echo "Found $PACKAGE_COUNT package(s) to publish"
+
+      - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          for package in ./artifacts/*.nupkg; do
+            echo "Publishing $package to NuGet.org..."
+            dotnet nuget push "$package" \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+          echo "All packages published successfully!"
+
+      - name: Upload published packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-nuget-packages
+          path: ./artifacts/*.nupkg
+          retention-days: 90
