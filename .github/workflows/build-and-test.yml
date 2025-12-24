@@ -36,7 +36,7 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.nbgv.outputs.version }}
+      version: ${{ steps.nbgv.outputs.SemVer2 }}
 
     steps:
       - name: Checkout code
@@ -48,23 +48,23 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ inputs.dotnet-version }}
+          global-json-file: ./global.json
 
-      - name: Install Nerdbank.GitVersioning
-        run: dotnet tool install -g nbgv
-
-      - name: Set version with NBGV
+      - name: Calculate Version with NBGV
+        uses: dotnet/nbgv@master
         id: nbgv
+        with:
+          setAllVars: true
+
+      - name: Version Info
         run: |
-          nbgv get-version --format json > version.json
-          VERSION=$(nbgv get-version -v NuGetPackageVersion)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Calculated version: $VERSION"
+          echo "Calculated version: ${{ steps.nbgv.outputs.SemVer2 }}"
 
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration ${{ inputs.configuration }} --no-restore
+        run: dotnet build --configuration ${{ inputs.configuration }} --no-restore /p:Version=${{ steps.nbgv.outputs.SemVer2 }}
 
       - name: Test
         run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
@@ -78,7 +78,7 @@ jobs:
 
       - name: Pack NuGet packages
         if: inputs.create-pack
-        run: dotnet pack --configuration ${{ inputs.configuration }} --no-build --output ./artifacts
+        run: dotnet pack --configuration ${{ inputs.configuration }} --no-build --output ./artifacts /p:PackageVersion=${{ steps.nbgv.outputs.SemVer2 }}
 
       - name: Upload NuGet packages
         if: inputs.create-pack
