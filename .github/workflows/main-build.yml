@@ -66,7 +66,16 @@ jobs:
           TAG="v${{ needs.build-and-test.outputs.version }}"
           # Wait a moment for the release to be created
           sleep 2
-          # Upload artifacts to the draft release
+
+          # Remove old NuGet packages from the draft release
+          echo "🗑️ Removing old NuGet packages..."
+          gh release view "$TAG" --json assets --jq '.assets[].name' | grep '\.nupkg$' | while read -r asset; do
+            echo "Deleting old package: $asset"
+            gh api --method DELETE "/repos/${{ github.repository }}/releases/assets/$(gh release view "$TAG" --json assets --jq ".assets[] | select(.name == \"$asset\") | .id")" || true
+          done
+
+          # Upload new artifacts to the draft release
+          echo "📦 Uploading new NuGet packages..."
           for file in ./artifacts/*.nupkg; do
             gh release upload "$TAG" "$file" --clobber
           done
