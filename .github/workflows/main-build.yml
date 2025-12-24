@@ -10,118 +10,82 @@ permissions:
   packages: write
 
 jobs:
-  build-and-pack:
-    name: Build, Pack and Create Draft Release
+  build-and-test:
+    name: Build, Test and Pack
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      create-pack: true
+
+  create-draft-release:
+    name: Create Draft Release
+    needs: build-and-test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Required for GitVersion
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
-            9.0.x
-            10.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Test
-        run: dotnet test --configuration Release --no-build --verbosity normal
-
-      - name: Pack NuGet packages
-        run: dotnet pack --configuration Release --no-build --output ./artifacts
-
-      - name: Get version from packages
-        id: get-version
-        run: |
-          # Extract version from the first package
-          VERSION=$(ls ./artifacts/*.nupkg | head -1 | sed -n 's/.*\.MyCSharp\.HttpUserAgentParser\.\([0-9]\+\.[0-9]\+\.[0-9]\+.*\)\.nupkg/\1/p')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-
-      - name: Check for existing draft release
-        id: check-draft
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          DRAFT_RELEASE=$(gh release list --limit 100 --json isDraft,name,tagName | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
-          if [ -n "$DRAFT_RELEASE" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "tag=$DRAFT_RELEASE" >> $GITHUB_OUTPUT
-            echo "Found existing draft release: $DRAFT_RELEASE"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "No existing draft release found"
-          fi
-
-      - name: Delete existing draft release
-        if: steps.check-draft.outputs.exists == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Deleting existing draft release: ${{ steps.check-draft.outputs.tag }}"
-          gh release delete ${{ steps.check-draft.outputs.tag }} --yes --cleanup-tag || true
-
-      - name: Create draft release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION="${{ steps.get-version.outputs.version }}"
-          TAG="v${VERSION}"
-
-          # Create release notes
-          cat > release-notes.md << 'EOF'
-          ## What's Changed
-
-          This is an automated draft release created from the main branch.
-
-          ### Packages
-
-          The following NuGet packages are included in this release:
-
-          EOF
-
-          # List all packages
-          for file in ./artifacts/*.nupkg; do
-            filename=$(basename "$file")
-            echo "- \`$filename\`" >> release-notes.md
-          done
-
-          cat >> release-notes.md << 'EOF'
-
-          ### Installation
-
-          ```bash
-          dotnet add package MyCSharp.HttpUserAgentParser
-          dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore
-          dotnet add package MyCSharp.HttpUserAgentParser.MemoryCache
-          ```
-
-          **Full Changelog**: https://github.com/${{ github.repository }}/commits/${{ github.sha }}
-          EOF
-
-          # Create draft release
-          gh release create "$TAG" \
-            ./artifacts/*.nupkg \
-            --draft \
-            --title "Release $VERSION" \
-            --notes-file release-notes.md \
-            --target ${{ github.sha }}
-
-          echo "Created draft release: $TAG"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Download NuGet packages
+        uses: actions/download-artifact@v4
         with:
           name: nuget-packages
-          path: ./artifacts/*.nupkg
-          retention-days: 30
+          path: ./artifacts
+
+      - name: Check if tag exists
+        id: check-tag
+        run: |
+          TAG="v${{ needs.build-and-test.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Tag $TAG already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✅ Tag $TAG does not exist yet"
+          fi
+
+      - name: Create/Update Draft Release
+        if: steps.check-tag.outputs.exists == 'false'
+        uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-name: release-drafter.yml
+          version: v${{ needs.build-and-test.outputs.version }}
+          tag: v${{ needs.build-and-test.outputs.version }}
+          name: Version ${{ needs.build-and-test.outputs.version }}
+          publish: false
+          prerelease: false
+
+      - name: Upload packages to draft release
+        if: steps.check-tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ needs.build-and-test.outputs.version }}"
+          # Wait a moment for the release to be created
+          sleep 2
+          # Upload artifacts to the draft release
+          for file in ./artifacts/*.nupkg; do
+            gh release upload "$TAG" "$file" --clobber
+          done
+          echo "✅ Uploaded NuGet packages to draft release"
+
+      - name: Summary
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          echo "✅ Draft release created/updated" >> $GITHUB_STEP_SUMMARY
+          echo "Version: v${{ needs.build-and-test.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Go to [Releases](../../releases)" >> $GITHUB_STEP_SUMMARY
+          echo "2. Review the draft release" >> $GITHUB_STEP_SUMMARY
+          echo "3. Edit release notes if needed" >> $GITHUB_STEP_SUMMARY
+          echo "4. Publish release to trigger production deployment" >> $GITHUB_STEP_SUMMARY
+
+      - name: Release already exists
+        if: steps.check-tag.outputs.exists == 'true'
+        run: |
+          echo "ℹ️ Release v${{ needs.build-and-test.outputs.version }} already exists" >> $GITHUB_STEP_SUMMARY
+          echo "No action taken" >> $GITHUB_STEP_SUMMARY

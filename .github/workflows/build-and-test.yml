@@ -1,0 +1,89 @@
+name: Build and Test (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      dotnet-version:
+        description: '.NET version to use (can be multi-line for multiple versions)'
+        required: false
+        type: string
+        default: |
+          8.0.x
+          9.0.x
+          10.0.x
+      configuration:
+        description: 'Build configuration'
+        required: false
+        type: string
+        default: 'Release'
+      upload-test-results:
+        description: 'Whether to upload test results as artifacts'
+        required: false
+        type: boolean
+        default: false
+      create-pack:
+        description: 'Whether to pack NuGet packages'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      version:
+        description: 'The calculated version from NBGV'
+        value: ${{ jobs.build.outputs.version }}
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.nbgv.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for GitVersion
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Install Nerdbank.GitVersioning
+        run: dotnet tool install -g nbgv
+
+      - name: Set version with NBGV
+        id: nbgv
+        run: |
+          nbgv get-version --format json > version.json
+          VERSION=$(nbgv get-version -v NuGetPackageVersion)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Calculated version: $VERSION"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration ${{ inputs.configuration }} --no-restore
+
+      - name: Test
+        run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always() && inputs.upload-test-results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ inputs.dotnet-version }}
+          path: '**/TestResults/**/*.trx'
+
+      - name: Pack NuGet packages
+        if: inputs.create-pack
+        run: dotnet pack --configuration ${{ inputs.configuration }} --no-build --output ./artifacts
+
+      - name: Upload NuGet packages
+        if: inputs.create-pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./artifacts/*.nupkg
+          retention-days: 30

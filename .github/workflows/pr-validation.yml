@@ -10,37 +10,23 @@ permissions:
   pull-requests: read
 
 jobs:
-  validate:
-    name: Build and Test
-    runs-on: ubuntu-latest
+  validate-dotnet-8:
+    name: Test on .NET 8.0
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      dotnet-version: '8.0.x'
+      upload-test-results: true
 
-    strategy:
-      matrix:
-        dotnet-version: ['8.0.x', '9.0.x', '10.0.x']
+  validate-dotnet-9:
+    name: Test on .NET 9.0
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      dotnet-version: '9.0.x'
+      upload-test-results: true
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Required for GitVersion
-
-      - name: Setup .NET ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Test
-        run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-${{ matrix.dotnet-version }}
-          path: '**/TestResults/**/*.trx'
+  validate-dotnet-10:
+    name: Test on .NET 10.0
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      dotnet-version: '10.0.x'
+      upload-test-results: true
