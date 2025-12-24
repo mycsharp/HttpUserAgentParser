@@ -40,6 +40,12 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <PropertyGroup Label="Performance">
+    <!-- Enable Dynamic Profile-Guided Optimization for runtime performance -->
+    <TieredPGO>true</TieredPGO>
+    <DynamicPGO>true</DynamicPGO>
+  </PropertyGroup>
+
   <PropertyGroup Label="Package">
     <IsPackable>false</IsPackable>
     <NoPackageAnalysis>true</NoPackageAnalysis>

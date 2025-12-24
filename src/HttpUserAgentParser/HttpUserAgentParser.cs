@@ -144,9 +144,10 @@ public static class HttpUserAgentParser
     /// </summary>
     public static string? GetRobot(string userAgent)
     {
+        ReadOnlySpan<char> ua = userAgent.AsSpan();
         foreach ((string key, string value) in HttpUserAgentStatics.Robots)
         {
-            if (userAgent.Contains(key, StringComparison.OrdinalIgnoreCase))
+            if (ContainsIgnoreCase(ua, key))
             {
                 return value;
             }
@@ -169,9 +170,10 @@ public static class HttpUserAgentParser
     /// </summary>
     public static string? GetMobileDevice(string userAgent)
     {
+        ReadOnlySpan<char> ua = userAgent.AsSpan();
         foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
         {
-            if (userAgent.Contains(key, StringComparison.OrdinalIgnoreCase))
+            if (ContainsIgnoreCase(ua, key))
             {
                 return value;
             }
