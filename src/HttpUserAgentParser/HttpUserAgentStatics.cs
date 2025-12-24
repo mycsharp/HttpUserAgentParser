@@ -73,14 +73,30 @@ public static class HttpUserAgentStatics
 
     /// <summary>
     /// Fast-path platform token rules for zero-allocation Contains checks
+    /// Sorted by frequency for better performance (most common platforms first)
     /// </summary>
     internal static readonly (string Token, string Name, HttpUserAgentPlatformType PlatformType)[] s_platformRules =
     [
+        // Most common: Windows (specific versions before generic)
         ("windows nt 10.0", "Windows 10", HttpUserAgentPlatformType.Windows),
+        ("windows nt 6.1", "Windows 7", HttpUserAgentPlatformType.Windows),
         ("windows nt 6.3", "Windows 8.1", HttpUserAgentPlatformType.Windows),
         ("windows nt 6.2", "Windows 8", HttpUserAgentPlatformType.Windows),
-        ("windows nt 6.1", "Windows 7", HttpUserAgentPlatformType.Windows),
         ("windows nt 6.0", "Windows Vista", HttpUserAgentPlatformType.Windows),
+        // Android (very common on mobile)
+        ("android", "Android", HttpUserAgentPlatformType.Android),
+        // iOS devices (very common)
+        ("iphone", "iOS", HttpUserAgentPlatformType.IOS),
+        ("ipad", "iOS", HttpUserAgentPlatformType.IOS),
+        ("ipod", "iOS", HttpUserAgentPlatformType.IOS),
+        // ChromeOS (must be before "os x" to avoid false match with "CrOS")
+        ("cros", "ChromeOS", HttpUserAgentPlatformType.ChromeOS),
+        // Mac OS (common)
+        ("os x", "Mac OS X", HttpUserAgentPlatformType.MacOS),
+        // Linux (common)
+        ("linux", "Linux", HttpUserAgentPlatformType.Linux),
+        // Other Windows versions
+        ("windows phone", "Windows Phone", HttpUserAgentPlatformType.Windows),
         ("windows nt 5.2", "Windows 2003", HttpUserAgentPlatformType.Windows),
         ("windows nt 5.1", "Windows XP", HttpUserAgentPlatformType.Windows),
         ("windows nt 5.0", "Windows 2000", HttpUserAgentPlatformType.Windows),
@@ -92,20 +108,17 @@ public static class HttpUserAgentStatics
         ("win98", "Windows 98", HttpUserAgentPlatformType.Windows),
         ("windows 95", "Windows 95", HttpUserAgentPlatformType.Windows),
         ("win95", "Windows 95", HttpUserAgentPlatformType.Windows),
-        ("windows phone", "Windows Phone", HttpUserAgentPlatformType.Windows),
         ("windows", "Unknown Windows OS", HttpUserAgentPlatformType.Windows),
-        ("android", "Android", HttpUserAgentPlatformType.Android),
+        // Less common platforms
         ("blackberry", "BlackBerry", HttpUserAgentPlatformType.BlackBerry),
-        ("iphone", "iOS", HttpUserAgentPlatformType.IOS),
-        ("ipad", "iOS", HttpUserAgentPlatformType.IOS),
-        ("ipod", "iOS", HttpUserAgentPlatformType.IOS),
-        ("cros", "ChromeOS", HttpUserAgentPlatformType.ChromeOS),
-        ("os x", "Mac OS X", HttpUserAgentPlatformType.MacOS),
         ("ppc mac", "Power PC Mac", HttpUserAgentPlatformType.MacOS),
+        ("debian", "Debian", HttpUserAgentPlatformType.Linux),
         ("freebsd", "FreeBSD", HttpUserAgentPlatformType.Linux),
         ("ppc", "Macintosh", HttpUserAgentPlatformType.Linux),
-        ("linux", "Linux", HttpUserAgentPlatformType.Linux),
-        ("debian", "Debian", HttpUserAgentPlatformType.Linux),
+        ("gnu", "GNU/Linux", HttpUserAgentPlatformType.Linux),
+        ("unix", "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
+        ("openbsd", "OpenBSD", HttpUserAgentPlatformType.Unix),
+        ("symbian", "Symbian OS", HttpUserAgentPlatformType.Symbian),
         ("sunos", "Sun Solaris", HttpUserAgentPlatformType.Generic),
         ("beos", "BeOS", HttpUserAgentPlatformType.Generic),
         ("apachebench", "ApacheBench", HttpUserAgentPlatformType.Generic),
@@ -115,10 +128,6 @@ public static class HttpUserAgentStatics
         ("hp-ux", "HP-UX", HttpUserAgentPlatformType.Windows),
         ("netbsd", "NetBSD", HttpUserAgentPlatformType.Generic),
         ("bsdi", "BSDi", HttpUserAgentPlatformType.Generic),
-        ("openbsd", "OpenBSD", HttpUserAgentPlatformType.Unix),
-        ("gnu", "GNU/Linux", HttpUserAgentPlatformType.Linux),
-        ("unix", "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
-        ("symbian", "Symbian OS", HttpUserAgentPlatformType.Symbian),
     ];
 
     // Precompiled platform regex map to attach to PlatformInformation without per-call allocations
@@ -181,42 +190,48 @@ public static class HttpUserAgentStatics
 
     /// <summary>
     /// Fast-path browser token rules. If these fail to extract a version, code will fall back to regex rules.
+    /// Sorted by specificity first, then frequency - more specific tokens must come before generic ones
+    /// (e.g., Edge/Opera before Chrome, since Edge/Opera UAs contain "Chrome")
     /// </summary>
     internal static readonly (string Name, string DetectToken, string? VersionToken)[] s_browserRules =
     [
+        // Most specific browsers first (contain Chrome/Mozilla in their UA)
         ("Opera", "OPR", null),
-        ("Flock", "Flock", null),
-        ("Edge", "Edge", null),
-        ("Edge", "EdgiOS", null),
-        ("Edge", "EdgA", null),
-        ("Edge", "Edg", null),
-        ("Vivaldi", "Vivaldi", null),
-        ("Brave", "Brave Chrome", null),
-        ("Chrome", "Chrome", null),
-        ("Chrome", "CriOS", null),
         ("Opera", "Opera", "Version/"),
         ("Opera", "Opera", null),
-        ("Internet Explorer", "MSIE", "MSIE "),
-        ("Internet Explorer", "Internet Explorer", null),
-        ("Internet Explorer", "Trident", "rv:"),
-        ("Shiira", "Shiira", null),
+        ("Edge", "Edg", null),
+        ("Edge", "Edge", null),
+        ("Edge", "EdgA", null),
+        ("Edge", "EdgiOS", null),
+        ("Brave", "Brave Chrome", null),
+        ("Vivaldi", "Vivaldi", null),
+        ("Flock", "Flock", null),
+        // Common browsers
+        ("Chrome", "Chrome", null),
+        ("Chrome", "CriOS", null),
+        ("Safari", "Version/", "Version/"),
         ("Firefox", "Firefox", null),
         ("Firefox", "FxiOS", null),
-        ("Chimera", "Chimera", null),
-        ("Phoenix", "Phoenix", null),
-        ("Firebird", "Firebird", null),
-        ("Camino", "Camino", null),
+        // Internet Explorer (legacy but still in use - MSIE before Trident to avoid false matches)
+        ("Internet Explorer", "MSIE", "MSIE "),
+        ("Internet Explorer", "Trident", "rv:"),
+        ("Internet Explorer", "Internet Explorer", null),
+        // Less common browsers
+        ("Maxthon", "Maxthon", null),
         ("Netscape", "Netscape", null),
-        ("OmniWeb", "OmniWeb", null),
-        ("Safari", "Version/", "Version/"),
         ("Konqueror", "Konqueror", null),
+        ("OmniWeb", "OmniWeb", null),
+        ("Shiira", "Shiira", null),
+        ("Chimera", "Chimera", null),
+        ("Camino", "Camino", null),
+        ("Firebird", "Firebird", null),
+        ("Phoenix", "Phoenix", null),
         ("iCab", "icab", null),
         ("Lynx", "Lynx", null),
         ("Links", "Links", null),
         ("HotJava", "hotjava", null),
         ("Amaya", "amaya", null),
         ("IBrowse", "IBrowse", null),
-        ("Maxthon", "Maxthon", null),
         ("Apple iPod", "ipod touch", null),
         ("Ubuntu Web Browser", "Ubuntu", null),
     ];
