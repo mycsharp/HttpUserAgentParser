@@ -113,30 +113,30 @@ public void MyMethod(IHttpUserAgentParserAccessor parserAccessor)
 ## Benchmark
 
 ```shell
-BenchmarkDotNet v0.14.0, Windows 10 (10.0.19045.6216/22H2/2022Update)
-AMD Ryzen 9 9950X, 1 CPU, 32 logical and 16 physical cores
-.NET SDK 10.0.100-preview.7.25380.108
-  [Host]   : .NET 10.0.0 (10.0.25.38108), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
-  ShortRun : .NET 10.0.0 (10.0.25.38108), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.6691/22H2/2022Update)
+AMD Ryzen 9 9950X 4.30GHz, 1 CPU, 32 logical and 16 physical cores
+.NET SDK 10.0.101
+  [Host]   : .NET 10.0.1 (10.0.1, 10.0.125.57005), X64 RyuJIT x86-64-v4
+  ShortRun : .NET 10.0.1 (10.0.1, 10.0.125.57005), X64 RyuJIT x86-64-v4
 
 Job=ShortRun  IterationCount=3  LaunchCount=1
 WarmupCount=3
 
-| Method             | Categories | Data         | Mean            | Error            | StdDev         | Ratio     | RatioSD  | Gen0     | Gen1     | Gen2     | Allocated  | Alloc Ratio |
-|------------------- |----------- |------------- |----------------:|-----------------:|---------------:|----------:|---------:|---------:|---------:|---------:|-----------:|------------:|
-| MyCSharp           | Basic      | Chrome Win10 |       871.85 ns |       132.008 ns |       7.236 ns |      1.00 |     0.01 |   0.0029 |        - |        - |       48 B |        1.00 |
-| UAParser           | Basic      | Chrome Win10 | 8,901,909.90 ns | 3,411,259.484 ns | 186,982.644 ns | 10,210.80 |   199.60 | 656.2500 | 578.1250 | 109.3750 | 11523310 B |  240,068.96 |
-| DeviceDetector.NET | Basic      | Chrome Win10 | 5,391,412.50 ns | 8,253,446.769 ns | 452,399.269 ns |  6,184.14 |   451.58 | 296.8750 | 125.0000 |  31.2500 |  5002239 B |  104,213.31 |
-|                    |            |              |                 |                  |                |           |          |          |          |          |            |             |
-| MyCSharp           | Basic      | Google-Bot   |       158.80 ns |        19.584 ns |       1.073 ns |      1.00 |     0.01 |        - |        - |        - |          - |          NA |
-| UAParser           | Basic      | Google-Bot   | 9,666,739.32 ns | 7,566,085.041 ns | 414,722.653 ns | 60,873.62 | 2,289.43 | 671.8750 | 656.2500 | 109.3750 | 11876998 B |          NA |
-| DeviceDetector.NET | Basic      | Google-Bot   | 6,106,666.41 ns |   593,634.990 ns |  32,539.137 ns | 38,455.05 |   285.97 | 539.0625 | 117.1875 |  23.4375 |  8817078 B |          NA |
-|                    |            |              |                 |                  |                |           |          |          |          |          |            |             |
-| MyCSharp           | Cached     | Chrome Win10 |        26.43 ns |         0.132 ns |       0.007 ns |      1.00 |     0.00 |        - |        - |        - |          - |          NA |
-| UAParser           | Cached     | Chrome Win10 |   177,417.99 ns |    24,390.139 ns |   1,336.906 ns |  6,713.66 |    43.84 |   2.1973 |        - |        - |    37488 B |          NA |
-|                    |            |              |                 |                  |                |           |          |          |          |          |            |             |
-| MyCSharp           | Cached     | Google-Bot   |        17.03 ns |         1.835 ns |       0.101 ns |      1.00 |     0.01 |        - |        - |        - |          - |          NA |
-| UAParser           | Cached     | Google-Bot   |   129,445.13 ns |    21,319.059 ns |   1,168.570 ns |  7,599.76 |    70.93 |   2.6855 |        - |        - |    45857 B |          NA |
+| Method             | Categories | Data         | Mean            | Error            | StdDev         | Ratio     | RatioSD | Gen0     | Gen1     | Gen2     | Allocated  | Alloc Ratio |
+|------------------- |----------- |------------- |----------------:|-----------------:|---------------:|----------:|--------:|---------:|---------:|---------:|-----------:|------------:|
+| MyCSharp           | Basic      | Chrome Win10 |       939.54 ns |       113.807 ns |       6.238 ns |      1.00 |    0.01 |   0.0019 |        - |        - |       48 B |        1.00 |
+| UAParser           | Basic      | Chrome Win10 | 9,120,055.21 ns | 2,108,412.449 ns | 115,569.201 ns |  9,707.23 |  120.28 | 671.8750 | 609.3750 | 109.3750 | 11659008 B |  242,896.00 |
+| DeviceDetector.NET | Basic      | Chrome Win10 | 5,099,680.21 ns | 5,313,448.322 ns | 291,248.033 ns |  5,428.01 |  270.28 | 296.8750 | 140.6250 |  31.2500 |  5034130 B |  104,877.71 |
+|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
+| MyCSharp           | Basic      | Google-Bot   |       226.47 ns |        20.818 ns |       1.141 ns |      1.00 |    0.01 |        - |        - |        - |          - |          NA |
+| UAParser           | Basic      | Google-Bot   | 9,007,285.42 ns |   491,694.016 ns |  26,951.408 ns | 39,772.36 |  202.28 | 687.5000 | 640.6250 | 125.0000 | 12015474 B |          NA |
+| DeviceDetector.NET | Basic      | Google-Bot   | 6,056,996.61 ns |   567,479.924 ns |  31,105.490 ns | 26,745.13 |  166.88 | 546.8750 | 132.8125 |  23.4375 |  8862491 B |          NA |
+|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
+| MyCSharp           | Cached     | Chrome Win10 |        24.59 ns |         2.222 ns |       0.122 ns |      1.00 |    0.01 |        - |        - |        - |          - |          NA |
+| UAParser           | Cached     | Chrome Win10 |   162,917.93 ns |    36,544.250 ns |   2,003.114 ns |  6,625.90 |   76.03 |   2.1973 |        - |        - |    37488 B |          NA |
+|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
+| MyCSharp           | Cached     | Google-Bot   |        17.42 ns |         1.077 ns |       0.059 ns |      1.00 |    0.00 |        - |        - |        - |          - |          NA |
+| UAParser           | Cached     | Google-Bot   |   126,321.45 ns |     3,171.908 ns |     173.863 ns |  7,253.51 |   23.01 |   2.6855 |        - |        - |    45856 B |          NA |
 ```
 
 ## Disclaimer
