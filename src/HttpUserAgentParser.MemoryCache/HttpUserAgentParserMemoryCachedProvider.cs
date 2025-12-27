@@ -151,5 +151,4 @@ public class HttpUserAgentParserMemoryCachedProvider(
         public override int GetHashCode()
             => UserAgent.GetHashCode(StringComparison.Ordinal);
     }
-
 }

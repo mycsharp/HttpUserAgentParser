@@ -141,10 +141,7 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     /// counter reports a correct value once a listener attaches.
     /// </remarks>
     [NonEvent]
-    internal void ConcurrentCacheSizeSet(int size)
-    {
-        HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
-    }
+    internal static void ConcurrentCacheSizeSet(int size) => HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
 
     /// <summary>
     /// Releases all EventCounter and PollingCounter resources used by this EventSource.

@@ -125,5 +125,4 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
             HttpUserAgentParserAspNetCoreMeters.UserAgentMissing();
         }
     }
-
 }

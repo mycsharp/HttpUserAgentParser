@@ -80,7 +80,7 @@ public sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
     /// Releases all EventCounter resources used by this EventSource.
     /// </summary>
     /// <param name="disposing">
-    /// <see langword="true"/> when called from <see cref="Dispose()"/>;
+    /// <see langword="true"/> when called from Dispose;
     /// <see langword="false"/> when called from a finalizer.
     /// </param>
     protected override void Dispose(bool disposing)

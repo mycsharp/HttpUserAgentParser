@@ -67,10 +67,10 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
     }
 
     [NonEvent]
-    internal void CacheSizeIncrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeIncrement();
+    internal static void CacheSizeIncrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeIncrement();
 
     [NonEvent]
-    internal void CacheSizeDecrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeDecrement();
+    internal static void CacheSizeDecrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeDecrement();
 
     /// <inheritdoc />
     protected override void Dispose(bool disposing)

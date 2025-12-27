@@ -1,6 +1,7 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
@@ -56,6 +57,12 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     /// <summary>
     /// Enables native System.Diagnostics.Metrics telemetry for the MemoryCache provider.
     /// </summary>
+    public static void EnableMeters(Meter? meter = null)
+    {
+        HttpUserAgentParserMemoryCacheMeters.Enable(meter);
+        Interlocked.Or(ref s_enabledFlags, MetersFlag);
+    }
+
     /// <summary>
     /// Records a cache hit.
     /// </summary>
@@ -113,5 +120,4 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheSizeDecrement()
         => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeDecrement();
-
 }

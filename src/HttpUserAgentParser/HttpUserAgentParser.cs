@@ -83,13 +83,13 @@ public static class HttpUserAgentParser
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentStatics.s_platformRules)
+        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) in HttpUserAgentStatics.s_platformRules)
         {
-            if (ContainsIgnoreCase(ua, platform.Token))
+            if (ContainsIgnoreCase(ua, Token))
             {
                 return new HttpUserAgentPlatformInformation(
-                    HttpUserAgentStatics.GetPlatformRegexForToken(platform.Token),
-                    platform.Name, platform.PlatformType);
+                    HttpUserAgentStatics.GetPlatformRegexForToken(Token),
+                    Name, PlatformType);
             }
         }
 
@@ -112,9 +112,9 @@ public static class HttpUserAgentParser
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
 
-        foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentStatics.s_browserRules)
+        foreach ((string Name, string DetectToken, string? VersionToken) in HttpUserAgentStatics.s_browserRules)
         {
-            if (!TryIndexOf(ua, browserRule.DetectToken, out int detectIndex))
+            if (!TryIndexOf(ua, DetectToken, out int detectIndex))
             {
                 continue;
             }
@@ -123,37 +123,37 @@ public static class HttpUserAgentParser
 
             int versionSearchStart;
             // For rules without a specific version token, ensure pattern Token/<digits>
-            if (string.IsNullOrEmpty(browserRule.VersionToken))
+            if (string.IsNullOrEmpty(VersionToken))
             {
-                int afterDetect = detectIndex + browserRule.DetectToken.Length;
+                int afterDetect = detectIndex + DetectToken.Length;
                 if (afterDetect >= ua.Length || ua[afterDetect] != '/')
                 {
                     // Likely a misspelling or partial token (e.g., Edgg, Oprea, Chromee)
                     continue;
                 }
             }
-            if (!string.IsNullOrEmpty(browserRule.VersionToken))
+            if (!string.IsNullOrEmpty(VersionToken))
             {
-                if (TryIndexOf(ua, browserRule.VersionToken!, out int vtIndex))
+                if (TryIndexOf(ua, VersionToken!, out int vtIndex))
                 {
-                    versionSearchStart = vtIndex + browserRule.VersionToken!.Length;
+                    versionSearchStart = vtIndex + VersionToken!.Length;
                 }
                 else
                 {
                     // If specific version token wasn't found, fall back to detect token area
-                    versionSearchStart = detectIndex + browserRule.DetectToken.Length;
+                    versionSearchStart = detectIndex + DetectToken.Length;
                 }
             }
             else
             {
-                versionSearchStart = detectIndex + browserRule.DetectToken.Length;
+                versionSearchStart = detectIndex + DetectToken.Length;
             }
 
             ReadOnlySpan<char> search = ua.Slice(versionSearchStart);
             if (TryExtractVersion(search, out Range range))
             {
                 string? version = search[range].ToString();
-                return (browserRule.Name, version);
+                return (Name, version);
             }
 
             // If we didn't find a version for this rule, try next rule
