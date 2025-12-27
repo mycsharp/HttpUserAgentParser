@@ -109,7 +109,6 @@ internal static class HttpUserAgentParserMeters
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ConcurrentCacheMiss() => s_concurrentCacheMiss?.Add(1);
 
-#if DEBUG
     /// <summary>
     /// Resets static state to support isolated unit tests.
     /// </summary>
@@ -124,5 +123,4 @@ internal static class HttpUserAgentParserMeters
         s_concurrentCacheMiss = null;
         s_concurrentCacheSize = null;
     }
-#endif
 }

@@ -13,9 +13,7 @@ public class HttpUserAgentParserMetersTelemetryTests
     [Fact]
     public void Meters_DoNotEmit_WhenDisabled()
     {
-#if DEBUG
         HttpUserAgentParserTelemetry.ResetForTests();
-#endif
 
         using MeterTestListener listener = new(MyCSharp.HttpUserAgentParser.Telemetry.HttpUserAgentParserMeters.MeterName);
 
@@ -28,9 +26,7 @@ public class HttpUserAgentParserMetersTelemetryTests
     [Fact]
     public void Meters_Emit_WhenEnabled()
     {
-#if DEBUG
         HttpUserAgentParserTelemetry.ResetForTests();
-#endif
 
         using MeterTestListener listener = new(MyCSharp.HttpUserAgentParser.Telemetry.HttpUserAgentParserMeters.MeterName);
 

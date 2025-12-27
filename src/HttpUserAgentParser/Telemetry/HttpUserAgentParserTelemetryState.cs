@@ -30,11 +30,9 @@ internal static class HttpUserAgentParserTelemetryState
     public static void SetConcurrentCacheSize(int size)
         => Volatile.Write(ref s_concurrentCacheSize, size);
 
-#if DEBUG
     /// <summary>
     /// Resets the telemetry state for unit tests.
     /// </summary>
     public static void ResetForTests()
         => Volatile.Write(ref s_concurrentCacheSize, 0);
-#endif
 }

@@ -152,9 +152,8 @@ internal static class HttpUserAgentParserTelemetry
     public static void ConcurrentCacheSizeSet(int size)
         => HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
 
-#if DEBUG
     /// <summary>
-    /// Resets static state to support isolated unit tests.
+    /// Resets telemetry state for unit testing.
     /// </summary>
     public static void ResetForTests()
     {
@@ -162,5 +161,4 @@ internal static class HttpUserAgentParserTelemetry
         HttpUserAgentParserTelemetryState.ResetForTests();
         HttpUserAgentParserMeters.ResetForTests();
     }
-#endif
 }
