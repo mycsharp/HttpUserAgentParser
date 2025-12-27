@@ -1,7 +1,9 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using MyCSharp.HttpUserAgentParser.Providers;
+using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache;
 
@@ -21,6 +23,36 @@ public class HttpUserAgentParserMemoryCachedProvider(
     {
         CacheKey key = GetKey(userAgent);
 
+        if (!HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)
+            return ParseWithoutTelemetry(key);
+
+        bool countersEnabled = HttpUserAgentParserMemoryCacheTelemetry.AreCountersEnabled;
+        if (countersEnabled && _memoryCache.TryGetValue(key, out HttpUserAgentInformation cached))
+        {
+            HttpUserAgentParserMemoryCacheEventSource.Log.CacheHit();
+            return cached;
+        }
+
+        return _memoryCache.GetOrCreate(key, static entry =>
+        {
+            CacheKey key = (entry.Key as CacheKey)!;
+            entry.SlidingExpiration = key.Options.CacheEntryOptions.SlidingExpiration;
+            entry.SetSize(1);
+
+            // Miss path. Note: Like other cache implementations, races can happen; counters are best-effort.
+            if (HttpUserAgentParserMemoryCacheTelemetry.AreCountersEnabled)
+                HttpUserAgentParserMemoryCacheEventSource.Log.CacheMiss();
+
+            HttpUserAgentParserMemoryCacheEventSource.Log.CacheSizeIncrement();
+            entry.RegisterPostEvictionCallback(static (_, _, _, _) => HttpUserAgentParserMemoryCacheEventSource.Log.CacheSizeDecrement());
+
+            return HttpUserAgentParser.Parse(key.UserAgent);
+        });
+    }
+
+    [ExcludeFromCodeCoverage]
+    private HttpUserAgentInformation ParseWithoutTelemetry(CacheKey key)
+    {
         return _memoryCache.GetOrCreate(key, static entry =>
         {
             CacheKey key = (entry.Key as CacheKey)!;

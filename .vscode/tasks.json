@@ -1,13 +1,51 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"problemMatcher": [
-				"$msCompile"
-			],
-			"group": "build"
-		}
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dotnet: restore",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["restore"],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "close": true,
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "dotnet: build",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build", "--no-restore"],
+      "problemMatcher": "$msCompile",
+      "dependsOn": "dotnet: restore",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "close": true,
+        "showReuseMessage": false
+      },
+      "group": "build"
+    },
+    {
+      "label": "dotnet: test",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "--no-build",
+        "--nologo"
+      ],
+      "problemMatcher": "$msCompile",
+      "dependsOn": "dotnet: build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "close": true,
+        "showReuseMessage": false
+      }
+    }
+  ]
+}

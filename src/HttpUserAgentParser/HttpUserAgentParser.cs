@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using MyCSharp.HttpUserAgentParser.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser;
 
@@ -19,6 +20,19 @@ public static class HttpUserAgentParser
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
     public static HttpUserAgentInformation Parse(string userAgent)
+    {
+        if (!HttpUserAgentParserTelemetry.AreCountersEnabled)
+            return ParseInternal(userAgent);
+
+        long startTimestamp = Stopwatch.GetTimestamp();
+        HttpUserAgentParserEventSource.Log.ParseRequest();
+
+        HttpUserAgentInformation result = ParseInternal(userAgent);
+        HttpUserAgentParserEventSource.Log.ParseDuration(Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
+        return result;
+    }
+
+    private static HttpUserAgentInformation ParseInternal(string userAgent)
     {
         // prepare
         userAgent = Cleanup(userAgent);
