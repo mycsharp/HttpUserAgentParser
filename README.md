@@ -7,7 +7,7 @@ Parsing HTTP User Agents with .NET
 | NuGet |
 |-|
 | [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser) |
-| [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.MemoryCache.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.MemoryCache)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache)| `dotnet add package MyCSharp.HttpUserAgentParser.MemoryCach.MemoryCache` |
+| [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.MemoryCache.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.MemoryCache)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache)| `dotnet add package MyCSharp.HttpUserAgentParser.MemoryCache` |
 | [![MyCSharp.HttpUserAgentParser.AspNetCore](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.AspNetCore.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.AspNetCore)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore) | `dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore` |
 
 
@@ -109,6 +109,183 @@ public void MyMethod(IHttpUserAgentParserAccessor parserAccessor)
     HttpUserAgentInformation info = parserAccessor.Get();
 }
 ```
+
+## Telemetry (EventCounters)
+
+Telemetry is **opt-in** and **modular per package**.
+
+- Opt-in: no telemetry overhead unless you explicitly enable it.
+- Modular: each package has its own `EventSource` name, so you can monitor only what you use.
+
+### Enable telemetry (Fluent API)
+
+Core parser telemetry:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+        .AddHttpUserAgentParser()
+        .WithTelemetry();
+}
+```
+
+MemoryCache telemetry (in addition to core, optional):
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+        .AddHttpUserAgentMemoryCachedParser()
+        .WithTelemetry() // core counters (optional)
+        .WithMemoryCacheTelemetry();
+}
+```
+
+ASP.NET Core telemetry (header present/missing):
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+        .AddHttpUserAgentMemoryCachedParser()
+        .AddHttpUserAgentParserAccessor()
+        .WithAspNetCoreTelemetry();
+}
+```
+
+### EventSource names and counters
+
+Core (`MyCSharp.HttpUserAgentParser`)
+
+- `parse-requests`
+- `parse-duration` (ms)
+- `cache-concurrentdictionary-hit`
+- `cache-concurrentdictionary-miss`
+- `cache-concurrentdictionary-size`
+
+MemoryCache (`MyCSharp.HttpUserAgentParser.MemoryCache`)
+
+- `cache-hit`
+- `cache-miss`
+- `cache-size`
+
+ASP.NET Core (`MyCSharp.HttpUserAgentParser.AspNetCore`)
+
+- `useragent-present`
+- `useragent-missing`
+
+### Monitor counters
+
+Using `dotnet-counters`:
+
+```bash
+dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser
+dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser.MemoryCache
+dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser.AspNetCore
+```
+
+### Export to OpenTelemetry
+
+You can collect these EventCounters via OpenTelemetry metrics.
+
+Packages you typically need:
+
+- `OpenTelemetry`
+- `OpenTelemetry.Instrumentation.EventCounters`
+- an exporter (e.g. `OpenTelemetry.Exporter.OpenTelemetryProtocol`)
+
+Example (minimal):
+
+```csharp
+using OpenTelemetry.Metrics;
+using MyCSharp.HttpUserAgentParser.Telemetry;
+using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
+using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
+
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddEventCountersInstrumentation(options =>
+            {
+                options.AddEventSources(
+                    HttpUserAgentParserEventSource.EventSourceName,
+                    HttpUserAgentParserMemoryCacheEventSource.EventSourceName,
+                    HttpUserAgentParserAspNetCoreEventSource.EventSourceName);
+            })
+            .AddOtlpExporter();
+    });
+```
+
+### Export to Application Insights
+
+Two common approaches:
+
+1) OpenTelemetry → Application Insights (recommended)
+   - Collect counters with OpenTelemetry (see above)
+   - Export using an Azure Monitor / Application Insights exporter (API varies by package/version)
+
+2) Custom `EventListener` → `TelemetryClient`
+   - Attach an `EventListener`
+   - Parse the `EventCounters` payload
+   - Forward values as custom metrics
+
+### OpenTelemetry listener (recommended)
+
+You can collect EventCounters as OpenTelemetry metrics.
+
+Typical packages:
+
+- `OpenTelemetry`
+- `OpenTelemetry.Instrumentation.EventCounters`
+- An exporter, e.g. `OpenTelemetry.Exporter.OpenTelemetryProtocol`
+
+Example:
+
+```csharp
+using OpenTelemetry.Metrics;
+
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddEventCountersInstrumentation(options =>
+            {
+                options.AddEventSources(
+                    HttpUserAgentParserEventSource.EventSourceName,
+                    HttpUserAgentParserMemoryCacheEventSource.EventSourceName,
+                    HttpUserAgentParserAspNetCoreEventSource.EventSourceName);
+            })
+            .AddOtlpExporter();
+    });
+```
+
+From there you can route metrics to:
+
+- OpenTelemetry Collector
+- Prometheus
+- Azure Monitor / Application Insights (via an Azure Monitor exporter)
+
+### Application Insights listener (custom)
+
+If you want a direct listener, you can attach an `EventListener` and forward counter values into Application Insights custom metrics.
+
+High-level steps:
+
+1) Enable telemetry via `.WithTelemetry()` / `.WithMemoryCacheTelemetry()` / `.WithAspNetCoreTelemetry()`
+2) Register an `EventListener` that enables the corresponding EventSources
+3) On `EventCounters` payload, forward values to `TelemetryClient.GetMetric(...).TrackValue(...)`
+
+Notes:
+
+- This is best-effort telemetry.
+- Prefer longer polling intervals (e.g. 10s) to reduce noise.
+
+> Notes
+>
+> - Counters are only emitted when telemetry is enabled and a listener is attached.
+> - Values are best-effort and may include cache races.
 
 ## Benchmark
 
