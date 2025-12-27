@@ -10,6 +10,10 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// System.Diagnostics.Metrics instruments emitted by MyCSharp.HttpUserAgentParser.
 /// This is opt-in and designed to keep overhead negligible unless a listener is enabled.
 /// </summary>
+/// <remarks>
+/// Instruments are created once on first enablement and emit no data unless observed
+/// by an active listener.
+/// </remarks>
 [ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMeters
 {
@@ -40,8 +44,11 @@ internal static class HttpUserAgentParserMeters
     public static bool IsParseDurationEnabled => s_parseDurationMs?.Enabled ?? false;
 
     /// <summary>
-    /// Initializes the meter and creates the instruments (idempotent).
+    /// Initializes the meter and creates all metric instruments.
     /// </summary>
+    /// <remarks>
+    /// Initialization is performed at most once. Subsequent calls are ignored.
+    /// </remarks>
     public static void Enable(Meter? meter = null)
     {
         if (Interlocked.Exchange(ref s_initialized, 1) == 1)

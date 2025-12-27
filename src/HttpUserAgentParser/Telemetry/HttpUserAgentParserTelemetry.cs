@@ -61,7 +61,17 @@ internal static class HttpUserAgentParserTelemetry
     /// Enables core EventCounter telemetry for the parser.
     /// </summary>
     public static void Enable() => Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
-/// <summary>
+
+    /// <summary>
+    /// Enables native System.Diagnostics.Metrics telemetry for the parser.
+    /// </summary>
+    public static void EnableMeters(Meter? meter = null)
+    {
+        HttpUserAgentParserMeters.Enable(meter);
+        Interlocked.Or(ref s_enabledFlags, MetersFlag);
+    }
+
+    /// <summary>
     /// Records a parse request event.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,18 +154,8 @@ internal static class HttpUserAgentParserTelemetry
 
 #if DEBUG
     /// <summary>
-    /// Resets telemetry state for unit testing.
-    /// </summary>f ((flags & MetersFlag) != 0)
-        {
-            HttpUserAgentParserMeters.ConcurrentCacheMiss();
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ConcurrentCacheSizeSet(int size)
-        => HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
-
-#if DEBUG
+    /// Resets static state to support isolated unit tests.
+    /// </summary>
     public static void ResetForTests()
     {
         Volatile.Write(ref s_enabledFlags, 0);
