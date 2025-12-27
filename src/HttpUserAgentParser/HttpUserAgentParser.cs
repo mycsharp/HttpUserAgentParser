@@ -17,8 +17,17 @@ namespace MyCSharp.HttpUserAgentParser;
 public static class HttpUserAgentParser
 {
     /// <summary>
+    /// The name of the Meter used for metrics.
+    /// </summary>
+    public const string MeterName = "MyCSharp.HttpUserAgentParser";
+
+    /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
+    /// <remarks>
+    /// If telemetry is enabled, this method will emit metrics for parse requests and duration.
+    /// The telemetry check is designed to be zero-overhead when disabled (using a volatile boolean check).
+    /// </remarks>
     public static HttpUserAgentInformation Parse(string userAgent)
     {
         if (!HttpUserAgentParserTelemetry.IsEnabled)

@@ -7,9 +7,12 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
 /// <summary>
 /// EventSource for EventCounters emitted by MyCSharp.HttpUserAgentParser.
-///
-/// The implementation is designed to keep overhead negligible unless a listener is enabled.
 /// </summary>
+/// <remarks>
+/// The implementation is designed to keep overhead negligible unless a listener
+/// is enabled. All counters are updated using lightweight, non-blocking operations
+/// suitable for hot paths.
+/// </remarks>
 [EventSource(Name = EventSourceName)]
 [ExcludeFromCodeCoverage]
 public sealed class HttpUserAgentParserEventSource : EventSource
@@ -19,6 +22,9 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     /// </summary>
     public const string EventSourceName = "MyCSharp.HttpUserAgentParser";
 
+    /// <summary>
+    /// Singleton instance of the EventSource.
+    /// </summary>
     internal static HttpUserAgentParserEventSource Log { get; } = new();
 
     private readonly IncrementingEventCounter _parseRequests;
@@ -28,6 +34,9 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     private readonly IncrementingEventCounter _concurrentCacheMiss;
     private readonly PollingCounter _concurrentCacheSize;
 
+    /// <summary>
+    /// Initializes all EventCounters and polling counters used by this EventSource.
+    /// </summary>
     private HttpUserAgentParserEventSource()
     {
         // Parser
@@ -56,13 +65,19 @@ public sealed class HttpUserAgentParserEventSource : EventSource
             DisplayUnits = "calls",
         };
 
-        _concurrentCacheSize = new PollingCounter("cache-concurrentdictionary-size", this, static () => HttpUserAgentParserTelemetryState.ConcurrentCacheSize)
+        _concurrentCacheSize = new PollingCounter(
+            "cache-concurrentdictionary-size",
+            this,
+            static () => HttpUserAgentParserTelemetryState.ConcurrentCacheSize)
         {
             DisplayName = "ConcurrentDictionary cache size",
             DisplayUnits = "entries",
         };
     }
 
+    /// <summary>
+    /// Records a User-Agent parse request.
+    /// </summary>
     [NonEvent]
     internal void ParseRequest()
     {
@@ -74,6 +89,10 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         _parseRequests?.Increment();
     }
 
+    /// <summary>
+    /// Records the duration of a User-Agent parse operation.
+    /// </summary>
+    /// <param name="milliseconds">Elapsed parse time in milliseconds.</param>
     [NonEvent]
     internal void ParseDuration(double milliseconds)
     {
@@ -85,6 +104,9 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         _parseDurationMs?.WriteMetric(milliseconds);
     }
 
+    /// <summary>
+    /// Records a cache hit in the concurrent dictionary provider.
+    /// </summary>
     [NonEvent]
     internal void ConcurrentCacheHit()
     {
@@ -96,6 +118,9 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         _concurrentCacheHit?.Increment();
     }
 
+    /// <summary>
+    /// Records a cache miss in the concurrent dictionary provider.
+    /// </summary>
     [NonEvent]
     internal void ConcurrentCacheMiss()
     {
@@ -107,15 +132,27 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         _concurrentCacheMiss?.Increment();
     }
 
+    /// <summary>
+    /// Updates the concurrent cache size used by the polling counter.
+    /// </summary>
+    /// <param name="size">Current number of entries in the cache.</param>
+    /// <remarks>
+    /// The size is updated even when telemetry is disabled so that the polling
+    /// counter reports a correct value once a listener attaches.
+    /// </remarks>
     [NonEvent]
     internal void ConcurrentCacheSizeSet(int size)
     {
-        // Size should be updated even if telemetry is currently disabled, so the polling counter is correct
-        // once a listener attaches.
         HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Releases all EventCounter and PollingCounter resources used by this EventSource.
+    /// </summary>
+    /// <param name="disposing">
+    /// <see langword="true"/> when called from <see cref="Dispose(bool)"/>;
+    /// <see langword="false"/> when called from a finalizer.
+    /// </param>
     protected override void Dispose(bool disposing)
     {
         if (disposing)

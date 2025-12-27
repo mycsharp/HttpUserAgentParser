@@ -14,6 +14,11 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore;
 public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAgentParser)
     : IHttpUserAgentParserAccessor
 {
+    /// <summary>
+    /// The name of the Meter used for metrics.
+    /// </summary>
+    public const string MeterName = "MyCSharp.HttpUserAgentParser.AspNetCore";
+
     private readonly IHttpUserAgentParserProvider _httpUserAgentParser = httpUserAgentParser;
 
     /// <summary>

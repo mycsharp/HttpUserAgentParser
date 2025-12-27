@@ -18,6 +18,13 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     /// <summary>
     /// Parses the user agent or uses the internal cached information
     /// </summary>
+    /// <remarks>
+    /// This method includes performance optimizations for telemetry:
+    /// <list type="bullet">
+    /// <item><description>Telemetry checks use a volatile flag to ensure zero overhead when disabled.</description></item>
+    /// <item><description>Cache size reporting (which requires an expensive <see cref="ConcurrentDictionary{TKey,TValue}.Count"/> lock) is only executed if the specific metric is enabled.</description></item>
+    /// </list>
+    /// </remarks>
     public HttpUserAgentInformation Parse(string userAgent)
     {
         if (!HttpUserAgentParserTelemetry.IsEnabled)
@@ -28,7 +35,6 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
         if (_cache.TryGetValue(userAgent, out HttpUserAgentInformation cached))
         {
             HttpUserAgentParserTelemetry.ConcurrentCacheHit();
-            HttpUserAgentParserTelemetry.ConcurrentCacheSizeSet(_cache.Count);
             return cached;
         }
 
@@ -39,7 +45,12 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
             return HttpUserAgentParser.Parse(ua);
         });
 
-        HttpUserAgentParserTelemetry.ConcurrentCacheSizeSet(_cache.Count);
+        if (HttpUserAgentParserTelemetry.IsCacheSizeEnabled)
+        {
+            // Optimization: Avoid expensive .Count property access (locks all buckets) if telemetry is disabled.
+            HttpUserAgentParserTelemetry.ConcurrentCacheSizeSet(_cache.Count);
+        }
+
         return result;
     }
 

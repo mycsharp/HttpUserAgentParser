@@ -12,7 +12,7 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 [ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMemoryCacheMeters
 {
-    public const string MeterName = "MyCSharp.HttpUserAgentParser.MemoryCache";
+    public const string MeterName = HttpUserAgentParserMemoryCachedProvider.MeterName;
 
     private static int s_initialized;
 
