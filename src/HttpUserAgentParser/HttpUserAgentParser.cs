@@ -21,14 +21,23 @@ public static class HttpUserAgentParser
     /// </summary>
     public static HttpUserAgentInformation Parse(string userAgent)
     {
-        if (!HttpUserAgentParserTelemetry.AreCountersEnabled)
+        if (!HttpUserAgentParserTelemetry.IsEnabled)
+        {
             return ParseInternal(userAgent);
+        }
 
-        long startTimestamp = Stopwatch.GetTimestamp();
-        HttpUserAgentParserEventSource.Log.ParseRequest();
+        bool measureDuration = HttpUserAgentParserTelemetry.ShouldMeasureParseDuration;
+        long startTimestamp = measureDuration ? Stopwatch.GetTimestamp() : 0;
+
+        HttpUserAgentParserTelemetry.ParseRequest();
 
         HttpUserAgentInformation result = ParseInternal(userAgent);
-        HttpUserAgentParserEventSource.Log.ParseDuration(Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
+
+        if (measureDuration)
+        {
+            HttpUserAgentParserTelemetry.ParseDuration(Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
+        }
+
         return result;
     }
 

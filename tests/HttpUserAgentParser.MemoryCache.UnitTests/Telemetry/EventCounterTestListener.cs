@@ -13,7 +13,9 @@ internal sealed class EventCounterTestListener(string eventSourceName) : EventLi
     protected override void OnEventSourceCreated(EventSource eventSource)
     {
         if (!string.Equals(eventSource.Name, _eventSourceName, StringComparison.Ordinal))
+        {
             return;
+        }
 
         EnableEvents(
             eventSource,
@@ -30,7 +32,9 @@ internal sealed class EventCounterTestListener(string eventSourceName) : EventLi
     protected override void OnEventWritten(EventWrittenEventArgs eventData)
     {
         if (string.Equals(eventData.EventName, "EventCounters", StringComparison.Ordinal))
+        {
             _sawEventCounters = true;
+        }
     }
 
     public bool WaitForCounters(TimeSpan timeout)

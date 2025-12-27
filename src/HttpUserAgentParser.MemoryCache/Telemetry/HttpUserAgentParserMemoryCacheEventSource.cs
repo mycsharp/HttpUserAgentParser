@@ -23,8 +23,6 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
     private readonly IncrementingEventCounter _cacheMiss;
     private readonly PollingCounter _cacheSize;
 
-    private static long s_cacheSize;
-
     private HttpUserAgentParserMemoryCacheEventSource()
     {
         _cacheHit = new IncrementingEventCounter("cache-hit", this)
@@ -39,7 +37,7 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
             DisplayUnits = "calls",
         };
 
-        _cacheSize = new PollingCounter("cache-size", this, static () => Volatile.Read(ref s_cacheSize))
+        _cacheSize = new PollingCounter("cache-size", this, static () => HttpUserAgentParserMemoryCacheTelemetryState.CacheSize)
         {
             DisplayName = "MemoryCache cache size",
             DisplayUnits = "entries",
@@ -49,22 +47,30 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
     [NonEvent]
     internal void CacheHit()
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _cacheHit?.Increment();
     }
 
     [NonEvent]
     internal void CacheMiss()
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _cacheMiss?.Increment();
     }
 
     [NonEvent]
-    internal void CacheSizeIncrement() => Interlocked.Increment(ref s_cacheSize);
+    internal void CacheSizeIncrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeIncrement();
 
     [NonEvent]
-    internal void CacheSizeDecrement() => Interlocked.Decrement(ref s_cacheSize);
+    internal void CacheSizeDecrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeDecrement();
 
     /// <inheritdoc />
     protected override void Dispose(bool disposing)

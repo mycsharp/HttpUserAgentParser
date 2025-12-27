@@ -69,6 +69,33 @@ EventSource: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserEvent
 dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser
 ```
 
+## Telemetry (native Meters)
+
+In addition to EventCounters, this package can emit **native** `System.Diagnostics.Metrics` instruments.
+
+Telemetry is:
+
+- **Opt-in**: disabled by default (keeps hot path overhead-free)
+- **Low overhead**: measurements are only recorded when enabled
+
+### Enable meters (Fluent API)
+
+```csharp
+services
+	.AddHttpUserAgentParser()
+	.WithMeterTelemetry();
+```
+
+### Meter + instruments
+
+Meter: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserMeters.MeterName`)
+
+- `parse-requests` (counter)
+- `parse-duration` (histogram, ms)
+- `cache-concurrentdictionary-hit` (counter)
+- `cache-concurrentdictionary-miss` (counter)
+- `cache-concurrentdictionary-size` (observable gauge)
+
 ## Export to OpenTelemetry
 
 You can collect these EventCounters via OpenTelemetry metrics and export them (OTLP, Prometheus, Azure Monitor, …).
@@ -98,6 +125,23 @@ builder.Services.AddOpenTelemetry()
 ```
 
 > If you also use the MemoryCache/AspNetCore packages, add their EventSource names too.
+
+### Export native meters to OpenTelemetry
+
+If you enabled **native meters** (see above), collect them via `AddMeter(...)`:
+
+```csharp
+using OpenTelemetry.Metrics;
+using MyCSharp.HttpUserAgentParser.Telemetry;
+
+builder.Services.AddOpenTelemetry()
+	.WithMetrics(metrics =>
+	{
+		metrics
+			.AddMeter(HttpUserAgentParserMeters.MeterName)
+			.AddOtlpExporter();
+	});
+```
 
 ## Export to Application Insights
 

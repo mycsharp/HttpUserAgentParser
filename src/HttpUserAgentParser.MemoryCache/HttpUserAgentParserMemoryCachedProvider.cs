@@ -24,12 +24,13 @@ public class HttpUserAgentParserMemoryCachedProvider(
         CacheKey key = GetKey(userAgent);
 
         if (!HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)
-            return ParseWithoutTelemetry(key);
-
-        bool countersEnabled = HttpUserAgentParserMemoryCacheTelemetry.AreCountersEnabled;
-        if (countersEnabled && _memoryCache.TryGetValue(key, out HttpUserAgentInformation cached))
         {
-            HttpUserAgentParserMemoryCacheEventSource.Log.CacheHit();
+            return ParseWithoutTelemetry(key);
+        }
+
+        if (_memoryCache.TryGetValue(key, out HttpUserAgentInformation cached))
+        {
+            HttpUserAgentParserMemoryCacheTelemetry.CacheHit();
             return cached;
         }
 
@@ -40,11 +41,10 @@ public class HttpUserAgentParserMemoryCachedProvider(
             entry.SetSize(1);
 
             // Miss path. Note: Like other cache implementations, races can happen; counters are best-effort.
-            if (HttpUserAgentParserMemoryCacheTelemetry.AreCountersEnabled)
-                HttpUserAgentParserMemoryCacheEventSource.Log.CacheMiss();
+            HttpUserAgentParserMemoryCacheTelemetry.CacheMiss();
 
-            HttpUserAgentParserMemoryCacheEventSource.Log.CacheSizeIncrement();
-            entry.RegisterPostEvictionCallback(static (_, _, _, _) => HttpUserAgentParserMemoryCacheEventSource.Log.CacheSizeDecrement());
+            HttpUserAgentParserMemoryCacheTelemetry.CacheSizeIncrement();
+            entry.RegisterPostEvictionCallback(static (_, _, _, _) => HttpUserAgentParserMemoryCacheTelemetry.CacheSizeDecrement());
 
             return HttpUserAgentParser.Parse(key.UserAgent);
         });

@@ -40,14 +40,22 @@ public sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
     [NonEvent]
     internal void UserAgentPresent()
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _userAgentPresent?.Increment();
     }
 
     [NonEvent]
     internal void UserAgentMissing()
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _userAgentMissing?.Increment();
     }
 

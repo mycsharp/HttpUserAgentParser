@@ -67,6 +67,25 @@ EventSource: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgent
 dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser.AspNetCore
 ```
 
+## Telemetry (native Meters)
+
+This package can also emit native `System.Diagnostics.Metrics` instruments.
+
+### Enable meters (Fluent API)
+
+```csharp
+services
+	.AddHttpUserAgentParserAccessor()
+	.WithAspNetCoreMeterTelemetry();
+```
+
+### Meter + instruments
+
+Meter: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgentParserAspNetCoreMeters.MeterName`)
+
+- `useragent-present` (counter)
+- `useragent-missing` (counter)
+
 ## Export to OpenTelemetry / Application Insights
 
 Collect via OpenTelemetry EventCounters instrumentation:
@@ -76,8 +95,19 @@ using OpenTelemetry.Metrics;
 
 metrics.AddEventCountersInstrumentation(options =>
 {
-	options.AddEventSources(MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry.HttpUserAgentParserAspNetCoreEventSource.EventSourceName);
+	options.AddEventSources(HttpUserAgentParserAspNetCoreEventSource.EventSourceName);
 });
 ```
 
 Then export using your preferred exporter (OTLP, Prometheus, Azure Monitor / Application Insights, …).
+
+### Export native meters to OpenTelemetry
+
+If you enabled **native meters** (see above), collect them via `AddMeter(...)`:
+
+```csharp
+using OpenTelemetry.Metrics;
+using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
+
+metrics.AddMeter(HttpUserAgentParserAspNetCoreMeters.MeterName);
+```

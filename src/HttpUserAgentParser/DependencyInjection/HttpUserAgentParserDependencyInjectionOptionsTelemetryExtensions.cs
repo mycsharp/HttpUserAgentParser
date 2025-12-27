@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics.Metrics;
 using MyCSharp.HttpUserAgentParser.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser.DependencyInjection;
@@ -17,6 +18,18 @@ public static class HttpUserAgentParserDependencyInjectionOptionsTelemetryExtens
         this HttpUserAgentParserDependencyInjectionOptions options)
     {
         HttpUserAgentParserTelemetry.Enable();
+        return options;
+    }
+
+    /// <summary>
+    /// Enables native System.Diagnostics.Metrics telemetry for the parser.
+    /// This is opt-in to keep the default path free of telemetry overhead.
+    /// </summary>
+    public static HttpUserAgentParserDependencyInjectionOptions WithMeterTelemetry(
+        this HttpUserAgentParserDependencyInjectionOptions options,
+        Meter? meter = null)
+    {
+        HttpUserAgentParserTelemetry.EnableMeters(meter);
         return options;
     }
 }

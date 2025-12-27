@@ -20,24 +20,26 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     /// </summary>
     public HttpUserAgentInformation Parse(string userAgent)
     {
-        if (!HttpUserAgentParserTelemetry.AreCountersEnabled)
+        if (!HttpUserAgentParserTelemetry.IsEnabled)
+        {
             return _cache.GetOrAdd(userAgent, static ua => HttpUserAgentParser.Parse(ua));
+        }
 
         if (_cache.TryGetValue(userAgent, out HttpUserAgentInformation cached))
         {
-            HttpUserAgentParserEventSource.Log.ConcurrentCacheHit();
-            HttpUserAgentParserEventSource.Log.ConcurrentCacheSizeSet(_cache.Count);
+            HttpUserAgentParserTelemetry.ConcurrentCacheHit();
+            HttpUserAgentParserTelemetry.ConcurrentCacheSizeSet(_cache.Count);
             return cached;
         }
 
         // Note: ConcurrentDictionary can invoke the factory multiple times in races; counters are best-effort.
         HttpUserAgentInformation result = _cache.GetOrAdd(userAgent, static ua =>
         {
-            HttpUserAgentParserEventSource.Log.ConcurrentCacheMiss();
+            HttpUserAgentParserTelemetry.ConcurrentCacheMiss();
             return HttpUserAgentParser.Parse(ua);
         });
 
-        HttpUserAgentParserEventSource.Log.ConcurrentCacheSizeSet(_cache.Count);
+        HttpUserAgentParserTelemetry.ConcurrentCacheSizeSet(_cache.Count);
         return result;
     }
 

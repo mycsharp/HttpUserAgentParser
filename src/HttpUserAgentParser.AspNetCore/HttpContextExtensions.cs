@@ -18,14 +18,18 @@ public static class HttpContextExtensions
     {
         if (httpContext.Request.Headers.TryGetValue("User-Agent", out StringValues value))
         {
-            if (HttpUserAgentParserAspNetCoreTelemetry.AreCountersEnabled)
-                HttpUserAgentParserAspNetCoreEventSource.Log.UserAgentPresent();
+            if (HttpUserAgentParserAspNetCoreTelemetry.IsEnabled)
+            {
+                HttpUserAgentParserAspNetCoreTelemetry.UserAgentPresent();
+            }
 
             return value;
         }
 
-        if (HttpUserAgentParserAspNetCoreTelemetry.AreCountersEnabled)
-            HttpUserAgentParserAspNetCoreEventSource.Log.UserAgentMissing();
+        if (HttpUserAgentParserAspNetCoreTelemetry.IsEnabled)
+        {
+            HttpUserAgentParserAspNetCoreTelemetry.UserAgentMissing();
+        }
 
         return null;
     }

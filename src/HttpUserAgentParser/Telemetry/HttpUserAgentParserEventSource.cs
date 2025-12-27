@@ -28,9 +28,6 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     private readonly IncrementingEventCounter _concurrentCacheMiss;
     private readonly PollingCounter _concurrentCacheSize;
 
-    // Backing values for PollingCounter and for easy verification.
-    private static long s_concurrentCacheSize;
-
     private HttpUserAgentParserEventSource()
     {
         // Parser
@@ -59,7 +56,7 @@ public sealed class HttpUserAgentParserEventSource : EventSource
             DisplayUnits = "calls",
         };
 
-        _concurrentCacheSize = new PollingCounter("cache-concurrentdictionary-size", this, static () => Volatile.Read(ref s_concurrentCacheSize))
+        _concurrentCacheSize = new PollingCounter("cache-concurrentdictionary-size", this, static () => HttpUserAgentParserTelemetryState.ConcurrentCacheSize)
         {
             DisplayName = "ConcurrentDictionary cache size",
             DisplayUnits = "entries",
@@ -69,28 +66,44 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     [NonEvent]
     internal void ParseRequest()
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _parseRequests?.Increment();
     }
 
     [NonEvent]
     internal void ParseDuration(double milliseconds)
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _parseDurationMs?.WriteMetric(milliseconds);
     }
 
     [NonEvent]
     internal void ConcurrentCacheHit()
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _concurrentCacheHit?.Increment();
     }
 
     [NonEvent]
     internal void ConcurrentCacheMiss()
     {
-        if (!IsEnabled()) return;
+        if (!IsEnabled())
+        {
+            return;
+        }
+
         _concurrentCacheMiss?.Increment();
     }
 
@@ -99,7 +112,7 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     {
         // Size should be updated even if telemetry is currently disabled, so the polling counter is correct
         // once a listener attaches.
-        Volatile.Write(ref s_concurrentCacheSize, size);
+        HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
     }
 
     /// <inheritdoc />
