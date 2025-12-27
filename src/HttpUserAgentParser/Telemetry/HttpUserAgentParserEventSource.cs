@@ -10,11 +10,16 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 ///
 /// The implementation is designed to keep overhead negligible unless a listener is enabled.
 /// </summary>
-[EventSource(Name = "MyCSharp.HttpUserAgentParser")]
+[EventSource(Name = EventSourceName)]
 [ExcludeFromCodeCoverage]
-internal sealed class HttpUserAgentParserEventSource : EventSource
+public sealed class HttpUserAgentParserEventSource : EventSource
 {
-    public static readonly HttpUserAgentParserEventSource Log = new();
+    /// <summary>
+    /// The EventSource name used for EventCounters.
+    /// </summary>
+    public const string EventSourceName = "MyCSharp.HttpUserAgentParser";
+
+    internal static HttpUserAgentParserEventSource Log { get; } = new();
 
     private readonly IncrementingEventCounter _parseRequests;
     private readonly EventCounter? _parseDurationMs;
@@ -62,44 +67,42 @@ internal sealed class HttpUserAgentParserEventSource : EventSource
     }
 
     [NonEvent]
-    public bool IsTelemetryEnabled() => IsEnabled();
-
-    [NonEvent]
-    public void ParseRequest()
+    internal void ParseRequest()
     {
         if (!IsEnabled()) return;
         _parseRequests?.Increment();
     }
 
     [NonEvent]
-    public void ParseDuration(double milliseconds)
+    internal void ParseDuration(double milliseconds)
     {
         if (!IsEnabled()) return;
         _parseDurationMs?.WriteMetric(milliseconds);
     }
 
     [NonEvent]
-    public void ConcurrentCacheHit()
+    internal void ConcurrentCacheHit()
     {
         if (!IsEnabled()) return;
         _concurrentCacheHit?.Increment();
     }
 
     [NonEvent]
-    public void ConcurrentCacheMiss()
+    internal void ConcurrentCacheMiss()
     {
         if (!IsEnabled()) return;
         _concurrentCacheMiss?.Increment();
     }
 
     [NonEvent]
-    public void ConcurrentCacheSizeSet(int size)
+    internal void ConcurrentCacheSizeSet(int size)
     {
         // Size should be updated even if telemetry is currently disabled, so the polling counter is correct
         // once a listener attaches.
         Volatile.Write(ref s_concurrentCacheSize, size);
     }
 
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)

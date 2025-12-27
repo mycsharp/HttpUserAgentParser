@@ -8,11 +8,16 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 /// <summary>
 /// EventSource for EventCounters emitted by MyCSharp.HttpUserAgentParser.MemoryCache.
 /// </summary>
-[EventSource(Name = "MyCSharp.HttpUserAgentParser.MemoryCache")]
+[EventSource(Name = EventSourceName)]
 [ExcludeFromCodeCoverage]
-internal sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
+public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
 {
-    public static readonly HttpUserAgentParserMemoryCacheEventSource Log = new();
+    /// <summary>
+    /// The EventSource name used for EventCounters.
+    /// </summary>
+    public const string EventSourceName = "MyCSharp.HttpUserAgentParser.MemoryCache";
+
+    internal static HttpUserAgentParserMemoryCacheEventSource Log { get; } = new();
 
     private readonly IncrementingEventCounter? _cacheHit;
     private readonly IncrementingEventCounter _cacheMiss;
@@ -42,25 +47,26 @@ internal sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
     }
 
     [NonEvent]
-    public void CacheHit()
+    internal void CacheHit()
     {
         if (!IsEnabled()) return;
         _cacheHit?.Increment();
     }
 
     [NonEvent]
-    public void CacheMiss()
+    internal void CacheMiss()
     {
         if (!IsEnabled()) return;
         _cacheMiss?.Increment();
     }
 
     [NonEvent]
-    public void CacheSizeIncrement() => Interlocked.Increment(ref s_cacheSize);
+    internal void CacheSizeIncrement() => Interlocked.Increment(ref s_cacheSize);
 
     [NonEvent]
-    public void CacheSizeDecrement() => Interlocked.Decrement(ref s_cacheSize);
+    internal void CacheSizeDecrement() => Interlocked.Decrement(ref s_cacheSize);
 
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)

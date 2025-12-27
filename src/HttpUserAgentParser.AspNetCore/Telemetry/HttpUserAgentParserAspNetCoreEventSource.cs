@@ -8,11 +8,16 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 /// <summary>
 /// EventSource for EventCounters emitted by MyCSharp.HttpUserAgentParser.AspNetCore.
 /// </summary>
-[EventSource(Name = "MyCSharp.HttpUserAgentParser.AspNetCore")]
+[EventSource(Name = EventSourceName)]
 [ExcludeFromCodeCoverage]
-internal sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
+public sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
 {
-    public static readonly HttpUserAgentParserAspNetCoreEventSource Log = new();
+    /// <summary>
+    /// The EventSource name used for EventCounters.
+    /// </summary>
+    public const string EventSourceName = "MyCSharp.HttpUserAgentParser.AspNetCore";
+
+    internal static HttpUserAgentParserAspNetCoreEventSource Log { get; } = new();
 
     private readonly IncrementingEventCounter _userAgentPresent;
     private readonly IncrementingEventCounter _userAgentMissing;
@@ -33,19 +38,20 @@ internal sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
     }
 
     [NonEvent]
-    public void UserAgentPresent()
+    internal void UserAgentPresent()
     {
         if (!IsEnabled()) return;
         _userAgentPresent?.Increment();
     }
 
     [NonEvent]
-    public void UserAgentMissing()
+    internal void UserAgentMissing()
     {
         if (!IsEnabled()) return;
         _userAgentMissing?.Increment();
     }
 
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)

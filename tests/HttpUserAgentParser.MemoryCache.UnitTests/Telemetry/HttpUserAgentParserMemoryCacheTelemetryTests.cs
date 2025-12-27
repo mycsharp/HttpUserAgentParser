@@ -1,6 +1,10 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
 using Xunit;
+using Microsoft.Extensions.DependencyInjection;
+using MyCSharp.HttpUserAgentParser.DependencyInjection;
+using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
+using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;
 
@@ -9,7 +13,10 @@ public class HttpUserAgentParserMemoryCacheTelemetryTests
     [Fact]
     public void EventCounters_DoNotThrow_WhenEnabled()
     {
-        using EventCounterTestListener listener = new("MyCSharp.HttpUserAgentParser");
+        using EventCounterTestListener listener = new(HttpUserAgentParserMemoryCacheEventSource.EventSourceName);
+
+        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
+            .WithMemoryCacheTelemetry();
 
         HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
 
