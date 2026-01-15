@@ -1,13 +1,45 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"problemMatcher": [
-				"$msCompile"
-			],
-			"group": "build"
-		}
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "dotnet clean",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "restore",
+      "type": "shell",
+      "command": "dotnet restore",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "dotnet build --nologo",
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "dotnet test --nologo",
+      "problemMatcher": "$msCompile",
+      "group": "test"
+    },
+    {
+      "label": "ci:validate",
+      "dependsOn": [
+        "clean",
+        "restore",
+        "build",
+        "test"
+      ],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
