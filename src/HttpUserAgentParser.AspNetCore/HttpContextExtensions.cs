@@ -13,6 +13,11 @@ public static class HttpContextExtensions
     /// <summary>
     /// Returns the User-Agent header value
     /// </summary>
+    /// <example>
+    /// <code>
+    /// string? userAgent = httpContext.GetUserAgentString();
+    /// </code>
+    /// </example>
     public static string? GetUserAgentString(this HttpContext httpContext)
     {
         if (httpContext.Request.Headers.TryGetValue("User-Agent", out StringValues value))

@@ -53,6 +53,12 @@ public readonly struct HttpUserAgentInformation
     /// <summary>
     /// Parses given <param name="userAgent">User Agent</param>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// HttpUserAgentInformation info = HttpUserAgentInformation.Parse(
+    ///     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/90.0.4430.212 Safari/537.36");
+    /// </code>
+    /// </example>
     public static HttpUserAgentInformation Parse(string userAgent) => HttpUserAgentParser.Parse(userAgent);
 
     /// <summary>

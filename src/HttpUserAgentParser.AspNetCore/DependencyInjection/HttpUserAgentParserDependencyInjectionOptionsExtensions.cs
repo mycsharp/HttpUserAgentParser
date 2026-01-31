@@ -15,6 +15,12 @@ public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
     /// Registers <see cref="HttpUserAgentParserAccessor"/> as <see cref="IHttpUserAgentParserAccessor"/>.
     ///  Requires a registered <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// IServiceCollection services = new ServiceCollection();
+    /// services.AddHttpUserAgentParser().AddHttpUserAgentParserAccessor();
+    /// </code>
+    /// </example>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParserAccessor(
         this HttpUserAgentParserDependencyInjectionOptions options)
     {

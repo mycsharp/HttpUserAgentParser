@@ -13,6 +13,12 @@ public static class HttpUserAgentParserServiceCollectionExtensions
     /// <summary>
     /// Registers <see cref="HttpUserAgentParserDefaultProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// IServiceCollection services = new ServiceCollection();
+    /// services.AddHttpUserAgentParser();
+    /// </code>
+    /// </example>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser(
         this IServiceCollection services)
     {
@@ -22,6 +28,12 @@ public static class HttpUserAgentParserServiceCollectionExtensions
     /// <summary>
     /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// IServiceCollection services = new ServiceCollection();
+    /// services.AddHttpUserAgentCachedParser();
+    /// </code>
+    /// </example>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentCachedParser(
         this IServiceCollection services)
     {
@@ -31,6 +43,12 @@ public static class HttpUserAgentParserServiceCollectionExtensions
     /// <summary>
     /// Registers <typeparam name="TProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// IServiceCollection services = new ServiceCollection();
+    /// services.AddHttpUserAgentParser&lt;HttpUserAgentParserDefaultProvider&gt;();
+    /// </code>
+    /// </example>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser<TProvider>(
         this IServiceCollection services) where TProvider : class, IHttpUserAgentParserProvider
     {

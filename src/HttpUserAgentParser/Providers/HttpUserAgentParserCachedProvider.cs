@@ -17,6 +17,11 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     /// <summary>
     /// Parses the user agent or uses the internal cached information
     /// </summary>
+    /// <example>
+    /// <code>
+    /// HttpUserAgentInformation info = provider.Parse("Mozilla/5.0 Chrome/90.0.4430.212");
+    /// </code>
+    /// </example>
     public HttpUserAgentInformation Parse(string userAgent)
         => _cache.GetOrAdd(userAgent, static ua => HttpUserAgentParser.Parse(ua));
 
@@ -28,5 +33,10 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     /// <summary>
     /// returns true if given user agent is in cache
     /// </summary>
+    /// <example>
+    /// <code>
+    /// bool cached = provider.HasCacheEntry("Mozilla/5.0 Chrome/90.0.4430.212");
+    /// </code>
+    /// </example>
     public bool HasCacheEntry(string userAgent) => _cache.ContainsKey(userAgent);
 }

@@ -289,6 +289,26 @@ public class HttpUserAgentParserTests
     }
 
     [Fact]
+    public void GetBrowser_Opera_Uses_VersionToken_After_Detect()
+    {
+        // Detect token "Opera" with a separate "Version/" token after it
+        const string ua = "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.16";
+
+        (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(ua);
+        Assert.NotNull(browser);
+        Assert.Equal("Opera", browser!.Value.Name);
+        Assert.Equal("12.16", browser.Value.Version);
+    }
+
+    [Fact]
+    public void GetBrowser_VersionToken_With_Empty_Tail_Does_Not_Throw()
+    {
+        // Detect token present but no trailing characters, should fail gracefully
+        (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser("Opera");
+        Assert.Null(browser);
+    }
+
+    [Fact]
     public void GetBrowser_LongToken_NoDigits_Within_Window_Does_Not_Parse_Version()
     {
         // Build UA: Detect token present (Chrome), but after '/' there are no digits within first 200 chars

@@ -19,12 +19,22 @@ public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAg
     /// <summary>
     /// User agent of current <see cref="IHttpContextAccessor"/>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// string? userAgent = accessor.GetHttpContextUserAgent(httpContext);
+    /// </code>
+    /// </example>
     public string? GetHttpContextUserAgent(HttpContext httpContext)
         => httpContext.GetUserAgentString();
 
     /// <summary>
     /// Returns current <see cref="HttpUserAgentInformation"/> of current <see cref="IHttpContextAccessor"/>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// HttpUserAgentInformation? info = accessor.Get(httpContext);
+    /// </code>
+    /// </example>
     public HttpUserAgentInformation? Get(HttpContext httpContext)
     {
         string? httpUserAgent = GetHttpContextUserAgent(httpContext);
