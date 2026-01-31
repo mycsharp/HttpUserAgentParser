@@ -29,7 +29,7 @@ public class HttpUserAgentParserAspNetCoreMetersTelemetryTests
         ctx.Request.Headers.Remove("User-Agent");
         Assert.Null(ctx.GetUserAgentString());
 
-        Assert.Contains("useragent-present", listener.InstrumentNames);
-        Assert.Contains("useragent-missing", listener.InstrumentNames);
+        Assert.Contains("user_agent.present", listener.InstrumentNames);
+        Assert.Contains("user_agent.missing", listener.InstrumentNames);
     }
 }

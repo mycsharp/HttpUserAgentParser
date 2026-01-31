@@ -27,7 +27,7 @@ internal static class HttpUserAgentParserMeters
     private static Meter? s_meter;
 
     private static Counter<long>? s_parseRequests;
-    private static Histogram<double>? s_parseDurationMs;
+    private static Histogram<double>? s_parseDuration;
 
     private static Counter<long>? s_concurrentCacheHit;
     private static Counter<long>? s_concurrentCacheMiss;
@@ -41,7 +41,7 @@ internal static class HttpUserAgentParserMeters
     /// <summary>
     /// Gets whether the parse duration histogram is currently enabled by a listener.
     /// </summary>
-    public static bool IsParseDurationEnabled => s_parseDurationMs?.Enabled ?? false;
+    public static bool IsParseDurationEnabled => s_parseDuration?.Enabled ?? false;
 
     /// <summary>
     /// Initializes the meter and creates all metric instruments.
@@ -59,29 +59,31 @@ internal static class HttpUserAgentParserMeters
         s_meter = meter ?? new Meter(MeterName);
 
         s_parseRequests = s_meter.CreateCounter<long>(
-            name: "parse-requests",
-            unit: "calls",
+            name: "parse.requests",
+            unit: "{call}",
             description: "User-Agent parse requests");
 
-        s_parseDurationMs = s_meter.CreateHistogram<double>(
-            name: "parse-duration",
+        // Using "ms" instead of "s" because parse times are sub-millisecond,
+        // making milliseconds more readable than fractional seconds.
+        s_parseDuration = s_meter.CreateHistogram<double>(
+            name: "parse.duration",
             unit: "ms",
             description: "Parse duration");
 
         s_concurrentCacheHit = s_meter.CreateCounter<long>(
-            name: "cache-concurrentdictionary-hit",
-            unit: "calls",
+            name: "cache.concurrent_dictionary.hit",
+            unit: "{call}",
             description: "ConcurrentDictionary cache hit");
 
         s_concurrentCacheMiss = s_meter.CreateCounter<long>(
-            name: "cache-concurrentdictionary-miss",
-            unit: "calls",
+            name: "cache.concurrent_dictionary.miss",
+            unit: "{call}",
             description: "ConcurrentDictionary cache miss");
 
         s_concurrentCacheSize = s_meter.CreateObservableGauge<long>(
-            name: "cache-concurrentdictionary-size",
+            name: "cache.concurrent_dictionary.size",
             observeValue: static () => HttpUserAgentParserTelemetryState.ConcurrentCacheSize,
-            unit: "entries",
+            unit: "{entry}",
             description: "ConcurrentDictionary cache size");
     }
 
@@ -95,7 +97,7 @@ internal static class HttpUserAgentParserMeters
     /// Records the parse duration in milliseconds.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ParseDuration(double milliseconds) => s_parseDurationMs?.Record(milliseconds);
+    public static void ParseDuration(double milliseconds) => s_parseDuration?.Record(milliseconds);
 
     /// <summary>
     /// Emits a counter increment for a concurrent dictionary cache hit.
@@ -118,7 +120,7 @@ internal static class HttpUserAgentParserMeters
 
         s_meter = null;
         s_parseRequests = null;
-        s_parseDurationMs = null;
+        s_parseDuration = null;
         s_concurrentCacheHit = null;
         s_concurrentCacheMiss = null;
         s_concurrentCacheSize = null;

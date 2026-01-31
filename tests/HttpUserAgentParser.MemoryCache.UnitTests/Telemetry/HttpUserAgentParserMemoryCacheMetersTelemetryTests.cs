@@ -30,8 +30,8 @@ public class HttpUserAgentParserMemoryCacheMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("cache-hit", listener.InstrumentNames);
-        Assert.Contains("cache-miss", listener.InstrumentNames);
-        Assert.Contains("cache-size", listener.InstrumentNames);
+        Assert.Contains("cache.hit", listener.InstrumentNames);
+        Assert.Contains("cache.miss", listener.InstrumentNames);
+        Assert.Contains("cache.size", listener.InstrumentNames);
     }
 }

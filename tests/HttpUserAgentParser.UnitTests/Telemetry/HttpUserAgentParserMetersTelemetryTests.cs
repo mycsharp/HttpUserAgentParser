@@ -43,10 +43,10 @@ public class HttpUserAgentParserMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("parse-requests", listener.InstrumentNames);
-        Assert.Contains("parse-duration", listener.InstrumentNames);
-        Assert.Contains("cache-concurrentdictionary-hit", listener.InstrumentNames);
-        Assert.Contains("cache-concurrentdictionary-miss", listener.InstrumentNames);
-        Assert.Contains("cache-concurrentdictionary-size", listener.InstrumentNames);
+        Assert.Contains("parse.requests", listener.InstrumentNames);
+        Assert.Contains("parse.duration", listener.InstrumentNames);
+        Assert.Contains("cache.concurrent_dictionary.hit", listener.InstrumentNames);
+        Assert.Contains("cache.concurrent_dictionary.miss", listener.InstrumentNames);
+        Assert.Contains("cache.concurrent_dictionary.size", listener.InstrumentNames);
     }
 }

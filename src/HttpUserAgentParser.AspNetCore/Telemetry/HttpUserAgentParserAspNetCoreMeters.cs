@@ -60,13 +60,13 @@ internal static class HttpUserAgentParserAspNetCoreMeters
         s_meter = meter ?? new Meter(MeterName);
 
         s_userAgentPresent = s_meter.CreateCounter<long>(
-            name: "useragent-present",
-            unit: "calls",
+            name: "user_agent.present",
+            unit: "{call}",
             description: "User-Agent header present");
 
         s_userAgentMissing = s_meter.CreateCounter<long>(
-            name: "useragent-missing",
-            unit: "calls",
+            name: "user_agent.missing",
+            unit: "{call}",
             description: "User-Agent header missing");
     }
 

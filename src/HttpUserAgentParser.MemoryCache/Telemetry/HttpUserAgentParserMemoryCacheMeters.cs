@@ -33,19 +33,19 @@ internal static class HttpUserAgentParserMemoryCacheMeters
         s_meter = meter ?? new Meter(MeterName);
 
         s_cacheHit = s_meter.CreateCounter<long>(
-            name: "cache-hit",
-            unit: "calls",
+            name: "cache.hit",
+            unit: "{call}",
             description: "MemoryCache cache hit");
 
         s_cacheMiss = s_meter.CreateCounter<long>(
-            name: "cache-miss",
-            unit: "calls",
+            name: "cache.miss",
+            unit: "{call}",
             description: "MemoryCache cache miss");
 
         s_cacheSize = s_meter.CreateObservableGauge<long>(
-            name: "cache-size",
+            name: "cache.size",
             observeValue: static () => HttpUserAgentParserMemoryCacheTelemetryState.CacheSize,
-            unit: "entries",
+            unit: "{entry}",
             description: "MemoryCache cache size");
     }
 
