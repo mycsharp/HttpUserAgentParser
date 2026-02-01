@@ -3,15 +3,18 @@
 namespace MyCSharp.HttpUserAgentParser.Providers;
 
 /// <summary>
-/// Simple parse provider
+/// Default implementation of <see cref="IHttpUserAgentParserProvider"/> without caching.
 /// </summary>
+/// <remarks>
+/// Each call to <see cref="Parse"/> performs a full parse operation.
+/// For repeated parsing of the same user agents, consider using <see cref="HttpUserAgentParserCachedProvider"/>.
+/// </remarks>
 public class HttpUserAgentParserDefaultProvider : IHttpUserAgentParserProvider
 {
-    /// <summary>
-    /// returns the result of <see cref="HttpUserAgentParser.Parse(string)"/>
-    /// </summary>
+    /// <inheritdoc/>
     /// <example>
     /// <code>
+    /// IHttpUserAgentParserProvider provider = new HttpUserAgentParserDefaultProvider();
     /// HttpUserAgentInformation info = provider.Parse("Mozilla/5.0 Chrome/90.0.4430.212");
     /// </code>
     /// </example>

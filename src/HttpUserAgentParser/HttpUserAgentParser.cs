@@ -11,17 +11,27 @@ namespace MyCSharp.HttpUserAgentParser;
 #pragma warning disable MA0049 // Type name should not match containing namespace
 
 /// <summary>
-/// Parser logic for user agents
+/// Provides methods to parse HTTP User-Agent strings and extract browser, platform, device, and robot information.
 /// </summary>
+/// <remarks>
+/// This parser is optimized for performance using span-based operations and vectorized string matching.
+/// For repeated parsing of the same user agent strings, consider using <see cref="Providers.HttpUserAgentParserCachedProvider"/>.
+/// </remarks>
 public static class HttpUserAgentParser
 {
     /// <summary>
-    /// Parses given <param name="userAgent">user agent</param>
+    /// Parses the specified User-Agent string and returns detailed information about the browser, platform, and device.
     /// </summary>
+    /// <param name="userAgent">The HTTP User-Agent header value to parse.</param>
+    /// <returns>An <see cref="HttpUserAgentInformation"/> instance containing the parsed information.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="userAgent"/> is <see langword="null"/>.</exception>
     /// <example>
     /// <code>
-    /// HttpUserAgentInformation info = HttpUserAgentParser.Parse(
-    ///     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/90.0.4430.212 Safari/537.36");
+    /// string userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/90.0.4430.212 Safari/537.36";
+    /// HttpUserAgentInformation info = HttpUserAgentParser.Parse(userAgentString);
+    ///
+    /// Console.WriteLine(info.Name);     // "Chrome"
+    /// Console.WriteLine(info.Version);  // "90.0.4430.212"
     /// </code>
     /// </example>
     public static HttpUserAgentInformation Parse(string userAgent)
@@ -47,22 +57,35 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// pre-cleanup of <param name="userAgent">user agent</param>
+    /// Removes leading and trailing whitespace from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to clean up.</param>
+    /// <returns>A trimmed copy of the User-Agent string.</returns>
     /// <example>
     /// <code>
     /// string cleaned = HttpUserAgentParser.Cleanup("  Mozilla/5.0  ");
+    /// // Result: "Mozilla/5.0"
     /// </code>
     /// </example>
     public static string Cleanup(string userAgent) => userAgent.Trim();
 
     /// <summary>
-    /// Returns the platform or null.
+    /// Extracts the platform information from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>
+    /// An <see cref="HttpUserAgentPlatformInformation"/> instance if a platform is detected; otherwise, <see langword="null"/>.
+    /// </returns>
     /// <example>
     /// <code>
     /// HttpUserAgentPlatformInformation? platform = HttpUserAgentParser.GetPlatform(
     ///     "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+    ///
+    /// if (platform != null)
+    /// {
+    ///     Console.WriteLine(platform.Value.Name);         // "Windows 10"
+    ///     Console.WriteLine(platform.Value.PlatformType); // Windows
+    /// }
     /// </code>
     /// </example>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
@@ -82,11 +105,16 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if platform was found
+    /// Attempts to extract the platform information from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="platform">When this method returns <see langword="true"/>, contains the platform information.</param>
+    /// <returns><see langword="true"/> if a platform was detected; otherwise, <see langword="false"/>.</returns>
     /// <example>
     /// <code>
-    /// bool ok = HttpUserAgentParser.TryGetPlatform("Mozilla/5.0 (Windows NT 10.0)", out var platform);
+    /// bool found = HttpUserAgentParser.TryGetPlatform(
+    ///     "Mozilla/5.0 (Windows NT 10.0)",
+    ///     out HttpUserAgentPlatformInformation? platform);
     /// </code>
     /// </example>
     public static bool TryGetPlatform(string userAgent, [NotNullWhen(true)] out HttpUserAgentPlatformInformation? platform)
@@ -96,13 +124,25 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// Returns the browser or null.
-    /// Fast path avoids regex by using token rules.
+    /// Extracts the browser name and version from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>
+    /// A tuple containing the browser name and version if detected; otherwise, <see langword="null"/>.
+    /// </returns>
+    /// <remarks>
+    /// Uses a fast path with token-based matching to avoid regex where possible.
+    /// </remarks>
     /// <example>
     /// <code>
-    /// var browser = HttpUserAgentParser.GetBrowser(
+    /// (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(
     ///     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/90.0.4430.212 Safari/537.36");
+    ///
+    /// if (browser != null)
+    /// {
+    ///     Console.WriteLine(browser.Value.Name);    // "Chrome"
+    ///     Console.WriteLine(browser.Value.Version); // "90.0.4430.212"
+    /// }
     /// </code>
     /// </example>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
@@ -158,11 +198,16 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if browser was found
+    /// Attempts to extract the browser name and version from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="browser">When this method returns <see langword="true"/>, contains the browser name and version.</param>
+    /// <returns><see langword="true"/> if a browser was detected; otherwise, <see langword="false"/>.</returns>
     /// <example>
     /// <code>
-    /// bool ok = HttpUserAgentParser.TryGetBrowser("Mozilla/5.0 Chrome/90.0.4430.212", out var browser);
+    /// bool found = HttpUserAgentParser.TryGetBrowser(
+    ///     "Mozilla/5.0 Chrome/90.0.4430.212",
+    ///     out (string Name, string? Version)? browser);
     /// </code>
     /// </example>
     public static bool TryGetBrowser(string userAgent, [NotNullWhen(true)] out (string Name, string? Version)? browser)
@@ -172,11 +217,14 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// Returns the robot or null.
+    /// Extracts the robot/bot name from the User-Agent string if it matches a known bot signature.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>The robot name if detected; otherwise, <see langword="null"/>.</returns>
     /// <example>
     /// <code>
     /// string? robot = HttpUserAgentParser.GetRobot("Googlebot/2.1 (+http://www.google.com/bot.html)");
+    /// // Result: "Googlebot"
     /// </code>
     /// </example>
     public static string? GetRobot(string userAgent)
@@ -194,11 +242,14 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if robot was found
+    /// Attempts to extract the robot/bot name from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="robotName">When this method returns <see langword="true"/>, contains the robot name.</param>
+    /// <returns><see langword="true"/> if a robot was detected; otherwise, <see langword="false"/>.</returns>
     /// <example>
     /// <code>
-    /// bool ok = HttpUserAgentParser.TryGetRobot("Googlebot/2.1", out var robotName);
+    /// bool isBot = HttpUserAgentParser.TryGetRobot("Googlebot/2.1", out string? robotName);
     /// </code>
     /// </example>
     public static bool TryGetRobot(string userAgent, [NotNullWhen(true)] out string? robotName)
@@ -208,11 +259,15 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// Returns the device or null.
+    /// Extracts the mobile device type from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>The device type (e.g., "Apple iPhone", "Android") if detected; otherwise, <see langword="null"/>.</returns>
     /// <example>
     /// <code>
-    /// string? device = HttpUserAgentParser.GetMobileDevice("Mozilla/5.0 (iPhone; CPU iPhone OS 14_5) Mobile");
+    /// string? device = HttpUserAgentParser.GetMobileDevice(
+    ///     "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5) Mobile");
+    /// // Result: "Apple iPhone"
     /// </code>
     /// </example>
     public static string? GetMobileDevice(string userAgent)
@@ -230,11 +285,16 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if device was found
+    /// Attempts to extract the mobile device type from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="device">When this method returns <see langword="true"/>, contains the device type.</param>
+    /// <returns><see langword="true"/> if a mobile device was detected; otherwise, <see langword="false"/>.</returns>
     /// <example>
     /// <code>
-    /// bool ok = HttpUserAgentParser.TryGetMobileDevice("Mozilla/5.0 (iPhone; CPU iPhone OS 14_5)", out var device);
+    /// bool isMobile = HttpUserAgentParser.TryGetMobileDevice(
+    ///     "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5)",
+    ///     out string? device);
     /// </code>
     /// </example>
     public static bool TryGetMobileDevice(string userAgent, [NotNullWhen(true)] out string? device)

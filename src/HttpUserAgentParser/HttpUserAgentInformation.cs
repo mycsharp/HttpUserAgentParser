@@ -3,37 +3,45 @@
 namespace MyCSharp.HttpUserAgentParser;
 
 /// <summary>
-/// Analyzed user agent
+/// Represents parsed information from an HTTP User-Agent string, including browser, platform, and device details.
 /// </summary>
+/// <remarks>
+/// This is an immutable value type. Use <see cref="Parse"/> or <see cref="HttpUserAgentParser.Parse"/> to create instances.
+/// </remarks>
 public readonly struct HttpUserAgentInformation
 {
     /// <summary>
-    /// Full User Agent string
+    /// Gets the original User-Agent string that was parsed.
     /// </summary>
     public string UserAgent { get; }
 
     /// <summary>
-    /// Type of user agent, see <see cref="HttpUserAgentType"/>
+    /// Gets the type of the user agent (Browser, Robot, or Unknown).
     /// </summary>
+    /// <seealso cref="HttpUserAgentType"/>
     public HttpUserAgentType Type { get; }
 
     /// <summary>
-    /// Platform of user agent, see <see cref="HttpUserAgentPlatformInformation"/>
+    /// Gets the platform information, or <see langword="null"/> if no platform was detected.
     /// </summary>
+    /// <seealso cref="HttpUserAgentPlatformInformation"/>
     public HttpUserAgentPlatformInformation? Platform { get; }
 
     /// <summary>
-    /// Browser or Bot Name of user agent e.g. "Chrome", "Edge"..
+    /// Gets the browser or robot name (e.g., "Chrome", "Firefox", "Googlebot"),
+    /// or <see langword="null"/> if not detected.
     /// </summary>
     public string? Name { get; }
 
     /// <summary>
-    /// Version of Browser or Bot Name of user agent e.g. "79.0", "83.0.125.4"
+    /// Gets the browser or robot version (e.g., "90.0.4430.212"),
+    /// or <see langword="null"/> if not detected.
     /// </summary>
     public string? Version { get; }
 
     /// <summary>
-    /// Device Type of user agent, e.g. "Android", "Apple iPhone"
+    /// Gets the mobile device type (e.g., "Apple iPhone", "Android"),
+    /// or <see langword="null"/> if not a mobile device.
     /// </summary>
     public string? MobileDeviceType { get; }
 
@@ -51,12 +59,18 @@ public readonly struct HttpUserAgentInformation
     }
 
     /// <summary>
-    /// Parses given <param name="userAgent">User Agent</param>
+    /// Parses the specified User-Agent string and returns parsed information.
     /// </summary>
+    /// <param name="userAgent">The HTTP User-Agent header value to parse.</param>
+    /// <returns>An <see cref="HttpUserAgentInformation"/> instance containing the parsed data.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="userAgent"/> is <see langword="null"/>.</exception>
     /// <example>
     /// <code>
     /// HttpUserAgentInformation info = HttpUserAgentInformation.Parse(
     ///     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/90.0.4430.212 Safari/537.36");
+    ///
+    /// Console.WriteLine(info.Name);    // "Chrome"
+    /// Console.WriteLine(info.Version); // "90.0.4430.212"
     /// </code>
     /// </example>
     public static HttpUserAgentInformation Parse(string userAgent) => HttpUserAgentParser.Parse(userAgent);
