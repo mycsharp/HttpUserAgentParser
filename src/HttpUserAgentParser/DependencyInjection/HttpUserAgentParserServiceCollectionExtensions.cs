@@ -11,8 +11,16 @@ namespace MyCSharp.HttpUserAgentParser.DependencyInjection;
 public static class HttpUserAgentParserServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers <see cref="HttpUserAgentParserDefaultProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+    /// Registers <see cref="HttpUserAgentParserDefaultProvider"/> as a singleton implementation of <see cref="IHttpUserAgentParserProvider"/>.
     /// </summary>
+    /// <param name="services">The service collection to add the services to.</param>
+    /// <returns>Options for further configuration.</returns>
+    /// <example>
+    /// <code>
+    /// IServiceCollection services = new ServiceCollection();
+    /// HttpUserAgentParserDependencyInjectionOptions options = services.AddHttpUserAgentParser();
+    /// </code>
+    /// </example>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser(
         this IServiceCollection services)
     {
@@ -20,8 +28,20 @@ public static class HttpUserAgentParserServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+    /// Registers <see cref="HttpUserAgentParserCachedProvider"/> as a singleton implementation of <see cref="IHttpUserAgentParserProvider"/>.
     /// </summary>
+    /// <param name="services">The service collection to add the services to.</param>
+    /// <returns>Options for further configuration.</returns>
+    /// <remarks>
+    /// This provider caches parsed results indefinitely using a <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey, TValue}"/>.
+    /// For expiration-based caching, use the MemoryCache package instead.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// IServiceCollection services = new ServiceCollection();
+    /// HttpUserAgentParserDependencyInjectionOptions options = services.AddHttpUserAgentCachedParser();
+    /// </code>
+    /// </example>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentCachedParser(
         this IServiceCollection services)
     {
@@ -29,8 +49,18 @@ public static class HttpUserAgentParserServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Registers <typeparam name="TProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
+    /// Registers a custom <see cref="IHttpUserAgentParserProvider"/> implementation as a singleton.
     /// </summary>
+    /// <typeparam name="TProvider">The provider type implementing <see cref="IHttpUserAgentParserProvider"/>.</typeparam>
+    /// <param name="services">The service collection to add the services to.</param>
+    /// <returns>Options for further configuration.</returns>
+    /// <example>
+    /// <code>
+    /// IServiceCollection services = new ServiceCollection();
+    /// HttpUserAgentParserDependencyInjectionOptions options = services
+    ///     .AddHttpUserAgentParser&lt;HttpUserAgentParserDefaultProvider&gt;();
+    /// </code>
+    /// </example>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser<TProvider>(
         this IServiceCollection services) where TProvider : class, IHttpUserAgentParserProvider
     {

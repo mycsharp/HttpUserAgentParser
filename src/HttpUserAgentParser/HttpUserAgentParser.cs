@@ -11,13 +11,29 @@ namespace MyCSharp.HttpUserAgentParser;
 #pragma warning disable MA0049 // Type name should not match containing namespace
 
 /// <summary>
-/// Parser logic for user agents
+/// Provides methods to parse HTTP User-Agent strings and extract browser, platform, device, and robot information.
 /// </summary>
+/// <remarks>
+/// This parser is optimized for performance using span-based operations and vectorized string matching.
+/// For repeated parsing of the same user agent strings, consider using <see cref="Providers.HttpUserAgentParserCachedProvider"/>.
+/// </remarks>
 public static class HttpUserAgentParser
 {
     /// <summary>
-    /// Parses given <param name="userAgent">user agent</param>
+    /// Parses the specified User-Agent string and returns detailed information about the browser, platform, and device.
     /// </summary>
+    /// <param name="userAgent">The HTTP User-Agent header value to parse.</param>
+    /// <returns>An <see cref="HttpUserAgentInformation"/> instance containing the parsed information.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="userAgent"/> is <see langword="null"/>.</exception>
+    /// <example>
+    /// <code>
+    /// string userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/90.0.4430.212 Safari/537.36";
+    /// HttpUserAgentInformation info = HttpUserAgentParser.Parse(userAgentString);
+    ///
+    /// Console.WriteLine(info.Name);     // "Chrome"
+    /// Console.WriteLine(info.Version);  // "90.0.4430.212"
+    /// </code>
+    /// </example>
     public static HttpUserAgentInformation Parse(string userAgent)
     {
         // prepare
@@ -41,22 +57,46 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// pre-cleanup of <param name="userAgent">user agent</param>
+    /// Removes leading and trailing whitespace from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to clean up.</param>
+    /// <returns>A trimmed copy of the User-Agent string.</returns>
+    /// <example>
+    /// <code>
+    /// string cleaned = HttpUserAgentParser.Cleanup("  Mozilla/5.0  ");
+    /// // Result: "Mozilla/5.0"
+    /// </code>
+    /// </example>
     public static string Cleanup(string userAgent) => userAgent.Trim();
 
     /// <summary>
-    /// returns the platform or null
+    /// Extracts the platform information from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>
+    /// An <see cref="HttpUserAgentPlatformInformation"/> instance if a platform is detected; otherwise, <see langword="null"/>.
+    /// </returns>
+    /// <example>
+    /// <code>
+    /// HttpUserAgentPlatformInformation? platform = HttpUserAgentParser.GetPlatform(
+    ///     "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+    ///
+    /// if (platform != null)
+    /// {
+    ///     Console.WriteLine(platform.Value.Name);         // "Windows 10"
+    ///     Console.WriteLine(platform.Value.PlatformType); // Windows
+    /// }
+    /// </code>
+    /// </example>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentStatics.s_platformRules)
+        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentFastRules.s_platformRules)
         {
             if (ContainsIgnoreCase(ua, platform.Token))
             {
                 return new HttpUserAgentPlatformInformation(
-                    HttpUserAgentStatics.GetPlatformRegexForToken(platform.Token),
+                    HttpUserAgentFastRules.GetPlatformRegexForToken(platform.Token),
                     platform.Name, platform.PlatformType);
             }
         }
@@ -65,8 +105,18 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if platform was found
+    /// Attempts to extract the platform information from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="platform">When this method returns <see langword="true"/>, contains the platform information.</param>
+    /// <returns><see langword="true"/> if a platform was detected; otherwise, <see langword="false"/>.</returns>
+    /// <example>
+    /// <code>
+    /// bool found = HttpUserAgentParser.TryGetPlatform(
+    ///     "Mozilla/5.0 (Windows NT 10.0)",
+    ///     out HttpUserAgentPlatformInformation? platform);
+    /// </code>
+    /// </example>
     public static bool TryGetPlatform(string userAgent, [NotNullWhen(true)] out HttpUserAgentPlatformInformation? platform)
     {
         platform = GetPlatform(userAgent);
@@ -74,54 +124,71 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns the browser or null
+    /// Extracts the browser name and version from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>
+    /// A tuple containing the browser name and version if detected; otherwise, <see langword="null"/>.
+    /// </returns>
+    /// <remarks>
+    /// Uses a fast path with token-based matching to avoid regex where possible.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(
+    ///     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/90.0.4430.212 Safari/537.36");
+    ///
+    /// if (browser != null)
+    /// {
+    ///     Console.WriteLine(browser.Value.Name);    // "Chrome"
+    ///     Console.WriteLine(browser.Value.Version); // "90.0.4430.212"
+    /// }
+    /// </code>
+    /// </example>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
 
-        foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentStatics.s_browserRules)
+        foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentFastRules.s_browserRules)
         {
             if (!TryIndexOf(ua, browserRule.DetectToken, out int detectIndex))
             {
                 continue;
             }
 
-            // Version token may differ (e.g., Safari uses "Version/")
-
+            int afterDetectIndex = detectIndex + browserRule.DetectToken.Length;
             int versionSearchStart;
+
             // For rules without a specific version token, ensure pattern Token/<digits>
             if (string.IsNullOrEmpty(browserRule.VersionToken))
             {
-                int afterDetect = detectIndex + browserRule.DetectToken.Length;
-                if (afterDetect >= ua.Length || ua[afterDetect] != '/')
+                if (afterDetectIndex >= ua.Length || ua[afterDetectIndex] != '/')
                 {
                     // Likely a misspelling or partial token (e.g., Edgg, Oprea, Chromee)
                     continue;
                 }
+                versionSearchStart = afterDetectIndex;
             }
-            if (!string.IsNullOrEmpty(browserRule.VersionToken))
+            else
             {
-                if (TryIndexOf(ua, browserRule.VersionToken!, out int vtIndex))
+                // Version token may differ (e.g., Safari uses "Version/")
+                ReadOnlySpan<char> afterDetect = afterDetectIndex < ua.Length ? ua.Slice(afterDetectIndex) : [];
+
+                if (!afterDetect.IsEmpty && TryIndexOf(afterDetect, browserRule.VersionToken, out int vtIndex))
                 {
-                    versionSearchStart = vtIndex + browserRule.VersionToken!.Length;
+                    versionSearchStart = afterDetectIndex + vtIndex + browserRule.VersionToken.Length;
                 }
                 else
                 {
                     // If specific version token wasn't found, fall back to detect token area
-                    versionSearchStart = detectIndex + browserRule.DetectToken.Length;
+                    versionSearchStart = afterDetectIndex;
                 }
-            }
-            else
-            {
-                versionSearchStart = detectIndex + browserRule.DetectToken.Length;
             }
 
             ReadOnlySpan<char> search = ua.Slice(versionSearchStart);
             if (TryExtractVersion(search, out Range range))
             {
-                string? version = search[range].ToString();
-                return (browserRule.Name, version);
+                return (browserRule.Name, search[range].ToString());
             }
 
             // If we didn't find a version for this rule, try next rule
@@ -131,8 +198,18 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if browser was found
+    /// Attempts to extract the browser name and version from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="browser">When this method returns <see langword="true"/>, contains the browser name and version.</param>
+    /// <returns><see langword="true"/> if a browser was detected; otherwise, <see langword="false"/>.</returns>
+    /// <example>
+    /// <code>
+    /// bool found = HttpUserAgentParser.TryGetBrowser(
+    ///     "Mozilla/5.0 Chrome/90.0.4430.212",
+    ///     out (string Name, string? Version)? browser);
+    /// </code>
+    /// </example>
     public static bool TryGetBrowser(string userAgent, [NotNullWhen(true)] out (string Name, string? Version)? browser)
     {
         browser = GetBrowser(userAgent);
@@ -140,12 +217,20 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns the robot or null
+    /// Extracts the robot/bot name from the User-Agent string if it matches a known bot signature.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>The robot name if detected; otherwise, <see langword="null"/>.</returns>
+    /// <example>
+    /// <code>
+    /// string? robot = HttpUserAgentParser.GetRobot("Googlebot/2.1 (+http://www.google.com/bot.html)");
+    /// // Result: "Googlebot"
+    /// </code>
+    /// </example>
     public static string? GetRobot(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        foreach ((string key, string value) in HttpUserAgentStatics.Robots)
+        foreach ((string key, string value) in HttpUserAgentFastRules.s_robotRules)
         {
             if (ContainsIgnoreCase(ua, key))
             {
@@ -157,8 +242,16 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if robot was found
+    /// Attempts to extract the robot/bot name from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="robotName">When this method returns <see langword="true"/>, contains the robot name.</param>
+    /// <returns><see langword="true"/> if a robot was detected; otherwise, <see langword="false"/>.</returns>
+    /// <example>
+    /// <code>
+    /// bool isBot = HttpUserAgentParser.TryGetRobot("Googlebot/2.1", out string? robotName);
+    /// </code>
+    /// </example>
     public static bool TryGetRobot(string userAgent, [NotNullWhen(true)] out string? robotName)
     {
         robotName = GetRobot(userAgent);
@@ -166,12 +259,21 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns the device or null
+    /// Extracts the mobile device type from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <returns>The device type (e.g., "Apple iPhone", "Android") if detected; otherwise, <see langword="null"/>.</returns>
+    /// <example>
+    /// <code>
+    /// string? device = HttpUserAgentParser.GetMobileDevice(
+    ///     "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5) Mobile");
+    /// // Result: "Apple iPhone"
+    /// </code>
+    /// </example>
     public static string? GetMobileDevice(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
+        foreach ((string key, string value) in HttpUserAgentFastRules.s_mobileRules)
         {
             if (ContainsIgnoreCase(ua, key))
             {
@@ -183,18 +285,34 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// returns true if device was found
+    /// Attempts to extract the mobile device type from the User-Agent string.
     /// </summary>
+    /// <param name="userAgent">The User-Agent string to analyze.</param>
+    /// <param name="device">When this method returns <see langword="true"/>, contains the device type.</param>
+    /// <returns><see langword="true"/> if a mobile device was detected; otherwise, <see langword="false"/>.</returns>
+    /// <example>
+    /// <code>
+    /// bool isMobile = HttpUserAgentParser.TryGetMobileDevice(
+    ///     "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5)",
+    ///     out string? device);
+    /// </code>
+    /// </example>
     public static bool TryGetMobileDevice(string userAgent, [NotNullWhen(true)] out string? device)
     {
         device = GetMobileDevice(userAgent);
         return device is not null;
     }
 
+    /// <summary>
+    /// Fast case-insensitive substring check.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool ContainsIgnoreCase(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle)
         => TryIndexOf(haystack, needle, out _);
 
+    /// <summary>
+    /// Finds the first index of a token in a span using ordinal-ignore-case.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryIndexOf(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle, out int index)
     {
@@ -204,7 +322,7 @@ public static class HttpUserAgentParser
 
     /// <summary>
     /// Extracts a dotted numeric version.
-    /// Accepts digits and dots; skips common separators ('/', ' ', ':', '=') until first digit.
+    /// Accepts digits and dots; skips common separators until first digit.
     /// Returns false if no version-like token is found.
     /// </summary>
     private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range)
@@ -306,7 +424,7 @@ public static class HttpUserAgentParser
             for (; i < haystack.Length; ++i)
             {
                 char c = haystack[i];
-                if (char.IsBetween(c, '0', '9'))
+                if ((uint)(c - '0') <= 9)
                 {
                     start = i;
                     break;
@@ -323,7 +441,7 @@ public static class HttpUserAgentParser
             for (i = 0; i < haystack.Length; ++i)
             {
                 char c = haystack[i];
-                if (!(char.IsBetween(c, '0', '9') || c == '.'))
+                if (!((uint)(c - '0') <= 9 || c == '.'))
                 {
                     break;
                 }

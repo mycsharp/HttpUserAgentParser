@@ -5,11 +5,14 @@ using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache;
 
-/// <inheritdoc/>
 /// <summary>
-/// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProvider"/>.
+/// Implementation of <see cref="IHttpUserAgentParserProvider"/> with caching using <see cref="Microsoft.Extensions.Caching.Memory.MemoryCache"/>.
 /// </summary>
-/// <param name="options">The options used to set expiration and size limit</param>
+/// <remarks>
+/// <para>Provides sliding expiration and size limits for cached entries.</para>
+/// <para>Default configuration: 256 entries maximum, 1 day sliding expiration.</para>
+/// </remarks>
+/// <param name="options">The options controlling cache size and expiration.</param>
 public class HttpUserAgentParserMemoryCachedProvider(
     HttpUserAgentParserMemoryCachedProviderOptions options) : IHttpUserAgentParserProvider
 {
@@ -17,6 +20,13 @@ public class HttpUserAgentParserMemoryCachedProvider(
     private readonly HttpUserAgentParserMemoryCachedProviderOptions _options = options;
 
     /// <inheritdoc/>
+    /// <example>
+    /// <code>
+    /// HttpUserAgentParserMemoryCachedProviderOptions options = new();
+    /// HttpUserAgentParserMemoryCachedProvider provider = new(options);
+    /// HttpUserAgentInformation info = provider.Parse("Mozilla/5.0 Chrome/90.0.4430.212");
+    /// </code>
+    /// </example>
     public HttpUserAgentInformation Parse(string userAgent)
     {
         CacheKey key = GetKey(userAgent);

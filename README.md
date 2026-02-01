@@ -4,10 +4,10 @@ Parsing HTTP User Agents with .NET
 
 ## NuGet
 
-| NuGet |
-|-|
-| [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser) |
-| [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.MemoryCache.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.MemoryCache)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache)| `dotnet add package MyCSharp.HttpUserAgentParser.MemoryCach.MemoryCache` |
+| NuGet | Install |
+|-|-|
+| [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser) | `dotnet add package MyCSharp.HttpUserAgentParser` |
+| [![MyCSharp.HttpUserAgentParser.MemoryCache](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.MemoryCache.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.MemoryCache)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache) | `dotnet add package MyCSharp.HttpUserAgentParser.MemoryCache` |
 | [![MyCSharp.HttpUserAgentParser.AspNetCore](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.AspNetCore.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.AspNetCore)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore) | `dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore` |
 
 
@@ -104,9 +104,9 @@ public void ConfigureServices(IServiceCollection services)
 Now you can use
 
 ```csharp
-public void MyMethod(IHttpUserAgentParserAccessor parserAccessor)
+public void MyMethod(IHttpUserAgentParserAccessor parserAccessor, HttpContext httpContext)
 {
-    HttpUserAgentInformation info = parserAccessor.Get();
+    HttpUserAgentInformation? info = parserAccessor.Get(httpContext);
 }
 ```
 
@@ -152,7 +152,7 @@ by [@BenjaminAbt](https://github.com/BenjaminAbt) and [@gfoidl](https://github.c
 
 MIT License
 
-Copyright (c) 2021-2025 MyCSharp 
+Copyright (c) 2021-2026 MyCSharp 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
