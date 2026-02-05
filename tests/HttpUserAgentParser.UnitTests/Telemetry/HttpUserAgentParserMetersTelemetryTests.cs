@@ -48,5 +48,7 @@ public class HttpUserAgentParserMetersTelemetryTests
         Assert.Contains("cache.concurrent_dictionary.hit", listener.InstrumentNames);
         Assert.Contains("cache.concurrent_dictionary.miss", listener.InstrumentNames);
         Assert.Contains("cache.concurrent_dictionary.size", listener.InstrumentNames);
+
+        Assert.Equal("s", listener.InstrumentUnits["parse.duration"]);
     }
 }

@@ -28,7 +28,7 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     internal static HttpUserAgentParserEventSource Log { get; } = new();
 
     private readonly IncrementingEventCounter _parseRequests;
-    private readonly EventCounter? _parseDurationMs;
+    private readonly EventCounter? _parseDurationSeconds;
 
     private readonly IncrementingEventCounter _concurrentCacheHit;
     private readonly IncrementingEventCounter _concurrentCacheMiss;
@@ -46,10 +46,10 @@ public sealed class HttpUserAgentParserEventSource : EventSource
             DisplayUnits = "calls",
         };
 
-        _parseDurationMs = new EventCounter("parse-duration", this)
+        _parseDurationSeconds = new EventCounter("parse-duration", this)
         {
             DisplayName = "Parse duration",
-            DisplayUnits = "ms",
+            DisplayUnits = "s",
         };
 
         // Providers (cache)
@@ -92,16 +92,16 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     /// <summary>
     /// Records the duration of a User-Agent parse operation.
     /// </summary>
-    /// <param name="milliseconds">Elapsed parse time in milliseconds.</param>
+    /// <param name="seconds">Elapsed parse time in seconds.</param>
     [NonEvent]
-    internal void ParseDuration(double milliseconds)
+    internal void ParseDuration(double seconds)
     {
         if (!IsEnabled())
         {
             return;
         }
 
-        _parseDurationMs?.WriteMetric(milliseconds);
+        _parseDurationSeconds?.WriteMetric(seconds);
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         if (disposing)
         {
             _parseRequests?.Dispose();
-            _parseDurationMs?.Dispose();
+            _parseDurationSeconds?.Dispose();
 
             _concurrentCacheHit?.Dispose();
             _concurrentCacheMiss?.Dispose();

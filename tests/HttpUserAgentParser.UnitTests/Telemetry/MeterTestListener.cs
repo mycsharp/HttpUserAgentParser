@@ -11,6 +11,7 @@ internal sealed class MeterTestListener : IDisposable
     private readonly MeterListener _listener;
 
     public ConcurrentBag<string> InstrumentNames { get; } = [];
+    public ConcurrentDictionary<string, string?> InstrumentUnits { get; } = new(StringComparer.Ordinal);
 
     public MeterTestListener(string meterName)
     {
@@ -24,6 +25,7 @@ internal sealed class MeterTestListener : IDisposable
                 return;
             }
 
+            InstrumentUnits[instrument.Name] = instrument.Unit;
             listener.EnableMeasurementEvents(instrument);
         };
 

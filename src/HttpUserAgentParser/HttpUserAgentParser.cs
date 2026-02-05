@@ -44,7 +44,7 @@ public static class HttpUserAgentParser
 
         if (measureDuration)
         {
-            HttpUserAgentParserTelemetry.ParseDuration(Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
+            HttpUserAgentParserTelemetry.ParseDuration(Stopwatch.GetElapsedTime(startTimestamp));
         }
 
         return result;

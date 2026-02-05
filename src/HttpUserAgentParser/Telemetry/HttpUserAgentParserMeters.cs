@@ -63,11 +63,9 @@ internal static class HttpUserAgentParserMeters
             unit: "{call}",
             description: "User-Agent parse requests");
 
-        // Using "ms" instead of "s" because parse times are sub-millisecond,
-        // making milliseconds more readable than fractional seconds.
         s_parseDuration = s_meter.CreateHistogram<double>(
             name: "parse.duration",
-            unit: "ms",
+            unit: "s",
             description: "Parse duration");
 
         s_concurrentCacheHit = s_meter.CreateCounter<long>(
@@ -94,10 +92,10 @@ internal static class HttpUserAgentParserMeters
     public static void ParseRequest() => s_parseRequests?.Add(1);
 
     /// <summary>
-    /// Records the parse duration in milliseconds.
+    /// Records the parse duration in seconds.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ParseDuration(double milliseconds) => s_parseDuration?.Record(milliseconds);
+    public static void ParseDuration(double seconds) => s_parseDuration?.Record(seconds);
 
     /// <summary>
     /// Emits a counter increment for a concurrent dictionary cache hit.

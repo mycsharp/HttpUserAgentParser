@@ -92,19 +92,19 @@ internal static class HttpUserAgentParserTelemetry
     /// <summary>
     /// Records the duration of a parse request.
     /// </summary>
-    /// <param name="milliseconds">The duration in milliseconds.</param>
+    /// <param name="duration">The elapsed duration.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ParseDuration(double milliseconds)
+    public static void ParseDuration(TimeSpan duration)
     {
         int flags = Volatile.Read(ref s_enabledFlags);
         if ((flags & EventCountersFlag) != 0)
         {
-            HttpUserAgentParserEventSource.Log.ParseDuration(milliseconds);
+            HttpUserAgentParserEventSource.Log.ParseDuration(duration.TotalSeconds);
         }
 
         if ((flags & MetersFlag) != 0)
         {
-            HttpUserAgentParserMeters.ParseDuration(milliseconds);
+            HttpUserAgentParserMeters.ParseDuration(duration.TotalSeconds);
         }
     }
 
