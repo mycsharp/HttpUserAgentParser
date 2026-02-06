@@ -51,11 +51,6 @@ internal static class HttpUserAgentParserMeters
     /// </remarks>
     public static void Enable(Meter? meter = null)
     {
-        if (Interlocked.Exchange(ref s_initialized, 1) == 1)
-        {
-            return;
-        }
-
         s_meter = meter ?? new Meter(MeterName);
 
         s_parseRequests = s_meter.CreateCounter<long>(
