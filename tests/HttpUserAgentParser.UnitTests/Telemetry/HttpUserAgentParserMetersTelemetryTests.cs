@@ -28,7 +28,7 @@ public class HttpUserAgentParserMetersTelemetryTests
     {
         HttpUserAgentParserTelemetry.ResetForTests();
 
-        using MeterTestListener listener = new(MyCSharp.HttpUserAgentParser.Telemetry.HttpUserAgentParserMeters.MeterName);
+        using MeterTestListener listener = new("mycsharp.http_user_agent_parser");
 
         new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
             .WithMeterTelemetry();
@@ -45,9 +45,9 @@ public class HttpUserAgentParserMetersTelemetryTests
 
         Assert.Contains("parse.requests", listener.InstrumentNames);
         Assert.Contains("parse.duration", listener.InstrumentNames);
-        Assert.Contains("cache.concurrent_dictionary.hit", listener.InstrumentNames);
-        Assert.Contains("cache.concurrent_dictionary.miss", listener.InstrumentNames);
-        Assert.Contains("cache.concurrent_dictionary.size", listener.InstrumentNames);
+        Assert.Contains("cache.hit", listener.InstrumentNames);
+        Assert.Contains("cache.miss", listener.InstrumentNames);
+        Assert.Contains("cache.size", listener.InstrumentNames);
 
         Assert.Equal("s", listener.InstrumentUnits["parse.duration"]);
     }

@@ -3,7 +3,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection;
-using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using Xunit;
 
@@ -14,7 +13,7 @@ public class HttpUserAgentParserAspNetCoreMetersTelemetryTests
     [Fact]
     public void Meters_Emit_WhenEnabled()
     {
-        using MeterTestListener listener = new("MyCSharp.HttpUserAgentParser.AspNetCore");
+        using MeterTestListener listener = new("mycsharp.http_user_agent_parser.aspnetcore");
 
         new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
             .WithAspNetCoreMeterTelemetry();

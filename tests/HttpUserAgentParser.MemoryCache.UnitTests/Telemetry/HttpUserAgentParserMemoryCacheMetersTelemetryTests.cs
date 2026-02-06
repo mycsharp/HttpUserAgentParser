@@ -2,9 +2,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
-using MyCSharp.HttpUserAgentParser.MemoryCache;
 using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
-using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;
@@ -14,7 +12,7 @@ public class HttpUserAgentParserMemoryCacheMetersTelemetryTests
     [Fact]
     public void Meters_Emit_WhenEnabled()
     {
-        using MeterTestListener listener = new("MyCSharp.HttpUserAgentParser.MemoryCache");
+        using MeterTestListener listener = new("mycsharp.http_user_agent_parser.memorycache");
 
         new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
             .WithMemoryCacheMeterTelemetry();
