@@ -117,12 +117,12 @@ internal static class HttpUserAgentParserTelemetry
         int flags = Volatile.Read(ref s_enabledFlags);
         if ((flags & EventCountersFlag) != 0)
         {
-            HttpUserAgentParserEventSource.Log.ConcurrentCacheHit();
+            HttpUserAgentParserEventSource.Log.CacheHit();
         }
 
         if ((flags & MetersFlag) != 0)
         {
-            HttpUserAgentParserMeters.ConcurrentCacheHit();
+            HttpUserAgentParserMeters.CacheHit();
         }
     }
 
@@ -135,12 +135,12 @@ internal static class HttpUserAgentParserTelemetry
         int flags = Volatile.Read(ref s_enabledFlags);
         if ((flags & EventCountersFlag) != 0)
         {
-            HttpUserAgentParserEventSource.Log.ConcurrentCacheMiss();
+            HttpUserAgentParserEventSource.Log.CacheMiss();
         }
 
         if ((flags & MetersFlag) != 0)
         {
-            HttpUserAgentParserMeters.ConcurrentCacheMiss();
+            HttpUserAgentParserMeters.CacheMiss();
         }
     }
 

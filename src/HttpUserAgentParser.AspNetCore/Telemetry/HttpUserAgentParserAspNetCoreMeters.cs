@@ -20,7 +20,7 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// <summary>
     /// Name of the meter used to publish AspNetCore User-Agent metrics.
     /// </summary>
-    public const string MeterName = HttpUserAgentParserAccessor.MeterName;
+    public const string MeterName = "mycsharp.http_user_agent_parser.aspnetcore";
 
     /// <summary>
     /// Indicates whether the meter and its instruments have been initialized.

@@ -18,7 +18,7 @@ public class HttpUserAgentParserMemoryCachedProvider(
     /// <summary>
     /// The name of the Meter used for metrics.
     /// </summary>
-    public const string MeterName = "MyCSharp.HttpUserAgentParser.MemoryCache";
+    public const string MeterName = "mycsharp.http_user_agent_parser.memorycache";
 
     private readonly Microsoft.Extensions.Caching.Memory.MemoryCache _memoryCache = new(options.CacheOptions);
     private readonly HttpUserAgentParserMemoryCachedProviderOptions _options = options;

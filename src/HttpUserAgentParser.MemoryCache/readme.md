@@ -68,9 +68,9 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser.MemoryCache` (constant: `HttpUserAgentParserMemoryCacheEventSource.EventSourceName`)
 
-- `cache-hit` (incrementing)
-- `cache-miss` (incrementing)
-- `cache-size` (polling)
+- `user_agent_parser.cache.hit` (incrementing)
+- `user_agent_parser.cache.miss` (incrementing)
+- `user_agent_parser.cache.size` (polling)
 
 ### Monitor with dotnet-counters
 
@@ -103,9 +103,9 @@ services
 
 Meter: `MyCSharp.HttpUserAgentParser.MemoryCache` (constant: `HttpUserAgentParserMemoryCacheMeters.MeterName`)
 
-- `cache-hit` (counter)
-- `cache-miss` (counter)
-- `cache-size` (observable gauge)
+- `user_agent_parser.cache.hit` (counter)
+- `user_agent_parser.cache.miss` (counter)
+- `user_agent_parser.cache.size` (observable gauge)
 
 ## Export to OpenTelemetry / Application Insights
 

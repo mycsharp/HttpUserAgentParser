@@ -58,8 +58,8 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgentParserAspNetCoreEventSource.EventSourceName`)
 
-- `useragent-present` (incrementing)
-- `useragent-missing` (incrementing)
+- `user_agent.present` (incrementing)
+- `user_agent.missing` (incrementing)
 
 ### Monitor with dotnet-counters
 
@@ -83,8 +83,8 @@ services
 
 Meter: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgentParserAspNetCoreMeters.MeterName`)
 
-- `useragent-present` (counter)
-- `useragent-missing` (counter)
+- `user_agent.present` (counter)
+- `user_agent.missing` (counter)
 
 ## Export to OpenTelemetry / Application Insights
 

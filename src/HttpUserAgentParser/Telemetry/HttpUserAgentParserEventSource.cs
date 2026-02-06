@@ -30,9 +30,9 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     private readonly IncrementingEventCounter _parseRequests;
     private readonly EventCounter? _parseDurationSeconds;
 
-    private readonly IncrementingEventCounter _concurrentCacheHit;
-    private readonly IncrementingEventCounter _concurrentCacheMiss;
-    private readonly PollingCounter _concurrentCacheSize;
+    private readonly IncrementingEventCounter _cacheHit;
+    private readonly IncrementingEventCounter _cacheMiss;
+    private readonly PollingCounter _cacheSize;
 
     /// <summary>
     /// Initializes all EventCounters and polling counters used by this EventSource.
@@ -53,24 +53,24 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         };
 
         // Providers (cache)
-        _concurrentCacheHit = new IncrementingEventCounter("cache-concurrentdictionary-hit", this)
+        _cacheHit = new IncrementingEventCounter("cache-hit", this)
         {
-            DisplayName = "ConcurrentDictionary cache hit",
+            DisplayName = "Cache hit",
             DisplayUnits = "calls",
         };
 
-        _concurrentCacheMiss = new IncrementingEventCounter("cache-concurrentdictionary-miss", this)
+        _cacheMiss = new IncrementingEventCounter("cache-miss", this)
         {
-            DisplayName = "ConcurrentDictionary cache miss",
+            DisplayName = "Cache miss",
             DisplayUnits = "calls",
         };
 
-        _concurrentCacheSize = new PollingCounter(
-            "cache-concurrentdictionary-size",
+        _cacheSize = new PollingCounter(
+            "cache-size",
             this,
             static () => HttpUserAgentParserTelemetryState.ConcurrentCacheSize)
         {
-            DisplayName = "ConcurrentDictionary cache size",
+            DisplayName = "Cache size",
             DisplayUnits = "entries",
         };
     }
@@ -105,35 +105,35 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     }
 
     /// <summary>
-    /// Records a cache hit in the concurrent dictionary provider.
+    /// Records a cache hit.
     /// </summary>
     [NonEvent]
-    internal void ConcurrentCacheHit()
+    internal void CacheHit()
     {
         if (!IsEnabled())
         {
             return;
         }
 
-        _concurrentCacheHit?.Increment();
+        _cacheHit?.Increment();
     }
 
     /// <summary>
-    /// Records a cache miss in the concurrent dictionary provider.
+    /// Records a cache miss.
     /// </summary>
     [NonEvent]
-    internal void ConcurrentCacheMiss()
+    internal void CacheMiss()
     {
         if (!IsEnabled())
         {
             return;
         }
 
-        _concurrentCacheMiss?.Increment();
+        _cacheMiss?.Increment();
     }
 
     /// <summary>
-    /// Updates the concurrent cache size used by the polling counter.
+    /// Updates the size used by the polling counter.
     /// </summary>
     /// <param name="size">Current number of entries in the cache.</param>
     /// <remarks>
@@ -141,7 +141,7 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     /// counter reports a correct value once a listener attaches.
     /// </remarks>
     [NonEvent]
-    internal static void ConcurrentCacheSizeSet(int size) => HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
+    internal static void CacheSizeSet(int size) => HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
 
     /// <summary>
     /// Releases all EventCounter and PollingCounter resources used by this EventSource.
@@ -157,9 +157,9 @@ public sealed class HttpUserAgentParserEventSource : EventSource
             _parseRequests?.Dispose();
             _parseDurationSeconds?.Dispose();
 
-            _concurrentCacheHit?.Dispose();
-            _concurrentCacheMiss?.Dispose();
-            _concurrentCacheSize?.Dispose();
+            _cacheHit?.Dispose();
+            _cacheMiss?.Dispose();
+            _cacheSize?.Dispose();
         }
 
         base.Dispose(disposing);

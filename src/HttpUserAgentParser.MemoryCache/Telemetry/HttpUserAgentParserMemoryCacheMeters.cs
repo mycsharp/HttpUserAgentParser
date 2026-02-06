@@ -35,18 +35,18 @@ internal static class HttpUserAgentParserMemoryCacheMeters
         s_cacheHit = s_meter.CreateCounter<long>(
             name: "cache.hit",
             unit: "{call}",
-            description: "MemoryCache cache hit");
+            description: "Cache hit");
 
         s_cacheMiss = s_meter.CreateCounter<long>(
             name: "cache.miss",
             unit: "{call}",
-            description: "MemoryCache cache miss");
+            description: "Cache miss");
 
         s_cacheSize = s_meter.CreateObservableGauge<long>(
             name: "cache.size",
             observeValue: static () => HttpUserAgentParserMemoryCacheTelemetryState.CacheSize,
             unit: "{entry}",
-            description: "MemoryCache cache size");
+            description: "Cache size");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -17,11 +17,6 @@ namespace MyCSharp.HttpUserAgentParser;
 public static class HttpUserAgentParser
 {
     /// <summary>
-    /// The name of the Meter used for metrics.
-    /// </summary>
-    public const string MeterName = "MyCSharp.HttpUserAgentParser";
-
-    /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
     /// <remarks>

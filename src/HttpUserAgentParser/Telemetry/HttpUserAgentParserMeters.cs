@@ -20,7 +20,7 @@ internal static class HttpUserAgentParserMeters
     /// <summary>
     /// The meter name used for all instruments.
     /// </summary>
-    public const string MeterName = HttpUserAgentParser.MeterName;
+    public const string MeterName = "mycsharp.http_user_agent_parser";
 
     private static int s_initialized;
 
@@ -69,20 +69,20 @@ internal static class HttpUserAgentParserMeters
             description: "Parse duration");
 
         s_concurrentCacheHit = s_meter.CreateCounter<long>(
-            name: "cache.concurrent_dictionary.hit",
+            name: "cache.hit",
             unit: "{call}",
-            description: "ConcurrentDictionary cache hit");
+            description: "Cache hit");
 
         s_concurrentCacheMiss = s_meter.CreateCounter<long>(
-            name: "cache.concurrent_dictionary.miss",
+            name: "cache.miss",
             unit: "{call}",
-            description: "ConcurrentDictionary cache miss");
+            description: "Cache miss");
 
         s_concurrentCacheSize = s_meter.CreateObservableGauge<long>(
-            name: "cache.concurrent_dictionary.size",
+            name: "cache.size",
             observeValue: static () => HttpUserAgentParserTelemetryState.ConcurrentCacheSize,
             unit: "{entry}",
-            description: "ConcurrentDictionary cache size");
+            description: "Cache size");
     }
 
     /// <summary>
@@ -98,16 +98,16 @@ internal static class HttpUserAgentParserMeters
     public static void ParseDuration(double seconds) => s_parseDuration?.Record(seconds);
 
     /// <summary>
-    /// Emits a counter increment for a concurrent dictionary cache hit.
+    /// Emits a counter increment for a cache hit.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ConcurrentCacheHit() => s_concurrentCacheHit?.Add(1);
+    public static void CacheHit() => s_concurrentCacheHit?.Add(1);
 
     /// <summary>
-    /// Emits a counter increment for a concurrent dictionary cache miss.
+    /// Emits a counter increment for a cache miss.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ConcurrentCacheMiss() => s_concurrentCacheMiss?.Add(1);
+    public static void CacheMiss() => s_concurrentCacheMiss?.Add(1);
 
     /// <summary>
     /// Resets static state to support isolated unit tests.

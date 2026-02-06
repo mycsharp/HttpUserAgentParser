@@ -57,11 +57,11 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserEventSource.EventSourceName`)
 
-- `parse-requests` (incrementing)
-- `parse-duration` (ms, event counter)
-- `cache-concurrentdictionary-hit` (incrementing)
-- `cache-concurrentdictionary-miss` (incrementing)
-- `cache-concurrentdictionary-size` (polling)
+- `parse.requests` (incrementing)
+- `parse.duration` (ms, event counter)
+- `cache.hit` (incrementing)
+- `cache.miss` (incrementing)
+- `cache.size` (polling)
 
 ### Monitor with dotnet-counters
 
@@ -90,11 +90,11 @@ services
 
 Meter: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserMeters.MeterName`)
 
-- `parse-requests` (counter)
-- `parse-duration` (histogram, ms)
-- `cache-concurrentdictionary-hit` (counter)
-- `cache-concurrentdictionary-miss` (counter)
-- `cache-concurrentdictionary-size` (observable gauge)
+- `parse.requests` (counter)
+- `parse.duration` (histogram, ms)
+- `cache.hit` (counter)
+- `cache.miss` (counter)
+- `cache.size` (observable gauge)
 
 ## Export to OpenTelemetry
 
