@@ -39,4 +39,9 @@ internal static class HttpUserAgentParserMemoryCacheTelemetryState
     /// Uses an atomic operation to remain safe in concurrent scenarios.
     /// </remarks>
     public static void CacheSizeDecrement() => Interlocked.Decrement(ref s_cacheSize);
+
+    /// <summary>
+    /// Resets the cache size for unit tests.
+    /// </summary>
+    public static void ResetForTests() => Volatile.Write(ref s_cacheSize, 0);
 }

@@ -31,4 +31,19 @@ public static class HttpUserAgentParserDependencyInjectionOptionsTelemetryExtens
         HttpUserAgentParserAspNetCoreTelemetry.EnableMeters(meter);
         return options;
     }
+
+    /// <summary>
+    /// Enables native System.Diagnostics.Metrics telemetry for the AspNetCore package using a custom meter prefix.
+    /// </summary>
+    /// <param name="options">The options container.</param>
+    /// <param name="meterPrefix">The prefix to use for the meter name.</param>
+    /// <exception cref="ArgumentException">Thrown when the prefix is not empty and does not match the required format.</exception>
+    public static HttpUserAgentParserDependencyInjectionOptions WithAspNetCoreMeterTelemetryPrefix(
+        this HttpUserAgentParserDependencyInjectionOptions options,
+        string meterPrefix)
+    {
+        Meter meter = new(HttpUserAgentParserAspNetCoreMeters.GetMeterName(meterPrefix));
+        HttpUserAgentParserAspNetCoreTelemetry.EnableMeters(meter);
+        return options;
+    }
 }

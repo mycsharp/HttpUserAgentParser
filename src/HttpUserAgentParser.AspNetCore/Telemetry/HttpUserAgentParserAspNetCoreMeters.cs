@@ -20,7 +20,51 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// <summary>
     /// Name of the meter used to publish AspNetCore User-Agent metrics.
     /// </summary>
-    public const string MeterName = "mycsharp.http_user_agent_parser.aspnetcore";
+    private const string MeterNameSuffix = "http_user_agent_parser.aspnetcore";
+
+    /// <summary>
+    /// Name of the meter used to publish AspNetCore User-Agent metrics.
+    /// </summary>
+    public const string MeterName = "mycsharp." + MeterNameSuffix;
+
+    /// <summary>
+    /// Builds a meter name from a custom prefix.
+    /// </summary>
+    /// <param name="meterPrefix">
+    /// The prefix to use. When null, the default prefix is used. When empty,
+    /// no prefix is applied. Otherwise, the prefix must be alphanumeric and end with '.'.
+    /// </param>
+    /// <returns>The full meter name.</returns>
+    /// <exception cref="ArgumentException">Thrown when the prefix is not empty and does not match the required format.</exception>
+    public static string GetMeterName(string? meterPrefix)
+    {
+        if (meterPrefix is null)
+        {
+            return MeterName;
+        }
+
+        meterPrefix = meterPrefix.Trim();
+        if (meterPrefix.Length == 0)
+        {
+            return MeterNameSuffix;
+        }
+
+        if (!meterPrefix.EndsWith('.'))
+        {
+            throw new ArgumentException("Meter prefix must end with '.'.", nameof(meterPrefix));
+        }
+
+        for (int i = 0; i < meterPrefix.Length - 1; i++)
+        {
+            char c = meterPrefix[i];
+            if (!char.IsLetterOrDigit(c))
+            {
+                throw new ArgumentException("Meter prefix must be alphanumeric.", nameof(meterPrefix));
+            }
+        }
+
+        return meterPrefix + MeterNameSuffix;
+    }
 
     /// <summary>
     /// Indicates whether the meter and its instruments have been initialized.
@@ -91,4 +135,16 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UserAgentMissing()
         => s_userAgentMissing?.Add(1);
+
+    /// <summary>
+    /// Resets static state to support isolated unit tests.
+    /// </summary>
+    public static void ResetForTests()
+    {
+        Volatile.Write(ref s_initialized, 0);
+
+        s_meter = null;
+        s_userAgentPresent = null;
+        s_userAgentMissing = null;
+    }
 }

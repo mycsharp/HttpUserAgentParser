@@ -125,4 +125,13 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
             HttpUserAgentParserAspNetCoreMeters.UserAgentMissing();
         }
     }
+
+    /// <summary>
+    /// Resets telemetry state for unit tests.
+    /// </summary>
+    public static void ResetForTests()
+    {
+        Volatile.Write(ref s_enabledFlags, 0);
+        HttpUserAgentParserAspNetCoreMeters.ResetForTests();
+    }
 }

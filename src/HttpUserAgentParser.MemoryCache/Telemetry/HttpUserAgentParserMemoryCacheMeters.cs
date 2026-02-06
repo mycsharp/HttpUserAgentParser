@@ -12,7 +12,48 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 [ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMemoryCacheMeters
 {
-    public const string MeterName = HttpUserAgentParserMemoryCachedProvider.MeterName;
+    private const string MeterNameSuffix = "http_user_agent_parser.memorycache";
+
+    public const string MeterName = "mycsharp." + MeterNameSuffix;
+
+    /// <summary>
+    /// Builds a meter name from a custom prefix.
+    /// </summary>
+    /// <param name="meterPrefix">
+    /// The prefix to use. When null, the default prefix is used. When empty,
+    /// no prefix is applied. Otherwise, the prefix must be alphanumeric and end with '.'.
+    /// </param>
+    /// <returns>The full meter name.</returns>
+    /// <exception cref="ArgumentException">Thrown when the prefix is not empty and does not match the required format.</exception>
+    public static string GetMeterName(string? meterPrefix)
+    {
+        if (meterPrefix is null)
+        {
+            return MeterName;
+        }
+
+        meterPrefix = meterPrefix.Trim();
+        if (meterPrefix.Length == 0)
+        {
+            return MeterNameSuffix;
+        }
+
+        if (!meterPrefix.EndsWith('.'))
+        {
+            throw new ArgumentException("Meter prefix must end with '.'.", nameof(meterPrefix));
+        }
+
+        for (int i = 0; i < meterPrefix.Length - 1; i++)
+        {
+            char c = meterPrefix[i];
+            if (!char.IsLetterOrDigit(c))
+            {
+                throw new ArgumentException("Meter prefix must be alphanumeric.", nameof(meterPrefix));
+            }
+        }
+
+        return meterPrefix + MeterNameSuffix;
+    }
 
     private static int s_initialized;
 
@@ -54,4 +95,14 @@ internal static class HttpUserAgentParserMemoryCacheMeters
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheMiss() => s_cacheMiss?.Add(1);
+
+    public static void ResetForTests()
+    {
+        Volatile.Write(ref s_initialized, 0);
+
+        s_meter = null;
+        s_cacheHit = null;
+        s_cacheMiss = null;
+        s_cacheSize = null;
+    }
 }

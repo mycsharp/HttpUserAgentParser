@@ -120,4 +120,14 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheSizeDecrement()
         => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeDecrement();
+
+    /// <summary>
+    /// Resets telemetry state for unit tests.
+    /// </summary>
+    public static void ResetForTests()
+    {
+        Volatile.Write(ref s_enabledFlags, 0);
+        HttpUserAgentParserMemoryCacheTelemetryState.ResetForTests();
+        HttpUserAgentParserMemoryCacheMeters.ResetForTests();
+    }
 }

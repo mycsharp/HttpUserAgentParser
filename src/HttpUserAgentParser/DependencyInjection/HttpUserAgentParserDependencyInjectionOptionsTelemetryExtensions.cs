@@ -32,4 +32,19 @@ public static class HttpUserAgentParserDependencyInjectionOptionsTelemetryExtens
         HttpUserAgentParserTelemetry.EnableMeters(meter);
         return options;
     }
+
+    /// <summary>
+    /// Enables native System.Diagnostics.Metrics telemetry for the parser using a custom meter prefix.
+    /// </summary>
+    /// <param name="options">The options container.</param>
+    /// <param name="meterPrefix">The prefix to use for the meter name.</param>
+    /// <exception cref="ArgumentException">Thrown when the prefix is not empty and does not match the required format.</exception>
+    public static HttpUserAgentParserDependencyInjectionOptions WithMeterTelemetryPrefix(
+        this HttpUserAgentParserDependencyInjectionOptions options,
+        string meterPrefix)
+    {
+        Meter meter = new(HttpUserAgentParserMeters.GetMeterName(meterPrefix));
+        HttpUserAgentParserTelemetry.EnableMeters(meter);
+        return options;
+    }
 }

@@ -24,4 +24,8 @@
         <ProjectReference Include="..\HttpUserAgentParser\HttpUserAgentParser.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests" PublicKey="$(PublicKey)" />
+    </ItemGroup>
+
 </Project>

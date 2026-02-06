@@ -159,7 +159,7 @@ public void ConfigureServices(IServiceCollection services)
 Core (`MyCSharp.HttpUserAgentParser`)
 
 - `parse-requests`
-- `parse-duration` (ms)
+- `parse-duration` (s)
 - `cache-concurrentdictionary-hit`
 - `cache-concurrentdictionary-miss`
 - `cache-concurrentdictionary-size`
@@ -184,6 +184,92 @@ dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser
 dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser.MemoryCache
 dotnet-counters monitor --process-id <pid> MyCSharp.HttpUserAgentParser.AspNetCore
 ```
+
+## Telemetry (Meters)
+
+Native `System.Diagnostics.Metrics` instruments are **opt-in** per package.
+
+### Enable meters (Fluent API)
+
+Core parser meters:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+        .AddHttpUserAgentParser()
+        .WithMeterTelemetry();
+}
+```
+
+MemoryCache meters:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+        .AddHttpUserAgentMemoryCachedParser()
+        .WithMeterTelemetry() // core meters (optional)
+        .WithMemoryCacheMeterTelemetry();
+}
+```
+
+ASP.NET Core meters:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+        .AddHttpUserAgentMemoryCachedParser()
+        .AddHttpUserAgentParserAccessor()
+        .WithAspNetCoreMeterTelemetry();
+}
+```
+
+### Meter names and instruments
+
+Core meter (default: `mycsharp.http_user_agent_parser`)
+
+- `parse.requests` (counter, `{call}`)
+- `parse.duration` (histogram, `s`)
+- `cache.hit` (counter, `{call}`)
+- `cache.miss` (counter, `{call}`)
+- `cache.size` (observable gauge, `{entry}`)
+
+MemoryCache meter (default: `mycsharp.http_user_agent_parser.memorycache`)
+
+- `cache.hit` (counter, `{call}`)
+- `cache.miss` (counter, `{call}`)
+- `cache.size` (observable gauge, `{entry}`)
+
+ASP.NET Core meter (default: `mycsharp.http_user_agent_parser.aspnetcore`)
+
+- `user_agent.present` (counter, `{call}`)
+- `user_agent.missing` (counter, `{call}`)
+
+### Meter prefix configuration
+
+The default prefix is `mycsharp.`. The prefix can be configured via DI:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+        .AddHttpUserAgentParser()
+        .WithMeterTelemetryPrefix("acme.");
+}
+```
+
+Rules:
+
+- `""` (empty) is allowed and removes the prefix.
+- Otherwise the prefix must be **alphanumeric** and **end with `.`**.
+
+Example results:
+
+- Prefix `"mycsharp."` -> `mycsharp.http_user_agent_parser`
+- Prefix `""` -> `http_user_agent_parser`
+- Prefix `"acme."` -> `acme.http_user_agent_parser`
 
 ### Export to OpenTelemetry
 
