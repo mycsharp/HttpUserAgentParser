@@ -71,7 +71,11 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
     /// <summary>
     /// Enables EventCounter telemetry for the AspNetCore package.
     /// </summary>
-    public static void Enable() => Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
+    public static void Enable()
+    {
+        _ = HttpUserAgentParserAspNetCoreEventSource.Log;
+        Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
+    }
 
     /// <summary>
     /// Enables native System.Diagnostics.Metrics telemetry for the AspNetCore package.
