@@ -8,6 +8,7 @@ internal sealed class EventCounterTestListener(string eventSourceName) : EventLi
 {
     private readonly string _eventSourceName = eventSourceName;
     private volatile bool _sawEventCounters;
+    private volatile bool _enabled;
 
     protected override void OnEventSourceCreated(EventSource eventSource)
     {
@@ -24,6 +25,8 @@ internal sealed class EventCounterTestListener(string eventSourceName) : EventLi
             {
                 ["EventCounterIntervalSec"] = "0.1"
             });
+
+        _enabled = true;
     }
 
     protected override void OnEventWritten(EventWrittenEventArgs eventData)
@@ -43,5 +46,16 @@ internal sealed class EventCounterTestListener(string eventSourceName) : EventLi
         }
 
         return _sawEventCounters;
+    }
+
+    public bool WaitUntilEnabled(TimeSpan timeout)
+    {
+        DateTimeOffset start = DateTimeOffset.UtcNow;
+        while (!_enabled && DateTimeOffset.UtcNow - start < timeout)
+        {
+            Thread.Sleep(10);
+        }
+
+        return _enabled;
     }
 }

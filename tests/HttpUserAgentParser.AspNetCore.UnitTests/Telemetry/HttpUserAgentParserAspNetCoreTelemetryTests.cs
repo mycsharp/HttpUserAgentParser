@@ -21,11 +21,15 @@ public class HttpUserAgentParserAspNetCoreTelemetryTests
 
         DefaultHttpContext ctx = new();
 
-        // present
+        // First call ensures the EventSource gets created (listener enables right after creation).
+        ctx.Request.Headers.UserAgent = "UA";
+        Assert.NotNull(ctx.GetUserAgentString());
+        Assert.True(listener.WaitUntilEnabled(TimeSpan.FromSeconds(2)));
+
+        // Now exercise telemetry-enabled paths.
         ctx.Request.Headers.UserAgent = "UA";
         Assert.NotNull(ctx.GetUserAgentString());
 
-        // missing
         ctx.Request.Headers.Remove("User-Agent");
         Assert.Null(ctx.GetUserAgentString());
 
