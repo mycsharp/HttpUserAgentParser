@@ -60,7 +60,11 @@ internal static class HttpUserAgentParserTelemetry
     /// <summary>
     /// Enables core EventCounter telemetry for the parser.
     /// </summary>
-    public static void Enable() => Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
+    public static void Enable()
+    {
+        _ = HttpUserAgentParserEventSource.Log;
+        Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
+    }
 
     /// <summary>
     /// Enables native System.Diagnostics.Metrics telemetry for the parser.

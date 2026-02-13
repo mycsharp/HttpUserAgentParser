@@ -52,7 +52,11 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     /// <summary>
     /// Enables EventCounter telemetry for the MemoryCache provider.
     /// </summary>
-    public static void Enable() => Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
+    public static void Enable()
+    {
+        _ = HttpUserAgentParserMemoryCacheEventSource.Log;
+        Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
+    }
 
     /// <summary>
     /// Enables native System.Diagnostics.Metrics telemetry for the MemoryCache provider.
