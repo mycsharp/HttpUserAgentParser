@@ -73,6 +73,8 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
     /// </summary>
     public static void Enable()
     {
+        // Force EventSource construction at enable-time so listeners can subscribe deterministically.
+        // This avoids CI-only timing races where first telemetry events happen before listener attachment.
         _ = HttpUserAgentParserAspNetCoreEventSource.Log;
         Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
     }
