@@ -25,4 +25,8 @@
         <ProjectReference Include="..\HttpUserAgentParser\HttpUserAgentParser.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests" PublicKey="$(PublicKey)" />
+    </ItemGroup>
+
 </Project>

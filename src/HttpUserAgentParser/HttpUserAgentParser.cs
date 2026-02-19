@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using MyCSharp.HttpUserAgentParser.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser;
 
@@ -18,7 +19,33 @@ public static class HttpUserAgentParser
     /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
+    /// <remarks>
+    /// If telemetry is enabled, this method will emit metrics for parse requests and duration.
+    /// The telemetry check is designed to be zero-overhead when disabled (using a volatile boolean check).
+    /// </remarks>
     public static HttpUserAgentInformation Parse(string userAgent)
+    {
+        if (!HttpUserAgentParserTelemetry.IsEnabled)
+        {
+            return ParseInternal(userAgent);
+        }
+
+        bool measureDuration = HttpUserAgentParserTelemetry.ShouldMeasureParseDuration;
+        long startTimestamp = measureDuration ? Stopwatch.GetTimestamp() : 0;
+
+        HttpUserAgentParserTelemetry.ParseRequest();
+
+        HttpUserAgentInformation result = ParseInternal(userAgent);
+
+        if (measureDuration)
+        {
+            HttpUserAgentParserTelemetry.ParseDuration(Stopwatch.GetElapsedTime(startTimestamp));
+        }
+
+        return result;
+    }
+
+    private static HttpUserAgentInformation ParseInternal(string userAgent)
     {
         // prepare
         userAgent = Cleanup(userAgent);
@@ -51,13 +78,13 @@ public static class HttpUserAgentParser
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) platform in HttpUserAgentStatics.s_platformRules)
+        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) in HttpUserAgentStatics.s_platformRules)
         {
-            if (ContainsIgnoreCase(ua, platform.Token))
+            if (ContainsIgnoreCase(ua, Token))
             {
                 return new HttpUserAgentPlatformInformation(
-                    HttpUserAgentStatics.GetPlatformRegexForToken(platform.Token),
-                    platform.Name, platform.PlatformType);
+                    HttpUserAgentStatics.GetPlatformRegexForToken(Token),
+                    Name, PlatformType);
             }
         }
 
@@ -80,9 +107,9 @@ public static class HttpUserAgentParser
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
 
-        foreach ((string Name, string DetectToken, string? VersionToken) browserRule in HttpUserAgentStatics.s_browserRules)
+        foreach ((string Name, string DetectToken, string? VersionToken) in HttpUserAgentStatics.s_browserRules)
         {
-            if (!TryIndexOf(ua, browserRule.DetectToken, out int detectIndex))
+            if (!TryIndexOf(ua, DetectToken, out int detectIndex))
             {
                 continue;
             }
@@ -91,37 +118,37 @@ public static class HttpUserAgentParser
 
             int versionSearchStart;
             // For rules without a specific version token, ensure pattern Token/<digits>
-            if (string.IsNullOrEmpty(browserRule.VersionToken))
+            if (string.IsNullOrEmpty(VersionToken))
             {
-                int afterDetect = detectIndex + browserRule.DetectToken.Length;
+                int afterDetect = detectIndex + DetectToken.Length;
                 if (afterDetect >= ua.Length || ua[afterDetect] != '/')
                 {
                     // Likely a misspelling or partial token (e.g., Edgg, Oprea, Chromee)
                     continue;
                 }
             }
-            if (!string.IsNullOrEmpty(browserRule.VersionToken))
+            if (!string.IsNullOrEmpty(VersionToken))
             {
-                if (TryIndexOf(ua, browserRule.VersionToken!, out int vtIndex))
+                if (TryIndexOf(ua, VersionToken!, out int vtIndex))
                 {
-                    versionSearchStart = vtIndex + browserRule.VersionToken!.Length;
+                    versionSearchStart = vtIndex + VersionToken!.Length;
                 }
                 else
                 {
                     // If specific version token wasn't found, fall back to detect token area
-                    versionSearchStart = detectIndex + browserRule.DetectToken.Length;
+                    versionSearchStart = detectIndex + DetectToken.Length;
                 }
             }
             else
             {
-                versionSearchStart = detectIndex + browserRule.DetectToken.Length;
+                versionSearchStart = detectIndex + DetectToken.Length;
             }
 
             ReadOnlySpan<char> search = ua.Slice(versionSearchStart);
             if (TryExtractVersion(search, out Range range))
             {
                 string? version = search[range].ToString();
-                return (browserRule.Name, version);
+                return (Name, version);
             }
 
             // If we didn't find a version for this rule, try next rule

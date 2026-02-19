@@ -1,45 +1,84 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "clean",
-      "type": "shell",
-      "command": "dotnet clean",
-      "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "restore",
-      "type": "shell",
-      "command": "dotnet restore",
-      "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "build",
-      "type": "shell",
-      "command": "dotnet build --nologo",
-      "problemMatcher": "$msCompile",
-      "group": "build"
-    },
-    {
-      "label": "test",
-      "type": "shell",
-      "command": "dotnet test --nologo",
-      "problemMatcher": "$msCompile",
-      "group": "test"
-    },
-    {
-      "label": "ci:validate",
-      "dependsOn": [
-        "clean",
-        "restore",
-        "build",
-        "test"
-      ],
-      "dependsOrder": "sequence",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "dotnet: restore",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"restore"
+			],
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "silent",
+				"panel": "dedicated",
+				"close": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "dotnet: build",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"--no-restore"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": "dotnet: restore",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"close": true,
+				"showReuseMessage": false
+			},
+			"group": "build"
+		},
+		{
+			"label": "dotnet: test",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"--no-build",
+				"--nologo"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": "dotnet: build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"close": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "test",
+			"type": "shell",
+			"command": "dotnet test --nologo",
+			"args": [],
+			"isBackground": false
+		},
+		{
+			"label": "test",
+			"type": "shell",
+			"command": "dotnet test --nologo",
+			"args": [],
+			"isBackground": false
+		},
+		{
+			"label": "test",
+			"type": "shell",
+			"command": "dotnet test --nologo",
+			"args": [],
+			"isBackground": false
+		},
+		{
+			"label": "test",
+			"type": "shell",
+			"command": "dotnet test --nologo",
+			"args": [],
+			"isBackground": false
+		}
+	]
 }

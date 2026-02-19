@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore;
 
@@ -16,7 +17,19 @@ public static class HttpContextExtensions
     public static string? GetUserAgentString(this HttpContext httpContext)
     {
         if (httpContext.Request.Headers.TryGetValue("User-Agent", out StringValues value))
+        {
+            if (HttpUserAgentParserAspNetCoreTelemetry.IsEnabled)
+            {
+                HttpUserAgentParserAspNetCoreTelemetry.UserAgentPresent();
+            }
+
             return value;
+        }
+
+        if (HttpUserAgentParserAspNetCoreTelemetry.IsEnabled)
+        {
+            HttpUserAgentParserAspNetCoreTelemetry.UserAgentMissing();
+        }
 
         return null;
     }
