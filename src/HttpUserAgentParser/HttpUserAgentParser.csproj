@@ -22,6 +22,8 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="MyCSharp.HttpUserAgentParser.UnitTests" />
+        <InternalsVisibleTo Include="MyCSharp.HttpUserAgentParser.AspNetCore" PublicKey="$(PublicKey)" />
+        <InternalsVisibleTo Include="MyCSharp.HttpUserAgentParser.MemoryCache" PublicKey="$(PublicKey)" />
     </ItemGroup>
 
 </Project>
