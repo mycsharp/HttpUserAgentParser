@@ -2,7 +2,7 @@
   <PropertyGroup Label="Project">
     <Product>MyCSharp.HttpUserAgentParser</Product>
     <Authors>MyCSharp, BenjaminAbt, gfoidl</Authors>
-    <Company>MyCSharp.de</Company>
+    <Company>myCSharp.de</Company>
   </PropertyGroup>
 
   <PropertyGroup Label="Vars">
