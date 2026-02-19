@@ -2,7 +2,8 @@
   <PropertyGroup Label="Project">
     <Product>MyCSharp.HttpUserAgentParser</Product>
     <Authors>MyCSharp, BenjaminAbt, gfoidl</Authors>
-    <Company>MyCSharp.de</Company>
+    <Company>myCSharp.de</Company>
+    <Copyright>myCSharp.de</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Label="Vars">
@@ -71,6 +72,21 @@
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
+  </PropertyGroup>
+
+  <!-- Global coverage settings applied to all test projects -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'" Label="Coverage">
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>lcov,opencover,cobertura</CoverletOutputFormat>
+    <CoverletOutput>$(MSBuildThisFileDirectory)TestResults/coverage/$(MSBuildProjectName).</CoverletOutput>
+    <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <ExcludeByFile>**/*Program.cs;**/*Startup.cs;**/*GlobalUsings.cs</ExcludeByFile>
+    <UseSourceLink>true</UseSourceLink>
+    <!-- Enforce high line coverage; branch coverage is informative only -->
+    <!-- Note: Set to 96 to account for performance-optimized helper methods and framework-specific code paths -->
+    <Threshold>96</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
   </PropertyGroup>
 
   <ItemGroup Label="Default Test Dependencies" Condition="'$(IsTestProject)' == 'true'">
