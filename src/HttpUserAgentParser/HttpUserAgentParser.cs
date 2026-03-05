@@ -236,8 +236,6 @@ public static class HttpUserAgentParser
     /// </summary>
     private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range)
     {
-        range = default;
-
         // Vectorization is used in a optimistic way and specialized to common (trimmed down) user agents.
         // When the first two char-vectors don't yield any success, we fall back to the scalar path.
         // This penalized not found versions, but has an advantage for found versions.
@@ -256,7 +254,7 @@ public static class HttpUserAgentParser
 
             if (between0and9 == Vector256<byte>.Zero)
             {
-                goto Scalar;
+                return TryExtractVersionScalar(haystack, out range);
             }
 
             uint bitMask = between0and9.ExtractMostSignificantBits();
@@ -269,11 +267,16 @@ public static class HttpUserAgentParser
 
             if (byteMask == Vector256<byte>.Zero)
             {
-                goto Scalar;
+                return TryExtractVersionScalar(haystack, out range);
             }
 
             bitMask = byteMask.ExtractMostSignificantBits();
             bitMask >>= start;
+
+            if (bitMask == 0)
+            {
+                return TryExtractVersionScalar(haystack, out range);
+            }
 
             idx = start + (int)uint.TrailingZeroCount(bitMask);
             Debug.Assert(idx is >= 0 and <= 32);
@@ -291,7 +294,7 @@ public static class HttpUserAgentParser
 
             if (between0and9 == Vector128<byte>.Zero)
             {
-                goto Scalar;
+                return TryExtractVersionScalar(haystack, out range);
             }
 
             uint bitMask = between0and9.ExtractMostSignificantBits();
@@ -304,11 +307,16 @@ public static class HttpUserAgentParser
 
             if (byteMask == Vector128<byte>.Zero)
             {
-                goto Scalar;
+                return TryExtractVersionScalar(haystack, out range);
             }
 
             bitMask = byteMask.ExtractMostSignificantBits();
             bitMask >>= start;
+
+            if (bitMask == 0)
+            {
+                return TryExtractVersionScalar(haystack, out range);
+            }
 
             idx = start + (int)uint.TrailingZeroCount(bitMask);
             Debug.Assert(idx is >= 0 and <= 16);
@@ -318,53 +326,57 @@ public static class HttpUserAgentParser
             return true;
         }
 
-    Scalar:
+        return TryExtractVersionScalar(haystack, out range);
+    }
+
+    private static bool TryExtractVersionScalar(ReadOnlySpan<char> haystack, out Range range)
+    {
+        range = default;
+
+        // Limit search window to avoid scanning entire UA string unnecessarily
+        const int Windows = 128;
+        if (haystack.Length > Windows)
         {
-            // Limit search window to avoid scanning entire UA string unnecessarily
-            const int Windows = 128;
-            if (haystack.Length > Windows)
-            {
-                haystack = haystack.Slice(0, Windows);
-            }
-
-            int start = -1;
-            int i = 0;
-
-            for (; i < haystack.Length; ++i)
-            {
-                char c = haystack[i];
-                if (char.IsBetween(c, '0', '9'))
-                {
-                    start = i;
-                    break;
-                }
-            }
-
-            if (start < 0)
-            {
-                // No digit found => no version
-                return false;
-            }
-
-            haystack = haystack.Slice(i + 1);
-            for (i = 0; i < haystack.Length; ++i)
-            {
-                char c = haystack[i];
-                if (!(char.IsBetween(c, '0', '9') || c == '.'))
-                {
-                    break;
-                }
-            }
-
-            i += start + 1;     // shift back the previous domain
-
-            if (i == start)
-            {
-                return false;
-            }
-
-            range = new Range(start, i);
-            return true;
+            haystack = haystack.Slice(0, Windows);
         }
+
+        int start = -1;
+        int i = 0;
+
+        for (; i < haystack.Length; ++i)
+        {
+            char c = haystack[i];
+            if (char.IsBetween(c, '0', '9'))
+            {
+                start = i;
+                break;
+            }
+        }
+
+        if (start < 0)
+        {
+            // No digit found => no version
+            return false;
+        }
+
+        haystack = haystack.Slice(i + 1);
+        for (i = 0; i < haystack.Length; ++i)
+        {
+            char c = haystack[i];
+            if (!(char.IsBetween(c, '0', '9') || c == '.'))
+            {
+                break;
+            }
+        }
+
+        i += start + 1;     // shift back the previous domain
+
+        if (i == start)
+        {
+            return false;
+        }
+
+        range = new Range(start, i);
+        return true;
     }
 }

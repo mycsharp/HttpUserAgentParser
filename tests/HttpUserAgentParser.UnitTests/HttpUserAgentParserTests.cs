@@ -54,6 +54,10 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 OPR/76.0.4017.107", "Opera", "76.0.4017.107", "Windows 10", HttpUserAgentPlatformType.Windows, null)]
     [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 OPR/76.0.4017.107", "Opera", "76.0.4017.107", "Mac OS X", HttpUserAgentPlatformType.MacOS, null)]
     [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 OPR/76.0.4017.107", "Opera", "76.0.4017.107", "Linux", HttpUserAgentPlatformType.Linux, null)]
+    [InlineData("Mozilla/5.0 (Linux; U; Android 13; Hisense U53 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/145.0.7632.79 Mobile Safari/537.36 OPR/98.0.2254.81553", "Opera", "98.0.2254.81553", "Android", HttpUserAgentPlatformType.Android, "Android")]
+    [InlineData("Mozilla/5.0 (Linux; Android 10; MED-LX9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.192 Mobile Safari/537.36 OPR/74.0.3922.71152", "Opera", "74.0.3922.71152", "Android", HttpUserAgentPlatformType.Android, "Android")]
+    [InlineData("Mozilla/5.0 (Linux; U; Android 13; Infinix X6526 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/145.0.7632.79 Mobile Safari/537.36 OPR/97.1.2254.80849", "Opera", "97.1.2254.80849", "Android", HttpUserAgentPlatformType.Android, "Android")]
+    [InlineData("Mozilla/5.0 (Linux; U; Android 13; Infinix X6836 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/145.0.7632.120 Mobile Safari/537.36 OPR/98.0.2254.81553", "Opera", "98.0.2254.81553", "Android", HttpUserAgentPlatformType.Android, "Android")]
     public void BrowserTests(string ua, string name, string version, string platformName, HttpUserAgentPlatformType platformType, string? mobileDeviceType)
     {
         HttpUserAgentInformation uaInfo = HttpUserAgentInformation.Parse(ua);
