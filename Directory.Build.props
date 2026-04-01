@@ -58,6 +58,17 @@
     <RepositoryUrl>https://github.com/mycsharp/HttpUserAgentParser</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
+    <!-- Central package icon for NuGet packages (file is included into the package via ItemGroup below) -->
+    <PackageIcon>unio.png</PackageIcon>
+  </PropertyGroup>
+
+<!-- Ensure the repository root res/unio.png is packed into NuGet packages -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)res\unio.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(IsBenchmarkProject)' == 'true'">
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
