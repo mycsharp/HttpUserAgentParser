@@ -40,12 +40,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Required for GitVersion
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ inputs.dotnet-version }}
           global-json-file: ./global.json
@@ -71,7 +71,7 @@ jobs:
 
       - name: Upload test results
         if: always() && inputs.upload-test-results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-results-${{ inputs.dotnet-version }}
           path: '**/TestResults/**/*.trx'
@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload NuGet packages
         if: inputs.create-pack
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nuget-packages
           path: ./artifacts/*.nupkg
