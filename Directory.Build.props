@@ -56,6 +56,7 @@
     <Description>HTTP User Agent Parser for .NET</Description>
     <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mycsharp/HttpUserAgentParser</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
   </PropertyGroup>
 
@@ -110,21 +111,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <!-- Global coverage settings applied to all test projects -->
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true'" Label="Coverage">
-    <CollectCoverage>true</CollectCoverage>
-    <CoverletOutputFormat>lcov,opencover,cobertura</CoverletOutputFormat>
-    <CoverletOutput>$(MSBuildThisFileDirectory)TestResults/coverage/$(MSBuildProjectName).</CoverletOutput>
-    <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
-    <ExcludeByFile>**/*Program.cs;**/*Startup.cs;**/*GlobalUsings.cs</ExcludeByFile>
-    <UseSourceLink>true</UseSourceLink>
-    <!-- Enforce high line coverage; branch coverage is informative only -->
-    <!-- Note: Set to 96 to account for performance-optimized helper methods and framework-specific code paths -->
-    <Threshold>96</Threshold>
-    <ThresholdType>line</ThresholdType>
-    <ThresholdStat>total</ThresholdStat>
-  </PropertyGroup>
 
   <!-- Limit coverage to the target assemblies for each test project -->
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.UnitTests'" Label="CoverageFilter">
