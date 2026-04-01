@@ -59,7 +59,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
     <!-- Central package icon for NuGet packages (file is included into the package via ItemGroup below) -->
-    <PackageIcon>unio.png</PackageIcon>
+    <PackageIcon>mycsharpde-logo-nuget.png</PackageIcon>
   </PropertyGroup>
 
 <!-- Ensure the repository root res/mycsharpde-logo-nuget.png is packed into NuGet packages -->
