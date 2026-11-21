@@ -3,14 +3,6 @@ name: Build and Test (Reusable)
 on:
   workflow_call:
     inputs:
-      dotnet-version:
-        description: '.NET version to use (can be multi-line for multiple versions)'
-        required: false
-        type: string
-        default: |
-          8.0.x
-          9.0.x
-          10.0.x
       configuration:
         description: 'Build configuration'
         required: false
@@ -47,7 +39,11 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: ${{ inputs.dotnet-version }}
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+            11.0.x
           global-json-file: ./global.json
 
       - name: Calculate Version with NBGV
@@ -67,13 +63,13 @@ jobs:
         run: dotnet build --configuration ${{ inputs.configuration }} --no-restore /p:Version=${{ steps.nbgv.outputs.SemVer2 }}
 
       - name: Test
-        run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+        run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal --logger "trx;LogFilePrefix=test-results"
 
       - name: Upload test results
         if: always() && inputs.upload-test-results
         uses: actions/upload-artifact@v6
         with:
-          name: test-results-${{ inputs.dotnet-version }}
+          name: test-results
           path: '**/TestResults/**/*.trx'
 
       - name: Pack NuGet packages
