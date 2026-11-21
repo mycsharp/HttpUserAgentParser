@@ -3,19 +3,26 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Toolchains.InProcess.Emit;
 using DeviceDetectorNET;
 using MyCSharp.HttpUserAgentParser;
 using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace HttpUserAgentParser.Benchmarks.LibraryComparison;
 
-[ShortRunJob]
+// BenchmarkDotNet 0.15.8 cannot build out-of-process jobs for .NET 11, so the short run executes in-process.
+[Config(typeof(InProcessShortRunConfig))]
 [MemoryDiagnoser]
 [CategoriesColumn]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
 public class LibraryComparisonBenchmarks
 {
+    private sealed class InProcessShortRunConfig : ManualConfig
+    {
+        public InProcessShortRunConfig() => AddJob(Job.ShortRun.WithToolchain(InProcessEmitToolchain.Instance));
+    }
+
     public record TestData(string Label, string UserAgent)
     {
         public override string ToString() => Label;

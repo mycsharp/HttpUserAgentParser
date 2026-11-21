@@ -11,17 +11,23 @@
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
   </PropertyGroup>
 
-    <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-        <DefineConstants>$(DefineConstants);OS_WIN</DefineConstants>
-    </PropertyGroup>
-
     <PropertyGroup Label="No strong named assembly references">
         <NoWarn>$(NoWarn);CS8002</NoWarn>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(BenchmarkBaselineAssembly)' != ''">
+        <DefineConstants>$(DefineConstants);BENCHMARK_BASELINE</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(BenchmarkBaselineAssembly)' != ''">
+        <Reference Include="MyCSharp.HttpUserAgentParser.Baseline">
+            <HintPath>$(BenchmarkBaselineAssembly)</HintPath>
+            <Aliases>Baseline</Aliases>
+        </Reference>
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" />
-        <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Condition="'$(OS)' == 'Windows_NT'" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     </ItemGroup>
 
