@@ -2,6 +2,8 @@
 
 Parsing HTTP User Agents with .NET
 
+The NuGet packages target .NET 8, 9, 10, and 11. Building the solution requires the .NET 11 SDK.
+
 ## NuGet
 
 | NuGet |
@@ -375,32 +377,90 @@ Notes:
 
 ## Benchmark
 
+Run the parser benchmarks with the .NET 11 runtime.
+
 ```shell
-BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.6691/22H2/2022Update)
-AMD Ryzen 9 9950X 4.30GHz, 1 CPU, 32 logical and 16 physical cores
-.NET SDK 10.0.101
-  [Host]   : .NET 10.0.1 (10.0.1, 10.0.125.57005), X64 RyuJIT x86-64-v4
-  ShortRun : .NET 10.0.1 (10.0.1, 10.0.125.57005), X64 RyuJIT x86-64-v4
-
-Job=ShortRun  IterationCount=3  LaunchCount=1
-WarmupCount=3
-
-| Method             | Categories | Data         | Mean            | Error            | StdDev         | Ratio     | RatioSD | Gen0     | Gen1     | Gen2     | Allocated  | Alloc Ratio |
-|------------------- |----------- |------------- |----------------:|-----------------:|---------------:|----------:|--------:|---------:|---------:|---------:|-----------:|------------:|
-| MyCSharp           | Basic      | Chrome Win10 |       939.54 ns |       113.807 ns |       6.238 ns |      1.00 |    0.01 |   0.0019 |        - |        - |       48 B |        1.00 |
-| UAParser           | Basic      | Chrome Win10 | 9,120,055.21 ns | 2,108,412.449 ns | 115,569.201 ns |  9,707.23 |  120.28 | 671.8750 | 609.3750 | 109.3750 | 11659008 B |  242,896.00 |
-| DeviceDetector.NET | Basic      | Chrome Win10 | 5,099,680.21 ns | 5,313,448.322 ns | 291,248.033 ns |  5,428.01 |  270.28 | 296.8750 | 140.6250 |  31.2500 |  5034130 B |  104,877.71 |
-|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
-| MyCSharp           | Basic      | Google-Bot   |       226.47 ns |        20.818 ns |       1.141 ns |      1.00 |    0.01 |        - |        - |        - |          - |          NA |
-| UAParser           | Basic      | Google-Bot   | 9,007,285.42 ns |   491,694.016 ns |  26,951.408 ns | 39,772.36 |  202.28 | 687.5000 | 640.6250 | 125.0000 | 12015474 B |          NA |
-| DeviceDetector.NET | Basic      | Google-Bot   | 6,056,996.61 ns |   567,479.924 ns |  31,105.490 ns | 26,745.13 |  166.88 | 546.8750 | 132.8125 |  23.4375 |  8862491 B |          NA |
-|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
-| MyCSharp           | Cached     | Chrome Win10 |        24.59 ns |         2.222 ns |       0.122 ns |      1.00 |    0.01 |        - |        - |        - |          - |          NA |
-| UAParser           | Cached     | Chrome Win10 |   162,917.93 ns |    36,544.250 ns |   2,003.114 ns |  6,625.90 |   76.03 |   2.1973 |        - |        - |    37488 B |          NA |
-|                    |            |              |                 |                  |                |           |         |          |          |          |            |             |
-| MyCSharp           | Cached     | Google-Bot   |        17.42 ns |         1.077 ns |       0.059 ns |      1.00 |    0.00 |        - |        - |        - |          - |          NA |
-| UAParser           | Cached     | Google-Bot   |   126,321.45 ns |     3,171.908 ns |     173.863 ns |  7,253.51 |   23.01 |   2.6855 |        - |        - |    45856 B |          NA |
+dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks*" --inProcess
 ```
+
+### Uncached parser performance on .NET 11
+
+BenchmarkDotNet 0.15.8 ran both implementations on .NET 11.0.0 x64, Windows 10, and an AMD Ryzen 9 9950X. The table shows mean time and allocated bytes per parse.
+
+| User agent | Baseline (ns) | Current (ns) | Allocated in both runs |
+| --- | ---: | ---: | ---: |
+| Chrome on Windows | 723.10 | 300.91 | 40 B |
+| Firefox on Linux | 569.95 | 360.02 | 32 B |
+| Chrome on Android | 691.54 | 466.74 | 40 B |
+| Safari on iPhone | 740.59 | 441.33 | 32 B |
+| Applebot | 465.22 | 212.52 | 0 B |
+| Googlebot | 9.87 | 8.45 | 0 B |
+| Unknown client | 632.35 | 467.71 | 0 B |
+
+The mean parse time fell by 26% to 58% in six scenarios. The Googlebot timings overlapped within the reported uncertainty.
+
+### Reproduce the .NET 11 comparison
+
+Build the parser from commit `36ec145` with the same SDK and target framework. The benchmark loads the baseline assembly alongside the current parser.
+
+```powershell
+$baseline = "artifacts/performance-baseline"
+New-Item -ItemType Directory -Path $baseline -Force | Out-Null
+git archive -o artifacts/performance-baseline.tar 36ec145
+tar -xf artifacts/performance-baseline.tar -C $baseline
+Copy-Item global.json $baseline
+
+Push-Location $baseline
+dotnet build src/HttpUserAgentParser -c Release -p:TargetFrameworks=net11.0 -p:AssemblyName=MyCSharp.HttpUserAgentParser.Baseline -p:NoWarn=NU1510
+Pop-Location
+
+$env:BenchmarkBaselineAssembly = (Resolve-Path "$baseline/src/HttpUserAgentParser/bin/Release/net11.0/MyCSharp.HttpUserAgentParser.Baseline.dll").Path
+dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks*" --inProcess --warmupCount 6 --iterationCount 12 --iterationTime 150
+Remove-Item Env:BenchmarkBaselineAssembly
+```
+
+### Library comparison on .NET 11
+
+```shell
+dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*LibraryComparison*"
+```
+
+Mean time of MyCSharp per parse, compared with the previous run of the same benchmark on .NET 10:
+
+| MyCSharp | .NET 10 (previous) | .NET 11 (current) | Change |
+| --- | ---: | ---: | ---: |
+| Basic, Chrome Win10 | 939.54 ns | 352.10 ns | -62.5% |
+| Basic, Google-Bot | 226.47 ns | 246.71 ns | +8.9% |
+| Cached, Chrome Win10 | 24.59 ns | 23.67 ns | -3.7% |
+| Cached, Google-Bot | 17.42 ns | 17.27 ns | -0.9% |
+
+Both runs used the ShortRun job (3 iterations), and the .NET 11 run executed in-process. The Google-Bot difference is within the measurement error of ±81.76 ns.
+
+```shell
+BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.7846/22H2/2022Update)
+AMD Ryzen 9 9950X 4.30GHz, 1 CPU, 32 logical and 16 physical cores
+.NET SDK 11.0.100
+  [Host] : .NET 11.0.0 (11.0.0, 11.0.26.53018), X64 RyuJIT x86-64-v4
+
+Job=ShortRun  Toolchain=InProcessEmitToolchain  IterationCount=3
+LaunchCount=1  WarmupCount=3
+```
+
+| Method             | Categories | Data         | Mean             | Error             | StdDev           | Ratio     | RatioSD  | Gen0     | Gen1     | Gen2    | Allocated  | Alloc Ratio |
+|------------------- |----------- |------------- |-----------------:|------------------:|-----------------:|----------:|---------:|---------:|---------:|--------:|-----------:|------------:|
+| MyCSharp           | Basic      | Chrome Win10 |        352.10 ns |         13.048 ns |         0.715 ns |      1.00 |     0.00 |        - |        - |       - |       48 B |        1.00 |
+| UAParser           | Basic      | Chrome Win10 | 13,082,281.25 ns | 22,274,660.073 ns | 1,220,949.286 ns | 37,155.21 | 3,003.78 | 656.2500 | 468.7500 | 93.7500 | 11654066 B |  242,793.04 |
+| DeviceDetector.NET | Basic      | Chrome Win10 |  6,607,830.21 ns |    762,385.537 ns |    41,788.924 ns | 18,767.01 |   107.96 | 335.9375 | 179.6875 | 46.8750 |  5529528 B |  115,198.50 |
+|                    |            |              |                  |                   |                  |           |          |          |          |         |            |             |
+| MyCSharp           | Basic      | Google-Bot   |        246.71 ns |         81.763 ns |         4.482 ns |      1.00 |     0.02 |        - |        - |       - |          - |          NA |
+| UAParser           | Basic      | Google-Bot   | 11,954,723.96 ns | 21,157,406.984 ns | 1,159,708.874 ns | 48,467.98 | 4,144.52 | 718.7500 | 484.3750 | 31.2500 | 12010180 B |          NA |
+| DeviceDetector.NET | Basic      | Google-Bot   |  7,522,161.72 ns |  3,709,410.885 ns |   203,325.328 ns | 30,497.07 |   862.90 | 601.5625 | 125.0000 | 15.6250 | 10124476 B |          NA |
+|                    |            |              |                  |                   |                  |           |          |          |          |         |            |             |
+| MyCSharp           | Cached     | Chrome Win10 |         23.67 ns |          6.669 ns |         0.366 ns |      1.00 |     0.02 |        - |        - |       - |          - |          NA |
+| UAParser           | Cached     | Chrome Win10 |    150,205.97 ns |     71,587.994 ns |     3,923.980 ns |  6,348.06 |   166.56 |   2.1973 |        - |       - |    37402 B |          NA |
+|                    |            |              |                  |                   |                  |           |          |          |          |         |            |             |
+| MyCSharp           | Cached     | Google-Bot   |         17.27 ns |          4.188 ns |         0.230 ns |      1.00 |     0.02 |        - |        - |       - |          - |          NA |
+| UAParser           | Cached     | Google-Bot   |    126,053.13 ns |     20,806.184 ns |     1,140.457 ns |  7,298.43 |   102.15 |   2.6855 |        - |       - |    45834 B |          NA |
 
 ## Disclaimer
 
