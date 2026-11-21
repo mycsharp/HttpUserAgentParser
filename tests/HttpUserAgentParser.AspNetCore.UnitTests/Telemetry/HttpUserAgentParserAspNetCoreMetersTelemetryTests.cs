@@ -31,8 +31,8 @@ public class HttpUserAgentParserAspNetCoreMetersTelemetryTests
         ctx.Request.Headers.Remove("User-Agent");
         Assert.Null(ctx.GetUserAgentString());
 
-        Assert.Contains("user_agent.present", listener.InstrumentNames);
-        Assert.Contains("user_agent.missing", listener.InstrumentNames);
+        Assert.Contains("user_agent.present", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("user_agent.missing", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -56,8 +56,8 @@ public class HttpUserAgentParserAspNetCoreMetersTelemetryTests
         ctx.Request.Headers.Remove("User-Agent");
         Assert.Null(ctx.GetUserAgentString());
 
-        Assert.Contains("user_agent.present", listener.InstrumentNames);
-        Assert.Contains("user_agent.missing", listener.InstrumentNames);
+        Assert.Contains("user_agent.present", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("user_agent.missing", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class HttpUserAgentParserAspNetCoreMetersTelemetryTests
         ctx.Request.Headers.UserAgent = "UA";
         Assert.NotNull(ctx.GetUserAgentString());
 
-        Assert.Contains("user_agent.present", listener.InstrumentNames);
+        Assert.Contains("user_agent.present", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]

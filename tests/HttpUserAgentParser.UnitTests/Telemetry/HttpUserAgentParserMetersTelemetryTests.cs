@@ -43,11 +43,11 @@ public class HttpUserAgentParserMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("parse.requests", listener.InstrumentNames);
-        Assert.Contains("parse.duration", listener.InstrumentNames);
-        Assert.Contains("cache.hit", listener.InstrumentNames);
-        Assert.Contains("cache.miss", listener.InstrumentNames);
-        Assert.Contains("cache.size", listener.InstrumentNames);
+        Assert.Contains("parse.requests", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("parse.duration", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.hit", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.miss", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.size", listener.InstrumentNames, StringComparer.Ordinal);
 
         Assert.Equal("s", listener.InstrumentUnits["parse.duration"]);
     }
@@ -73,11 +73,11 @@ public class HttpUserAgentParserMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("parse.requests", listener.InstrumentNames);
-        Assert.Contains("parse.duration", listener.InstrumentNames);
-        Assert.Contains("cache.hit", listener.InstrumentNames);
-        Assert.Contains("cache.miss", listener.InstrumentNames);
-        Assert.Contains("cache.size", listener.InstrumentNames);
+        Assert.Contains("parse.requests", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("parse.duration", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.hit", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.miss", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.size", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -96,8 +96,8 @@ public class HttpUserAgentParserMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("parse.requests", listener.InstrumentNames);
-        Assert.Contains("parse.duration", listener.InstrumentNames);
+        Assert.Contains("parse.requests", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("parse.duration", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]
