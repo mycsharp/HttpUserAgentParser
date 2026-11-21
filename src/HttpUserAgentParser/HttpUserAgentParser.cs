@@ -1,10 +1,9 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
 using MyCSharp.HttpUserAgentParser.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser;
@@ -16,6 +15,8 @@ namespace MyCSharp.HttpUserAgentParser;
 /// </summary>
 public static class HttpUserAgentParser
 {
+    private static readonly SearchValues<char> s_versionCharacters = SearchValues.Create("0123456789.");
+
     /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
@@ -172,13 +173,40 @@ public static class HttpUserAgentParser
     public static string? GetRobot(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        foreach ((string key, string value) in HttpUserAgentStatics.Robots)
+        (string Key, string Value)[] robots = HttpUserAgentStatics.Robots;
+#if NET9_0_OR_GREATER
+        (string firstKey, string firstValue) = robots[0];
+        if (ContainsIgnoreCase(ua, firstKey))
+        {
+            return firstValue;
+        }
+
+        int index = 1;
+        foreach (SearchValues<string> group in HttpUserAgentStatics.s_robotTokenGroups)
+        {
+            bool containsDefaultRobot = ua.ContainsAny(group);
+            int end = Math.Min(index + HttpUserAgentStatics.TokenGroupSize, robots.Length);
+            for (; index < end; index++)
+            {
+                (string key, string value) = robots[index];
+
+                // The public array is mutable. Check any keys callers have replaced.
+                if ((containsDefaultRobot || !ReferenceEquals(key, HttpUserAgentStatics.s_defaultRobotKeys[index]))
+                    && ContainsIgnoreCase(ua, key))
+                {
+                    return value;
+                }
+            }
+        }
+#else
+        foreach ((string key, string value) in robots)
         {
             if (ContainsIgnoreCase(ua, key))
             {
                 return value;
             }
         }
+#endif
 
         return null;
     }
@@ -198,6 +226,27 @@ public static class HttpUserAgentParser
     public static string? GetMobileDevice(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
+#if NET9_0_OR_GREATER
+        ReadOnlySpan<string> keys = HttpUserAgentStatics.Mobiles.Keys.AsSpan();
+        ReadOnlySpan<string> values = HttpUserAgentStatics.Mobiles.Values.AsSpan();
+        for (int i = 0; i < HttpUserAgentStatics.s_mobileTokenGroups.Length; i++)
+        {
+            if (!ua.ContainsAny(HttpUserAgentStatics.s_mobileTokenGroups[i]))
+            {
+                continue;
+            }
+
+            int start = i * HttpUserAgentStatics.TokenGroupSize;
+            int end = Math.Min(start + HttpUserAgentStatics.TokenGroupSize, keys.Length);
+            for (int j = start; j < end; j++)
+            {
+                if (ContainsIgnoreCase(ua, keys[j]))
+                {
+                    return values[j];
+                }
+            }
+        }
+#else
         foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
         {
             if (ContainsIgnoreCase(ua, key))
@@ -205,6 +254,7 @@ public static class HttpUserAgentParser
                 return value;
             }
         }
+#endif
 
         return null;
     }
@@ -230,153 +280,23 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// Extracts a dotted numeric version.
-    /// Accepts digits and dots; skips common separators ('/', ' ', ':', '=') until first digit.
-    /// Returns false if no version-like token is found.
+    /// Finds the first ASCII digit and reads subsequent digits and dots within the search window.
     /// </summary>
     private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range)
     {
-        // Vectorization is used in a optimistic way and specialized to common (trimmed down) user agents.
-        // When the first two char-vectors don't yield any success, we fall back to the scalar path.
-        // This penalized not found versions, but has an advantage for found versions.
-        // Vector512 is left out, because there are no common inputs with length 128 or more.
-        //
-        // Two short (same size as char) vectors are read, then packed to byte vectors on which the
-        // operation is done. For short / chart the higher byte is not of interest and zero or outside
-        // the target characters, thus with bytes we can process twice as much elements at once.
+        const int SearchWindow = 128;
+        haystack = haystack[..Math.Min(haystack.Length, SearchWindow)];
 
-        if (Vector256.IsHardwareAccelerated && haystack.Length >= 2 * Vector256<short>.Count)
-        {
-            ref char ptr = ref MemoryMarshal.GetReference(haystack);
-
-            Vector256<byte> vec = ptr.ReadVector256AsBytes(0);
-            Vector256<byte> between0and9 = Vector256.LessThan(vec - Vector256.Create((byte)'0'), Vector256.Create((byte)('9' - '0' + 1)));
-
-            if (between0and9 == Vector256<byte>.Zero)
-            {
-                return TryExtractVersionScalar(haystack, out range);
-            }
-
-            uint bitMask = between0and9.ExtractMostSignificantBits();
-            int idx = (int)uint.TrailingZeroCount(bitMask);
-            Debug.Assert(idx is >= 0 and <= 32);
-            int start = idx;
-
-            Vector256<byte> byteMask = between0and9 | Vector256.Equals(vec, Vector256.Create((byte)'.'));
-            byteMask = ~byteMask;
-
-            if (byteMask == Vector256<byte>.Zero)
-            {
-                return TryExtractVersionScalar(haystack, out range);
-            }
-
-            bitMask = byteMask.ExtractMostSignificantBits();
-            bitMask >>= start;
-
-            if (bitMask == 0)
-            {
-                return TryExtractVersionScalar(haystack, out range);
-            }
-
-            idx = start + (int)uint.TrailingZeroCount(bitMask);
-            Debug.Assert(idx is >= 0 and <= 32);
-            int end = idx;
-
-            range = new Range(start, end);
-            return true;
-        }
-        else if (Vector128.IsHardwareAccelerated && haystack.Length >= 2 * Vector128<short>.Count)
-        {
-            ref char ptr = ref MemoryMarshal.GetReference(haystack);
-
-            Vector128<byte> vec = ptr.ReadVector128AsBytes(0);
-            Vector128<byte> between0and9 = Vector128.LessThan(vec - Vector128.Create((byte)'0'), Vector128.Create((byte)('9' - '0' + 1)));
-
-            if (between0and9 == Vector128<byte>.Zero)
-            {
-                return TryExtractVersionScalar(haystack, out range);
-            }
-
-            uint bitMask = between0and9.ExtractMostSignificantBits();
-            int idx = (int)uint.TrailingZeroCount(bitMask);
-            Debug.Assert(idx is >= 0 and <= 16);
-            int start = idx;
-
-            Vector128<byte> byteMask = between0and9 | Vector128.Equals(vec, Vector128.Create((byte)'.'));
-            byteMask = ~byteMask;
-
-            if (byteMask == Vector128<byte>.Zero)
-            {
-                return TryExtractVersionScalar(haystack, out range);
-            }
-
-            bitMask = byteMask.ExtractMostSignificantBits();
-            bitMask >>= start;
-
-            if (bitMask == 0)
-            {
-                return TryExtractVersionScalar(haystack, out range);
-            }
-
-            idx = start + (int)uint.TrailingZeroCount(bitMask);
-            Debug.Assert(idx is >= 0 and <= 16);
-            int end = idx;
-
-            range = new Range(start, end);
-            return true;
-        }
-
-        return TryExtractVersionScalar(haystack, out range);
-    }
-
-    private static bool TryExtractVersionScalar(ReadOnlySpan<char> haystack, out Range range)
-    {
-        range = default;
-
-        // Limit search window to avoid scanning entire UA string unnecessarily
-        const int Windows = 128;
-        if (haystack.Length > Windows)
-        {
-            haystack = haystack.Slice(0, Windows);
-        }
-
-        int start = -1;
-        int i = 0;
-
-        for (; i < haystack.Length; ++i)
-        {
-            char c = haystack[i];
-            if (char.IsBetween(c, '0', '9'))
-            {
-                start = i;
-                break;
-            }
-        }
-
+        int start = haystack.IndexOfAnyInRange('0', '9');
         if (start < 0)
         {
-            // No digit found => no version
+            range = default;
             return false;
         }
 
-        haystack = haystack.Slice(i + 1);
-        for (i = 0; i < haystack.Length; ++i)
-        {
-            char c = haystack[i];
-            if (!(char.IsBetween(c, '0', '9') || c == '.'))
-            {
-                break;
-            }
-        }
-
-        i += start + 1;     // shift back the previous domain
-
-        if (i == start)
-        {
-            return false;
-        }
-
-        range = new Range(start, i);
+        ReadOnlySpan<char> version = haystack[start..];
+        int length = version.IndexOfAnyExcept(s_versionCharacters);
+        range = new Range(start, length < 0 ? haystack.Length : start + length);
         return true;
     }
 }

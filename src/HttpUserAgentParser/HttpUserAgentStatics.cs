@@ -1,5 +1,8 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+#if NET9_0_OR_GREATER
+using System.Buffers;
+#endif
 using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 
@@ -189,7 +192,7 @@ public static class HttpUserAgentStatics
     }.ToFrozenDictionary();
 
     /// <summary>
-    /// Fast-path browser token rules. If these fail to extract a version, code will fall back to regex rules.
+    /// Browser token rules for detection and version extraction.
     /// Sorted by specificity first, then frequency - more specific tokens must come before generic ones
     /// (e.g., Edge/Opera before Chrome, since Edge/Opera UAs contain "Chrome")
     /// </summary>
@@ -397,6 +400,27 @@ public static class HttpUserAgentStatics
         ( "360Spider", "360Spider" ),
         ( "GeedoProductSearch", "GeedoProductSearch" )
     ];
+
+#if NET9_0_OR_GREATER
+    // Small groups let the runtime vectorize the substring checks and preserve rule priority.
+    internal const int TokenGroupSize = 8;
+
+    internal static readonly string[] s_defaultRobotKeys = Array.ConvertAll(Robots, static robot => robot.Key);
+    internal static readonly SearchValues<string>[] s_robotTokenGroups = CreateTokenGroups(s_defaultRobotKeys.AsSpan(1));
+    internal static readonly SearchValues<string>[] s_mobileTokenGroups = CreateTokenGroups(Mobiles.Keys.AsSpan());
+
+    private static SearchValues<string>[] CreateTokenGroups(ReadOnlySpan<string> tokens)
+    {
+        SearchValues<string>[] groups = new SearchValues<string>[(tokens.Length + TokenGroupSize - 1) / TokenGroupSize];
+        for (int i = 0; i < groups.Length; i++)
+        {
+            ReadOnlySpan<string> remaining = tokens[(i * TokenGroupSize)..];
+            groups[i] = SearchValues.Create(remaining[..Math.Min(TokenGroupSize, remaining.Length)], StringComparison.OrdinalIgnoreCase);
+        }
+
+        return groups;
+    }
+#endif
 
     /// <summary>
     /// Tools
