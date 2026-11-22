@@ -290,4 +290,81 @@ public sealed class HttpUserAgentParserMemoryCacheMetersTelemetryTests : IDispos
 
         Assert.IsType<ArgumentException>(nested);
     }
+
+    [Fact]
+    public void A_Cache_Size_Gauge_Whose_Publication_Failed_Is_Not_Created_Again()
+    {
+        using Meter meter = new("retry.memorycache");
+        bool fail = true;
+        using MeterListener failing = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (ReferenceEquals(instrument.Meter, meter) && string.Equals(instrument.Name, "cache.size", StringComparison.Ordinal) && fail)
+                {
+                    fail = false;
+                    throw new InvalidOperationException("listener failure");
+                }
+            },
+        };
+        failing.Start();
+
+        Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserMemoryCacheMeters.Enable(meter));
+        HttpUserAgentParserMemoryCacheMeters.Enable(meter); // the retry completes the instruments
+
+        int gauges = 0;
+        long? size = null;
+        using MeterListener observer = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (ReferenceEquals(instrument.Meter, meter) && string.Equals(instrument.Name, "cache.size", StringComparison.Ordinal))
+                {
+                    gauges++;
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        observer.SetMeasurementEventCallback<long>((_, value, _, _) => size = value);
+        observer.Start();
+        observer.RecordObservableInstruments();
+
+        Assert.Equal(1, gauges);
+        Assert.NotNull(size); // the gauge published first reports, because its meter is in use
+    }
+
+    [Fact]
+    public async Task Mutual_Registrations_From_Listener_Callbacks_Do_Not_Block()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
+        using Meter coreMeter = new("mutual.core");
+        using Meter memoryCacheMeter = new("mutual.memorycache");
+        using Meter nestedCoreMeter = new("mutual.core.nested");
+        using Meter nestedMemoryCacheMeter = new("mutual.memorycache.nested");
+        using Barrier bothInCallbacks = new(2);
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                // Each callback waits until the other registration is in its callback as well, then registers the other package.
+                if (ReferenceEquals(instrument.Meter, coreMeter) && string.Equals(instrument.Name, "parse.requests", StringComparison.Ordinal))
+                {
+                    bothInCallbacks.SignalAndWait(TimeSpan.FromSeconds(10), cancellationToken);
+                    options.WithMemoryCacheMeterTelemetry(nestedMemoryCacheMeter);
+                }
+                else if (ReferenceEquals(instrument.Meter, memoryCacheMeter) && string.Equals(instrument.Name, "cache.hit", StringComparison.Ordinal))
+                {
+                    bothInCallbacks.SignalAndWait(TimeSpan.FromSeconds(10), cancellationToken);
+                    options.WithMeterTelemetry(nestedCoreMeter);
+                }
+            },
+        };
+        listener.Start();
+
+        Task core = Task.Run(() => options.WithMeterTelemetry(coreMeter), cancellationToken);
+        Task memoryCache = Task.Run(() => options.WithMemoryCacheMeterTelemetry(memoryCacheMeter), cancellationToken);
+
+        await Task.WhenAll(core, memoryCache).WaitAsync(TimeSpan.FromSeconds(20), cancellationToken);
+    }
 }

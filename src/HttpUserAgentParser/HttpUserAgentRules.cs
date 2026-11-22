@@ -239,7 +239,8 @@ internal static class HttpUserAgentRules
         ( "MistralAI-User", "MistralAI-User" ),
         ( "DuckAssistBot", "DuckAssistBot" ),
         ( "AI2Bot", "AI2Bot" ),
-        ( " YouBot/", "YouBot" ), // "YouBot/" alone would match "ShowyouBot/1.0"
+        ( "ShowyouBot", "ShowyouBot" ), // before YouBot, whose key it contains
+        ( "YouBot/", "YouBot" ),
     ];
 
     /// <summary>

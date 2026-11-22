@@ -399,10 +399,13 @@ public class HttpUserAgentParserTests
     }
 
     [Fact]
-    public void GetRobot_Does_Not_Match_YouBot_Inside_Another_Name()
+    public void GetRobot_Tells_YouBot_And_ShowyouBot_Apart()
     {
-        Assert.Null(HttpUserAgentParser.GetRobot("ShowyouBot (http://showyou.com/crawler)"));
-        Assert.Null(HttpUserAgentParser.GetRobot("ShowyouBot/1.0"));
+        Assert.Equal("ShowyouBot", HttpUserAgentParser.GetRobot("ShowyouBot (http://showyou.com/crawler)"));
+        Assert.Equal("ShowyouBot", HttpUserAgentParser.GetRobot("ShowyouBot/1.0"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("YouBot/1.0"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0 (YouBot/1.0)"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0+(compatible;+YouBot/1.0)"));
         Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; YouBot/1.0; +https://docs.you.com/youbot; env:prod) Chrome/X.X.X.X Safari/537.36"));
     }
 }

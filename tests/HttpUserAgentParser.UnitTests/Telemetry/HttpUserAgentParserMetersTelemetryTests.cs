@@ -300,4 +300,98 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
 
         HttpUserAgentParserCacheMeterGuard.ResetMemoryCacheForTests();
     }
+
+    [Fact]
+    public void A_Nested_Registration_Of_Another_Own_Meter_Leaves_No_Meter_Behind()
+    {
+        using Meter callerMeter = new("nested.caller");
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (string.Equals(instrument.Meter.Name, "nested.a", StringComparison.Ordinal)
+                    && string.Equals(instrument.Name, "parse.requests", StringComparison.Ordinal))
+                {
+                    HttpUserAgentParserMeters.EnableOwnedMeter("nested.b");
+                }
+            },
+        };
+        listener.Start();
+
+        HttpUserAgentParserMeters.EnableOwnedMeter("nested.a"); // registers nested.b while its instruments are created
+        Assert.Equal((1, 5), CountLiveMeters("nested.a"));
+        Assert.Equal((0, 0), CountLiveMeters("nested.b"));
+
+        HttpUserAgentParserMeters.Enable(callerMeter);
+        Assert.Equal((0, 0), CountLiveMeters("nested.a"));
+    }
+
+    [Fact]
+    public void Passing_The_Own_Meter_In_Use_Keeps_It()
+    {
+        HttpUserAgentParserMeters.EnableOwnedMeter("own.inuse");
+        Meter? ownMeter = null;
+        using (MeterListener finder = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (string.Equals(instrument.Meter.Name, "own.inuse", StringComparison.Ordinal))
+                {
+                    ownMeter = instrument.Meter;
+                }
+            },
+        })
+        {
+            finder.Start();
+        }
+
+        HttpUserAgentParserMeters.Enable(ownMeter!);
+
+        Assert.Equal((1, 5), CountLiveMeters("own.inuse"));
+        using MeterTestListener recorder = new("own.inuse");
+        HttpUserAgentParserMeters.ParseRequest();
+        Assert.Equal(new[] { "parse.requests" }, recorder.InstrumentNames, StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public void A_Cache_Size_Gauge_Whose_Publication_Failed_Is_Not_Created_Again()
+    {
+        using Meter meter = new("retry.core");
+        bool fail = true;
+        using MeterListener failing = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (ReferenceEquals(instrument.Meter, meter) && string.Equals(instrument.Name, "cache.size", StringComparison.Ordinal) && fail)
+                {
+                    fail = false;
+                    throw new InvalidOperationException("listener failure");
+                }
+            },
+        };
+        failing.Start();
+
+        Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserMeters.Enable(meter));
+        HttpUserAgentParserMeters.Enable(meter); // the retry completes the instruments
+
+        int gauges = 0;
+        long? size = null;
+        using MeterListener observer = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (ReferenceEquals(instrument.Meter, meter) && string.Equals(instrument.Name, "cache.size", StringComparison.Ordinal))
+                {
+                    gauges++;
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        observer.SetMeasurementEventCallback<long>((_, value, _, _) => size = value);
+        observer.Start();
+        observer.RecordObservableInstruments();
+
+        Assert.Equal(1, gauges);
+        Assert.NotNull(size); // the gauge published first reports, because its meter is in use
+    }
 }
