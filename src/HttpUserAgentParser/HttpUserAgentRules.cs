@@ -139,9 +139,9 @@ internal static class HttpUserAgentRules
     ];
 
     /// <summary>
-    /// Robot rules. This array instance is exposed as <see cref="HttpUserAgentStatics.Robots"/>; entries replaced by callers are honored.
+    /// The default robots in priority order (<see cref="HttpUserAgentStatics.DefaultRobots"/>); never changed.
     /// </summary>
-    internal static readonly (string Key, string Value)[] Robots =
+    internal static readonly (string Key, string Value)[] DefaultRobots =
     [
         ( "googlebot", "Googlebot" ),
         ( "meta-externalagent", "meta-externalagent" ),
@@ -244,16 +244,6 @@ internal static class HttpUserAgentRules
     ];
 
     /// <summary>
-    /// The default robot keys, used to detect entries replaced by callers.
-    /// </summary>
-    internal static readonly string[] DefaultRobotKeys = Array.ConvertAll(Robots, static robot => robot.Key);
-
-    /// <summary>
-    /// Robot token matcher over the default keys. "googlebot" gets its own group: it is by far the most common robot.
-    /// </summary>
-    internal static readonly PriorityTokenMatcher<RobotDetector> RobotMatcher = new(DefaultRobotKeys, 1);
-
-    /// <summary>
     /// Short substrings ("anchors") of the default robot keys. Every key contains at least one anchor,
     /// so a user agent without any anchor cannot match a default key. The few anchors need far fewer searches
     /// than all keys, which makes the common case (a browser) cheap.
@@ -267,9 +257,21 @@ internal static class HttpUserAgentRules
     ];
 
     /// <summary>
-    /// Matcher over the robot anchors, see <see cref="CuratedRobotAnchors"/>.
+    /// The default robots with their matchers.
     /// </summary>
-    internal static readonly PriorityTokenMatcher<RobotAnchorDetector> RobotAnchorMatcher = new(CreateRobotAnchors(DefaultRobotKeys, CuratedRobotAnchors));
+    internal static readonly HttpUserAgentRobotSet DefaultRobotSet = new(DefaultRobots);
+
+    private static HttpUserAgentRobotSet s_robotSet = DefaultRobotSet;
+
+    /// <summary>
+    /// Gets the robots the parser detects.
+    /// </summary>
+    internal static HttpUserAgentRobotSet RobotSet => Volatile.Read(ref s_robotSet);
+
+    /// <summary>
+    /// Replaces the robots the parser detects.
+    /// </summary>
+    internal static void SetRobotSet(HttpUserAgentRobotSet robotSet) => Volatile.Write(ref s_robotSet, robotSet);
 
     /// <summary>
     /// Returns <paramref name="curatedAnchors"/> plus every key that contains none of them,
@@ -287,28 +289,6 @@ internal static class HttpUserAgentRules
         }
 
         return [.. anchors];
-    }
-
-    /// <summary>
-    /// Returns <see langword="true"/> if no key of <see cref="Robots"/> has been replaced.
-    /// </summary>
-    /// <remarks>
-    /// Compares the key references with <see cref="DefaultRobotKeys"/>. Replaced display names (values) do not matter:
-    /// the parser returns the current value of the matching entry.
-    /// </remarks>
-    internal static bool AreRobotKeysUnchanged()
-    {
-        ReadOnlySpan<string> defaultKeys = DefaultRobotKeys;
-        ReadOnlySpan<(string Key, string Value)> robots = Robots.AsSpan(0, defaultKeys.Length);
-        for (int i = 0; i < defaultKeys.Length; i++)
-        {
-            if (!ReferenceEquals(robots[i].Key, defaultKeys[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /// <summary>

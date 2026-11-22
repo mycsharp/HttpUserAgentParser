@@ -280,55 +280,30 @@ public static class HttpUserAgentParser
     /// </summary>
     public static string? GetRobot(string userAgent)
     {
-        ReadOnlySpan<char> ua = userAgent.AsSpan();
-        (string Key, string Value)[] robots = HttpUserAgentRules.Robots;
-        string[] defaultKeys = HttpUserAgentRules.DefaultRobotKeys;
+        HttpUserAgentRobotSet robots = HttpUserAgentRules.RobotSet;
 
-        // Googlebot, by far the most common robot, comes first: if the entry is unchanged and matches, it wins.
-        (string firstKey, string firstValue) = robots[0];
-        if (ReferenceEquals(firstKey, defaultKeys[0]) && ContainsIgnoreCase(ua, firstKey))
+        // The first robot (Googlebot in the default list, by far the most common robot) is checked on its own.
+        if (robots.FirstKey is { } firstKey && ContainsIgnoreCase(userAgent, firstKey))
         {
-            return firstValue;
+            return robots.FirstValue;
         }
 
-        if (HttpUserAgentRules.AreRobotKeysUnchanged())
-        {
-            // The few anchors rule out most user agents (browsers) before the full key search.
-            if (!HttpUserAgentRules.RobotAnchorMatcher.ContainsAny(ua))
-            {
-                return null;
-            }
+        return FindRobot(userAgent, robots);
+    }
 
-            int index = HttpUserAgentRules.RobotMatcher.Find(ua, 1, out _);
-            return index >= 0 ? robots[index].Value : null;
+    /// <summary>
+    /// Finds the first robot after the first one; separate from <see cref="GetRobot"/>, so its check of the first robot stays small.
+    /// </summary>
+    private static string? FindRobot(ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
+    {
+        // The few anchors rule out most user agents (browsers) before the full key search.
+        if (!robots.AnchorMatcher.ContainsAny(ua))
+        {
+            return null;
         }
 
-        // The public array is mutable and callers replaced keys: they are checked one by one, in array order.
-#if NET9_0_OR_GREATER
-        // Default keys are filtered by group.
-        foreach (ref readonly PriorityTokenGroup group in HttpUserAgentRules.RobotMatcher.Groups)
-        {
-            bool mayMatchDefaultKey = group.MayMatch(ua);
-            for (int i = group.Start; i < group.End; i++)
-            {
-                (string key, string value) = robots[i];
-                if ((mayMatchDefaultKey || !ReferenceEquals(key, defaultKeys[i])) && ContainsIgnoreCase(ua, key))
-                {
-                    return value;
-                }
-            }
-        }
-#else
-        foreach ((string key, string value) in robots)
-        {
-            if (ContainsIgnoreCase(ua, key))
-            {
-                return value;
-            }
-        }
-#endif
-
-        return null;
+        int index = robots.Matcher.Find(ua, 1, out _);
+        return index >= 0 ? robots.Entries[index].Value : null;
     }
 
     /// <summary>

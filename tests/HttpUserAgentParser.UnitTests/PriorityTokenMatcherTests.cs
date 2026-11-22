@@ -154,11 +154,11 @@ public class PriorityTokenMatcherTests
     [Fact]
     public void Built_In_Matchers_Use_Small_Vectorized_Groups()
     {
-        Assert.All(HttpUserAgentRules.RobotMatcher.Groups.ToArray(), static g => Assert.InRange(g.FilterValues.Length, 1, PriorityTokenGroup.MaxValuesPerGroup));
+        Assert.All(HttpUserAgentRules.DefaultRobotSet.Matcher.Groups.ToArray(), static g => Assert.InRange(g.FilterValues.Length, 1, PriorityTokenGroup.MaxValuesPerGroup));
         Assert.All(HttpUserAgentRules.MobileMatcher.Groups.ToArray(), static g => Assert.InRange(g.FilterValues.Length, 1, PriorityTokenGroup.MaxValuesPerGroup));
 
         // Googlebot, by far the most common robot, is checked on its own.
-        Assert.Equal((0, 1), (HttpUserAgentRules.RobotMatcher.Groups[0].Start, HttpUserAgentRules.RobotMatcher.Groups[0].End));
+        Assert.Equal((0, 1), (HttpUserAgentRules.DefaultRobotSet.Matcher.Groups[0].Start, HttpUserAgentRules.DefaultRobotSet.Matcher.Groups[0].End));
     }
 #endif
 
@@ -185,7 +185,7 @@ public class PriorityTokenMatcherTests
     {
         // When a new robot key is not covered, it becomes an anchor on its own (correct, but an extra search).
         // Extend the curated anchors instead.
-        Assert.Equal(HttpUserAgentRules.CuratedRobotAnchors.Length, HttpUserAgentRules.RobotAnchorMatcher.Count);
+        Assert.Equal(HttpUserAgentRules.CuratedRobotAnchors.Length, HttpUserAgentRules.DefaultRobotSet.AnchorMatcher.Count);
     }
 
     public static TheoryData<string> CatalogBrowserUserAgents => [.. UserAgentCatalog.Browsers.Select(static ua => ua.UserAgent)];
@@ -194,7 +194,7 @@ public class PriorityTokenMatcherTests
     [MemberData(nameof(CatalogBrowserUserAgents))]
     public void Robot_Anchors_Do_Not_Occur_In_Browser_User_Agents(string userAgent)
     {
-        Assert.False(HttpUserAgentRules.RobotAnchorMatcher.ContainsAny(userAgent));
+        Assert.False(HttpUserAgentRules.DefaultRobotSet.AnchorMatcher.ContainsAny(userAgent));
     }
 
     [Theory]
@@ -221,7 +221,7 @@ public class PriorityTokenMatcherTests
     public void Built_In_Matchers_Equal_Sequential_Scan(string userAgent)
     {
         AssertEqualsSequentialScan(HttpUserAgentRules.MobileMatcher, [.. HttpUserAgentRules.Mobiles.Select(static rule => rule.Key)], userAgent);
-        AssertEqualsSequentialScan(HttpUserAgentRules.RobotMatcher, HttpUserAgentRules.DefaultRobotKeys, userAgent);
+        AssertEqualsSequentialScan(HttpUserAgentRules.DefaultRobotSet.Matcher, HttpUserAgentRules.DefaultRobotSet.Keys, userAgent);
     }
 
     private static void AssertEqualsSequentialScan<T>(PriorityTokenMatcher<T> matcher, string[] tokens, string input)

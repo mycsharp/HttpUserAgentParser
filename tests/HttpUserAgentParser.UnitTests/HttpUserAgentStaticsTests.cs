@@ -147,10 +147,10 @@ public class HttpUserAgentStaticsTests
     }
 
     [Fact]
-    public void Robots_Is_The_Array_Used_By_The_Parser()
+    public void DefaultRobots_Are_The_Robots_Of_The_Library()
     {
-        Assert.Same(HttpUserAgentRules.Robots, HttpUserAgentStatics.Robots);
-        Assert.Contains(("googlebot", "Googlebot"), HttpUserAgentStatics.Robots);
+        Assert.Equal(HttpUserAgentRules.DefaultRobots, HttpUserAgentStatics.DefaultRobots);
+        Assert.Contains(("googlebot", "Googlebot"), HttpUserAgentStatics.DefaultRobots);
     }
 
     [Fact]

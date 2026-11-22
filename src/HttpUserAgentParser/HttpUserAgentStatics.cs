@@ -10,7 +10,7 @@ namespace MyCSharp.HttpUserAgentParser;
 /// </summary>
 /// <remarks>
 /// The parser does not read <see cref="Platforms"/>, <see cref="Browsers"/>, <see cref="Mobiles"/> or <see cref="Tools"/>;
-/// they are provided for consumers. <see cref="Robots"/> is shared with the parser: replaced entries are honored.
+/// they are provided for consumers. The parser detects the <see cref="Robots"/>; change them with <see cref="SetRobots"/>.
 /// All regular expressions are source-generated (no runtime compilation, trimming and Native AOT compatible).
 /// </remarks>
 public static class HttpUserAgentStatics
@@ -119,12 +119,46 @@ public static class HttpUserAgentStatics
     public static readonly FrozenDictionary<string, string> Mobiles = HttpUserAgentRules.CreateMobileDictionary();
 
     /// <summary>
-    /// Robots
+    /// The robots the parser detects, in priority order: the first entry whose key occurs in the user agent wins.
     /// </summary>
     /// <remarks>
-    /// The parser uses this array directly: the first matching entry wins and replaced entries are honored.
+    /// Read-only; <see cref="SetRobots"/> replaces the list. Initially <see cref="DefaultRobots"/>.
     /// </remarks>
-    public static readonly (string Key, string Value)[] Robots = HttpUserAgentRules.Robots;
+    public static IReadOnlyList<(string Key, string Value)> Robots => HttpUserAgentRules.RobotSet.ReadOnlyEntries;
+
+    /// <summary>
+    /// The robots of this library, in priority order.
+    /// </summary>
+    public static IReadOnlyList<(string Key, string Value)> DefaultRobots => HttpUserAgentRules.DefaultRobotSet.ReadOnlyEntries;
+
+    /// <summary>
+    /// Replaces the robots the parser detects, in priority order: the first entry whose key occurs in the user agent
+    /// (ignoring case) wins, and its value is the robot name.
+    /// </summary>
+    /// <remarks>
+    /// The list applies to all following parses in the process; it is replaced atomically, so a parse running at the same
+    /// time uses either the previous or the new list. To extend the defaults, pass e.g.
+    /// <c>[.. HttpUserAgentStatics.DefaultRobots, ("MyCrawler", "My Crawler")]</c>; <see cref="DefaultRobots"/> restores them.
+    /// Building the matchers takes a moment, so set the list once at startup rather than per request.
+    /// </remarks>
+    /// <param name="robots">The robots in priority order.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="robots"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">A key is <see langword="null"/> or empty, or a value is <see langword="null"/>.</exception>
+    public static void SetRobots(IEnumerable<(string Key, string Value)> robots)
+    {
+        ArgumentNullException.ThrowIfNull(robots);
+
+        (string Key, string Value)[] entries = [.. robots];
+        foreach ((string key, string value) in entries)
+        {
+            if (string.IsNullOrEmpty(key) || value is null)
+            {
+                throw new ArgumentException("A robot needs a key that is not empty and a value.", nameof(robots));
+            }
+        }
+
+        HttpUserAgentRules.SetRobotSet(new HttpUserAgentRobotSet(entries));
+    }
 
     /// <summary>
     /// Tools
