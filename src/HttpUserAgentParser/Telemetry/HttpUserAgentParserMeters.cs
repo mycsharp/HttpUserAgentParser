@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 
@@ -14,7 +13,6 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// Instruments are created once on first enablement and emit no data unless observed
 /// by an active listener.
 /// </remarks>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMeters
 {
     /// <summary>
@@ -68,6 +66,11 @@ internal static class HttpUserAgentParserMeters
     /// </remarks>
     public static void Enable(Meter? meter = null)
     {
+        if (Interlocked.Exchange(ref s_initialized, 1) == 1)
+        {
+            return;
+        }
+
         s_meter = meter ?? new Meter(MeterName);
 
         s_parseRequests = s_meter.CreateCounter<long>(

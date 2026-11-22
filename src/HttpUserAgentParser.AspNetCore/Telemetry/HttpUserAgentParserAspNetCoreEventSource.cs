@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
@@ -8,13 +7,7 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 /// <summary>
 /// EventSource for EventCounters emitted by MyCSharp.HttpUserAgentParser.AspNetCore.
 /// </summary>
-/// <remarks>
-/// Provides EventCounter-based telemetry for User-Agent presence detection.
-/// Counters are incremented only when the EventSource is enabled to minimize
-/// overhead on hot paths.
-/// </remarks>
 [EventSource(Name = EventSourceName)]
-[ExcludeFromCodeCoverage]
 public sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
 {
     /// <summary>
@@ -31,9 +24,12 @@ public sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
     private readonly IncrementingEventCounter _userAgentMissing;
 
     /// <summary>
-    /// Initializes the EventCounters used by this EventSource.
+    /// Initializes all EventCounters used by this EventSource.
     /// </summary>
-    private HttpUserAgentParserAspNetCoreEventSource()
+    /// <remarks>
+    /// Use <see cref="Log"/>; the constructor is only accessible for tests.
+    /// </remarks>
+    internal HttpUserAgentParserAspNetCoreEventSource()
     {
         _userAgentPresent = new IncrementingEventCounter("useragent-present", this)
         {
@@ -49,47 +45,43 @@ public sealed class HttpUserAgentParserAspNetCoreEventSource : EventSource
     }
 
     /// <summary>
-    /// Increments the EventCounter for requests with a present User-Agent header.
+    /// Records a request with a User-Agent header.
     /// </summary>
     [NonEvent]
     internal void UserAgentPresent()
     {
-        if (!IsEnabled())
+        if (IsEnabled())
         {
-            return;
+            _userAgentPresent.Increment();
         }
-
-        _userAgentPresent?.Increment();
     }
 
     /// <summary>
-    /// Increments the EventCounter for requests with a missing User-Agent header.
+    /// Records a request without a User-Agent header.
     /// </summary>
     [NonEvent]
     internal void UserAgentMissing()
     {
-        if (!IsEnabled())
+        if (IsEnabled())
         {
-            return;
+            _userAgentMissing.Increment();
         }
-
-        _userAgentMissing?.Increment();
     }
 
     /// <summary>
     /// Releases all EventCounter resources used by this EventSource.
     /// </summary>
     /// <param name="disposing">
-    /// <see langword="true"/> when called from Dispose;
+    /// <see langword="true"/> when called from <see cref="EventSource.Dispose()"/>;
     /// <see langword="false"/> when called from a finalizer.
     /// </param>
+    /// <remarks>
+    /// Follows the pattern of the EventCounters documentation: the counters are released in both cases.
+    /// </remarks>
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            _userAgentPresent?.Dispose();
-            _userAgentMissing?.Dispose();
-        }
+        _userAgentPresent.Dispose();
+        _userAgentMissing.Dispose();
 
         base.Dispose(disposing);
     }

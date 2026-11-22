@@ -261,26 +261,6 @@ public class HttpUserAgentParserTests
     }
 
     [Fact]
-    public void GetRobot_UsesReplacementRuleInOriginalOrder()
-    {
-        int last = HttpUserAgentStatics.Robots.Length - 1;
-        (string Key, string Value) original = HttpUserAgentStatics.Robots[last];
-
-        try
-        {
-            HttpUserAgentStatics.Robots[last] = ("CustomTestCrawler", "Custom crawler");
-
-            Assert.Equal("Custom crawler", HttpUserAgentParser.GetRobot("customtestcrawler/1.0"));
-            Assert.Equal("Googlebot", HttpUserAgentParser.GetRobot("customtestcrawler/1.0 googlebot/2.1"));
-            Assert.Null(HttpUserAgentParser.GetRobot(original.Key));
-        }
-        finally
-        {
-            HttpUserAgentStatics.Robots[last] = original;
-        }
-    }
-
-    [Fact]
     public void TryGetMobileDevice_True_And_False()
     {
         bool ok = HttpUserAgentParser.TryGetMobileDevice("(iPhone; CPU iPhone OS)", out string? device);

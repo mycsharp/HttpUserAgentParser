@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 
@@ -14,7 +13,6 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 /// The state is evaluated using lock-free, thread-safe reads and is intended
 /// to be checked on hot paths.
 /// </remarks>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserAspNetCoreTelemetry
 {
     /// <summary>
@@ -45,28 +43,6 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
     /// </remarks>
     public static bool IsEnabled
         => Volatile.Read(ref s_enabledFlags) != 0;
-
-    /// <summary>
-    /// Gets a value indicating whether event counter telemetry is enabled.
-    /// </summary>
-    /// <remarks>
-    /// Returns <see langword="true"/> only if the event counter flag is set
-    /// and the underlying event source is enabled.
-    /// </remarks>
-    public static bool AreCountersEnabled
-        => (Volatile.Read(ref s_enabledFlags) & EventCountersFlag) != 0
-           && HttpUserAgentParserAspNetCoreEventSource.Log.IsEnabled();
-
-    /// <summary>
-    /// Gets a value indicating whether meter-based telemetry is enabled.
-    /// </summary>
-    /// <remarks>
-    /// Returns <see langword="true"/> only if the meter flag is set
-    /// and the meter provider is enabled.
-    /// </remarks>
-    public static bool AreMetersEnabled
-        => (Volatile.Read(ref s_enabledFlags) & MetersFlag) != 0
-           && HttpUserAgentParserAspNetCoreMeters.IsEnabled;
 
     /// <summary>
     /// Enables EventCounter telemetry for the AspNetCore package.

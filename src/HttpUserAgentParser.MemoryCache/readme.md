@@ -33,7 +33,7 @@ public sealed class MyService(IHttpUserAgentParserProvider parser)
 services.AddHttpUserAgentMemoryCachedParser(options =>
 {
 	options.CacheEntryOptions.SlidingExpiration = TimeSpan.FromMinutes(60); // default is 1 day
-	options.CacheOptions.SizeLimit = 1024; // default is null (= no limit)
+	options.CacheOptions.SizeLimit = 1024; // default is 256
 });
 ```
 
@@ -68,9 +68,9 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser.MemoryCache` (constant: `HttpUserAgentParserMemoryCacheEventSource.EventSourceName`)
 
-- `user_agent_parser.cache.hit` (incrementing)
-- `user_agent_parser.cache.miss` (incrementing)
-- `user_agent_parser.cache.size` (polling)
+- `cache-hit` (incrementing)
+- `cache-miss` (incrementing)
+- `cache-size` (polling)
 
 ### Monitor with dotnet-counters
 
@@ -101,11 +101,11 @@ services
 
 ### Meter + instruments
 
-Meter: `MyCSharp.HttpUserAgentParser.MemoryCache` (constant: `HttpUserAgentParserMemoryCacheMeters.MeterName`)
+Meter: `mycsharp.http_user_agent_parser.memorycache` (constant: `HttpUserAgentParserMemoryCachedProvider.MeterName`)
 
-- `user_agent_parser.cache.hit` (counter)
-- `user_agent_parser.cache.miss` (counter)
-- `user_agent_parser.cache.size` (observable gauge)
+- `cache.hit` (counter)
+- `cache.miss` (counter)
+- `cache.size` (observable gauge)
 
 ## Export to OpenTelemetry / Application Insights
 
@@ -134,9 +134,9 @@ If you enabled **native meters** (see above), collect them via `AddMeter(...)`:
 
 ```csharp
 using OpenTelemetry.Metrics;
-using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
+using MyCSharp.HttpUserAgentParser.MemoryCache;
 
-metrics.AddMeter(HttpUserAgentParserMemoryCacheMeters.MeterName);
+metrics.AddMeter(HttpUserAgentParserMemoryCachedProvider.MeterName);
 ```
 
 ### Application Insights listener registration

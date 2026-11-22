@@ -2,6 +2,10 @@
 
 Fast HTTP User-Agent parsing for .NET.
 
+- Allocation-free detection with vectorized `SearchValues`, no regular expressions in the parser
+- Trimming and Native AOT compatible
+- Detects the most used browsers and current search engine, SEO and AI crawlers
+
 Repository:
 https://github.com/mycsharp/HttpUserAgentParser
 
@@ -18,6 +22,17 @@ string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 HttpUserAgentInformation info = HttpUserAgentParser.Parse(userAgent);
 // or: HttpUserAgentInformation.Parse(userAgent)
 ```
+
+## Regular expressions
+
+The parser itself does not execute regular expressions. `HttpUserAgentStatics.Platforms`, `HttpUserAgentStatics.Browsers`
+and `HttpUserAgentPlatformInformation.Regex` provide source-generated regular expressions (`[GeneratedRegex]`) for your own
+matching; they are created on first access.
+
+## Native AOT
+
+The package is trimming and Native AOT compatible. EventCounters (`WithTelemetry()`) need
+`<EventSourceSupport>true</EventSourceSupport>` in Native AOT apps; native meters work without it.
 
 ## Dependency injection
 
@@ -57,11 +72,11 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserEventSource.EventSourceName`)
 
-- `parse.requests` (incrementing)
-- `parse.duration` (ms, event counter)
-- `cache.hit` (incrementing)
-- `cache.miss` (incrementing)
-- `cache.size` (polling)
+- `parse-requests` (incrementing)
+- `parse-duration` (s, event counter)
+- `cache-hit` (incrementing, `HttpUserAgentParserCachedProvider`)
+- `cache-miss` (incrementing, `HttpUserAgentParserCachedProvider`)
+- `cache-size` (polling, `HttpUserAgentParserCachedProvider`)
 
 ### Monitor with dotnet-counters
 
@@ -88,10 +103,10 @@ services
 
 ### Meter + instruments
 
-Meter: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserMeters.MeterName`)
+Meter: `mycsharp.http_user_agent_parser` (the prefix `mycsharp.` can be changed with `WithMeterTelemetryPrefix(...)`)
 
 - `parse.requests` (counter)
-- `parse.duration` (histogram, ms)
+- `parse.duration` (histogram, s)
 - `cache.hit` (counter)
 - `cache.miss` (counter)
 - `cache.size` (observable gauge)
@@ -132,13 +147,12 @@ If you enabled **native meters** (see above), collect them via `AddMeter(...)`:
 
 ```csharp
 using OpenTelemetry.Metrics;
-using MyCSharp.HttpUserAgentParser.Telemetry;
 
 builder.Services.AddOpenTelemetry()
 	.WithMetrics(metrics =>
 	{
 		metrics
-			.AddMeter(HttpUserAgentParserMeters.MeterName)
+			.AddMeter("mycsharp.http_user_agent_parser")
 			.AddOtlpExporter();
 	});
 ```

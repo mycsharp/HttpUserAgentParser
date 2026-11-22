@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 using MyCSharp.HttpUserAgentParser.Providers;
@@ -69,11 +68,6 @@ public class HttpUserAgentParserMemoryCachedProvider(
     /// <summary>
     /// Parses the user agent string using the memory cache without emitting telemetry.
     /// </summary>
-    /// <remarks>
-    /// This method is excluded from code coverage as it mainly wires together
-    /// cache access and parsing logic without additional behavior.
-    /// </remarks>
-    [ExcludeFromCodeCoverage]
     private HttpUserAgentInformation ParseWithoutTelemetry(CacheKey key)
     {
         return _memoryCache.GetOrCreate(key, static entry =>
@@ -120,7 +114,7 @@ public class HttpUserAgentParserMemoryCachedProvider(
     /// Implements <see cref="IEquatable{T}"/> as required by <c>IMemoryCache</c>
     /// to ensure correct key comparison semantics.
     /// </remarks>
-    private class CacheKey : IEquatable<CacheKey> // required for IMemoryCache
+    internal sealed class CacheKey : IEquatable<CacheKey> // required for IMemoryCache
     {
         /// <summary>
         /// Gets or sets the raw User-Agent string.

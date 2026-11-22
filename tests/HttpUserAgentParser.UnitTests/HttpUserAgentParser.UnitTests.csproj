@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\HttpUserAgentParser\HttpUserAgentParser.csproj" />
+        <ProjectReference Include="..\HttpUserAgentParser.TestHelpers\HttpUserAgentParser.TestHelpers.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -4,4 +4,8 @@
         <IsTestProject>false</IsTestProject>
     </PropertyGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\HttpUserAgentParser\HttpUserAgentParser.csproj" />
+    </ItemGroup>
+
 </Project>

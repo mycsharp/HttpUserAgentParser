@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
 
@@ -31,7 +32,10 @@ public static class HttpUserAgentParserServiceCollectionExtensions
     /// <summary>
     /// Registers <typeparam name="TProvider"/> as singleton to <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
-    public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser<TProvider>(
+    /// <remarks>
+    /// <typeparamref name="TProvider"/> is created by the dependency injection container; its public constructors are preserved for trimming and Native AOT.
+    /// </remarks>
+    public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParser<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TProvider>(
         this IServiceCollection services) where TProvider : class, IHttpUserAgentParserProvider
     {
         // create options

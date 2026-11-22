@@ -8,8 +8,13 @@ using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;
 
-public class HttpUserAgentParserMemoryCacheTelemetryTests
+[Collection(TelemetryCollection.Name)]
+public sealed class HttpUserAgentParserMemoryCacheTelemetryTests : IDisposable
 {
+    public HttpUserAgentParserMemoryCacheTelemetryTests() => HttpUserAgentParserMemoryCacheTelemetry.ResetForTests();
+
+    public void Dispose() => HttpUserAgentParserMemoryCacheTelemetry.ResetForTests();
+
     [Fact]
     public void EventCounters_DoNotThrow_WhenEnabled()
     {

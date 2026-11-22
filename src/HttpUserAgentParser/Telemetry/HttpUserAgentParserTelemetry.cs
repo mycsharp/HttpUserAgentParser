@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 
@@ -10,7 +9,6 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// Opt-in switch for core telemetry.
 /// Telemetry is disabled by default to ensure zero overhead unless explicitly enabled.
 /// </summary>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserTelemetry
 {
     // Bit flags to track which telemetry systems are enabled.

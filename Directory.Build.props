@@ -94,10 +94,9 @@
     <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
     <ExcludeByFile>**/*Program.cs;**/*Startup.cs;**/*GlobalUsings.cs</ExcludeByFile>
     <UseSourceLink>true</UseSourceLink>
-    <!-- Enforce high line coverage; branch coverage is informative only -->
-    <!-- Note: Set to 96 to account for performance-optimized helper methods and framework-specific code paths -->
-    <Threshold>96</Threshold>
-    <ThresholdType>line</ThresholdType>
+    <!-- Enforce full line, branch and method coverage for every target framework -->
+    <Threshold>100</Threshold>
+    <ThresholdType>line,branch,method</ThresholdType>
     <ThresholdStat>total</ThresholdStat>
   </PropertyGroup>
 
@@ -129,6 +128,15 @@
     <Include>[MyCSharp.HttpUserAgentParser.AspNetCore]*</Include>
   </PropertyGroup>
 
+  <PropertyGroup Label="Roslyn package assets">
+    <!-- The Roslyn packages below only pin the Roslyn version used by the analyzers; their runtime assets
+         (Roslyn, System.Composition, System.IO.Pipelines, ...) must not end up in the apps and tests, where they can
+         replace framework assemblies (e.g. System.IO.Pipelines of ASP.NET Core 8 in Native AOT apps).
+         BenchmarkDotNet compiles benchmarks at runtime and needs them. -->
+    <RoslynPackageIncludeAssets>build; analyzers</RoslynPackageIncludeAssets>
+    <RoslynPackageIncludeAssets Condition="'$(IsBenchmarkProject)' == 'true'">runtime; build; native; contentfiles; analyzers</RoslynPackageIncludeAssets>
+  </PropertyGroup>
+
   <ItemGroup Label="Default Analyzers">
     <PackageReference Include="Roslynator.Analyzers">
       <PrivateAssets>all</PrivateAssets>
@@ -144,15 +152,15 @@
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>$(RoslynPackageIncludeAssets)</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.Common">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>$(RoslynPackageIncludeAssets)</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>$(RoslynPackageIncludeAssets)</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Meziantou.Analyzer">
       <PrivateAssets>all</PrivateAssets>

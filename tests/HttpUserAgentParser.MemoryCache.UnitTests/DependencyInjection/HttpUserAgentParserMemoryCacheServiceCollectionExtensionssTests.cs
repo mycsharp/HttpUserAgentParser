@@ -25,4 +25,20 @@ public class HttpUserAgentParserMemoryCacheServiceCollectionExtensionssTests
         Assert.Equal(typeof(HttpUserAgentParserMemoryCachedProvider), services[1].ImplementationType);
         Assert.Equal(ServiceLifetime.Singleton, services[1].Lifetime);
     }
+
+    [Fact]
+    public void AddHttpUserAgentMemoryCachedParser_Applies_Options()
+    {
+        ServiceCollection services = new();
+
+        services.AddHttpUserAgentMemoryCachedParser(options =>
+        {
+            options.CacheOptions.SizeLimit = 1024;
+            options.CacheEntryOptions.SlidingExpiration = TimeSpan.FromMinutes(60);
+        });
+
+        HttpUserAgentParserMemoryCachedProviderOptions options = Assert.IsType<HttpUserAgentParserMemoryCachedProviderOptions>(services[0].ImplementationInstance);
+        Assert.Equal(1024, options.CacheOptions.SizeLimit);
+        Assert.Equal(TimeSpan.FromMinutes(60), options.CacheEntryOptions.SlidingExpiration);
+    }
 }

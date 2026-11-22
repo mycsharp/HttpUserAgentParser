@@ -15,7 +15,7 @@ dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore
 
 Register a provider (any of the available ones) and then add the accessor:
 
-The accessor pattern reads the `User-Agent` header from the current `HttpContext` and parses it using the registered provider.
+The accessor reads the `User-Agent` header from the `HttpContext` you pass in and parses it using the registered provider. It does not depend on `IHttpContextAccessor`.
 
 ```csharp
 services
@@ -26,11 +26,17 @@ services
 Usage:
 
 ```csharp
-public sealed class MyController(IHttpUserAgentParserAccessor accessor)
+public sealed class MyController(IHttpUserAgentParserAccessor accessor) : ControllerBase
 {
-	public HttpUserAgentInformation Get() => accessor.Get();
+	[HttpGet]
+	public HttpUserAgentInformation? Get() => accessor.Get(HttpContext); // null without User-Agent header
 }
+
+// Minimal API
+app.MapGet("/ua", (HttpContext context, IHttpUserAgentParserAccessor accessor) => accessor.Get(context));
 ```
+
+The package is trimming and Native AOT compatible.
 
 ### Just read the header
 
@@ -58,8 +64,8 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgentParserAspNetCoreEventSource.EventSourceName`)
 
-- `user_agent.present` (incrementing)
-- `user_agent.missing` (incrementing)
+- `useragent-present` (incrementing)
+- `useragent-missing` (incrementing)
 
 ### Monitor with dotnet-counters
 
@@ -81,7 +87,7 @@ services
 
 ### Meter + instruments
 
-Meter: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgentParserAspNetCoreMeters.MeterName`)
+Meter: `mycsharp.http_user_agent_parser.aspnetcore` (the prefix `mycsharp.` can be changed with `WithAspNetCoreMeterTelemetryPrefix(...)`)
 
 - `user_agent.present` (counter)
 - `user_agent.missing` (counter)
@@ -107,7 +113,6 @@ If you enabled **native meters** (see above), collect them via `AddMeter(...)`:
 
 ```csharp
 using OpenTelemetry.Metrics;
-using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 
-metrics.AddMeter(HttpUserAgentParserAspNetCoreMeters.MeterName);
+metrics.AddMeter("mycsharp.http_user_agent_parser.aspnetcore");
 ```

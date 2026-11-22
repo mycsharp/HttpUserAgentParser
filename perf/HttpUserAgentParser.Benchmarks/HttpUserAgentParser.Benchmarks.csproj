@@ -39,6 +39,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\HttpUserAgentParser\HttpUserAgentParser.csproj" />
+        <ProjectReference Include="..\..\tests\HttpUserAgentParser.TestHelpers\HttpUserAgentParser.TestHelpers.csproj" />
     </ItemGroup>
 
 </Project>

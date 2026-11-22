@@ -1,7 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
 /// <summary>
@@ -12,7 +10,6 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// so that polling-based instruments can report correct values once a listener
 /// attaches.
 /// </remarks>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserTelemetryState
 {
     private static long s_concurrentCacheSize;

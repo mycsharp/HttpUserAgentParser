@@ -1,17 +1,13 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 
 /// <summary>
 /// Holds telemetry state for tracking the size of the HTTP User-Agent parser memory cache.
 /// </summary>
 /// <remarks>
-/// This class is excluded from code coverage as it contains only simple
-/// thread-safe state management logic.
+/// The state is updated with atomic operations, so it is safe in concurrent scenarios.
 /// </remarks>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMemoryCacheTelemetryState
 {
     private static long s_cacheSize;

@@ -5,7 +5,7 @@ namespace MyCSharp.HttpUserAgentParser;
 /// <summary>
 /// Analyzed user agent
 /// </summary>
-public readonly struct HttpUserAgentInformation
+public readonly struct HttpUserAgentInformation : IEquatable<HttpUserAgentInformation>
 {
     /// <summary>
     /// Full User Agent string
@@ -72,4 +72,21 @@ public readonly struct HttpUserAgentInformation
     /// </summary>
     internal static HttpUserAgentInformation CreateForUnknown(string userAgent, HttpUserAgentPlatformInformation? platform, string? deviceName)
         => new(userAgent, platform, HttpUserAgentType.Unknown, name: null, version: null, deviceName);
+
+    /// <summary>
+    /// Returns <see langword="true"/> if all properties of both instances are equal (ordinal string comparison).
+    /// </summary>
+    public bool Equals(HttpUserAgentInformation other)
+        => Type == other.Type
+        && string.Equals(UserAgent, other.UserAgent, StringComparison.Ordinal)
+        && string.Equals(Name, other.Name, StringComparison.Ordinal)
+        && string.Equals(Version, other.Version, StringComparison.Ordinal)
+        && string.Equals(MobileDeviceType, other.MobileDeviceType, StringComparison.Ordinal)
+        && Nullable.Equals(Platform, other.Platform);
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) => obj is HttpUserAgentInformation other && Equals(other);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => HashCode.Combine(UserAgent, Type, Name, Version);
 }

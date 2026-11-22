@@ -65,6 +65,52 @@ public partial class HttpUserAgentInformationTests
         Assert.Null(ua.MobileDeviceType);
     }
 
+    [Fact]
+    public void Equals_Same_Values()
+    {
+        const string UserAgent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Mobile Safari/537.36";
+
+        HttpUserAgentInformation first = HttpUserAgentParser.Parse(UserAgent);
+        HttpUserAgentInformation second = HttpUserAgentParser.Parse(new string(UserAgent.AsSpan()));
+
+        Assert.True(first.Equals(second));
+        Assert.True(first.Equals((object)second));
+        Assert.Equal(first.GetHashCode(), second.GetHashCode());
+    }
+
+    public static TheoryData<int> DifferingProperties => [0, 1, 2, 3, 4, 5, 6];
+
+    [Theory]
+    [MemberData(nameof(DifferingProperties))]
+    public void Not_Equals_When_Any_Property_Differs(int property)
+    {
+        HttpUserAgentPlatformInformation platform = new(TextRegex(), "Android", HttpUserAgentPlatformType.Android);
+        HttpUserAgentInformation info = HttpUserAgentInformation.CreateForBrowser("ua", platform, "Chrome", "1.0", "Android");
+
+        HttpUserAgentInformation other = property switch
+        {
+            0 => HttpUserAgentInformation.CreateForBrowser("other", platform, "Chrome", "1.0", "Android"),
+            1 => HttpUserAgentInformation.CreateForUnknown("ua", platform, "Android"),
+            2 => HttpUserAgentInformation.CreateForBrowser("ua", platform, "Edge", "1.0", "Android"),
+            3 => HttpUserAgentInformation.CreateForBrowser("ua", platform, "Chrome", "2.0", "Android"),
+            4 => HttpUserAgentInformation.CreateForBrowser("ua", platform, "Chrome", "1.0", null),
+            5 => HttpUserAgentInformation.CreateForBrowser("ua", null, "Chrome", "1.0", "Android"),
+            _ => HttpUserAgentInformation.CreateForBrowser("ua", new HttpUserAgentPlatformInformation(TextRegex(), "Linux", HttpUserAgentPlatformType.Linux), "Chrome", "1.0", "Android"),
+        };
+
+        Assert.False(info.Equals(other));
+        Assert.False(info.Equals((object)other));
+    }
+
+    [Fact]
+    public void Not_Equals_Other_Types()
+    {
+        HttpUserAgentInformation info = HttpUserAgentInformation.CreateForRobot("ua", "Googlebot");
+
+        Assert.False(info.Equals((object?)null));
+        Assert.False(info.Equals("ua"));
+    }
+
     [GeneratedRegex("", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex TextRegex();
 }

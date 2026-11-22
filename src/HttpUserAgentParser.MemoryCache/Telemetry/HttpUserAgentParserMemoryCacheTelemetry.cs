@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 
@@ -9,7 +8,6 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 /// <summary>
 /// Opt-in switch for MemoryCache package telemetry.
 /// </summary>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMemoryCacheTelemetry
 {
     // Bit flags to track which telemetry systems are enabled.

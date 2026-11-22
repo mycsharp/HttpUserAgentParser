@@ -83,3 +83,35 @@ jobs:
           name: nuget-packages
           path: ./artifacts/*.nupkg
           retention-days: 30
+
+  native-aot:
+    name: Native AOT (${{ matrix.framework }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [net8.0, net9.0, net10.0, net11.0]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+            11.0.x
+          global-json-file: ./global.json
+
+      - name: Install Native AOT prerequisites
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      # The libraries are rooted completely: every trimming or AOT warning fails the publish.
+      - name: Publish smoke test with Native AOT
+        run: dotnet publish tests/HttpUserAgentParser.NativeAot.Smoke --configuration Release --framework ${{ matrix.framework }} --runtime linux-x64 --output ./artifacts/aot
+
+      - name: Run smoke test
+        run: ./artifacts/aot/MyCSharp.HttpUserAgentParser.NativeAot.Smoke

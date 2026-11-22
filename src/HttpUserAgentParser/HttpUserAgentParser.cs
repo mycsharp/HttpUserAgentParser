@@ -60,9 +60,9 @@ public static class HttpUserAgentParser
         HttpUserAgentPlatformInformation? platform = GetPlatform(userAgent);
         string? mobileDeviceType = GetMobileDevice(userAgent);
 
-        if (TryGetBrowser(userAgent, out (string Name, string? Version)? browser))
+        if (GetBrowser(userAgent) is { } browser)
         {
-            return HttpUserAgentInformation.CreateForBrowser(userAgent, platform, browser?.Name, browser?.Version, mobileDeviceType);
+            return HttpUserAgentInformation.CreateForBrowser(userAgent, platform, browser.Name, browser.Version, mobileDeviceType);
         }
 
         return HttpUserAgentInformation.CreateForUnknown(userAgent, platform, mobileDeviceType);
@@ -78,14 +78,14 @@ public static class HttpUserAgentParser
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
     {
+        // Rules are sorted by frequency, so a sequential scan usually stops after a few tokens.
+        // (Measured with a mixed real-world workload, this beats vectorized token groups here.)
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        foreach ((string Token, string Name, HttpUserAgentPlatformType PlatformType) in HttpUserAgentStatics.s_platformRules)
+        foreach ((string token, HttpUserAgentPlatformInformation platform) in HttpUserAgentRules.Platforms)
         {
-            if (ContainsIgnoreCase(ua, Token))
+            if (ContainsIgnoreCase(ua, token))
             {
-                return new HttpUserAgentPlatformInformation(
-                    HttpUserAgentStatics.GetPlatformRegexForToken(Token),
-                    Name, PlatformType);
+                return platform;
             }
         }
 
@@ -108,48 +108,36 @@ public static class HttpUserAgentParser
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
 
-        foreach ((string Name, string DetectToken, string? VersionToken) in HttpUserAgentStatics.s_browserRules)
+        // Rules are evaluated in priority order (specific browsers before the browsers their user agents contain).
+        foreach ((string name, string detectToken, string? versionToken) in HttpUserAgentRules.Browsers)
         {
-            if (!TryIndexOf(ua, DetectToken, out int detectIndex))
+            if (!TryIndexOf(ua, detectToken, out int detectIndex))
             {
                 continue;
             }
 
-            // Version token may differ (e.g., Safari uses "Version/")
+            int versionSearchStart = detectIndex + detectToken.Length;
 
-            int versionSearchStart;
-            // For rules without a specific version token, ensure pattern Token/<digits>
-            if (string.IsNullOrEmpty(VersionToken))
+            if (versionToken is null)
             {
-                int afterDetect = detectIndex + DetectToken.Length;
-                if (afterDetect >= ua.Length || ua[afterDetect] != '/')
+                // For rules without a specific version token, ensure pattern Token/<digits>
+                if (versionSearchStart >= ua.Length || ua[versionSearchStart] != '/')
                 {
                     // Likely a misspelling or partial token (e.g., Edgg, Oprea, Chromee)
                     continue;
                 }
             }
-            if (!string.IsNullOrEmpty(VersionToken))
+            else if (TryIndexOf(ua, versionToken, out int versionTokenIndex))
             {
-                if (TryIndexOf(ua, VersionToken!, out int vtIndex))
-                {
-                    versionSearchStart = vtIndex + VersionToken!.Length;
-                }
-                else
-                {
-                    // If specific version token wasn't found, fall back to detect token area
-                    versionSearchStart = detectIndex + DetectToken.Length;
-                }
-            }
-            else
-            {
-                versionSearchStart = detectIndex + DetectToken.Length;
+                // Version token may differ (e.g., Safari uses "Version/")
+                versionSearchStart = versionTokenIndex + versionToken.Length;
             }
 
-            ReadOnlySpan<char> search = ua.Slice(versionSearchStart);
+            // Otherwise (version token not found) the version is searched after the detect token.
+            ReadOnlySpan<char> search = ua[versionSearchStart..];
             if (TryExtractVersion(search, out Range range))
             {
-                string? version = search[range].ToString();
-                return (Name, version);
+                return (name, search[range].ToString());
             }
 
             // If we didn't find a version for this rule, try next rule
@@ -173,26 +161,38 @@ public static class HttpUserAgentParser
     public static string? GetRobot(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
-        (string Key, string Value)[] robots = HttpUserAgentStatics.Robots;
+        (string Key, string Value)[] robots = HttpUserAgentRules.Robots;
 #if NET9_0_OR_GREATER
+        string[] defaultKeys = HttpUserAgentRules.DefaultRobotKeys;
+
+        // Googlebot, by far the most common robot, comes first: if the entry is unchanged and matches, it wins.
         (string firstKey, string firstValue) = robots[0];
-        if (ContainsIgnoreCase(ua, firstKey))
+        if (ReferenceEquals(firstKey, defaultKeys[0]) && ContainsIgnoreCase(ua, firstKey))
         {
             return firstValue;
         }
 
-        int index = 1;
-        foreach (SearchValues<string> group in HttpUserAgentStatics.s_robotTokenGroups)
+        if (HttpUserAgentRules.AreRobotsUnchanged())
         {
-            bool containsDefaultRobot = ua.ContainsAny(group);
-            int end = Math.Min(index + HttpUserAgentStatics.TokenGroupSize, robots.Length);
-            for (; index < end; index++)
+            // Few vectorized passes over the anchors rule out most user agents (browsers) before the full key search.
+            if (!HttpUserAgentRules.RobotAnchorMatcher.ContainsAny(ua))
             {
-                (string key, string value) = robots[index];
+                return null;
+            }
 
-                // The public array is mutable. Check any keys callers have replaced.
-                if ((containsDefaultRobot || !ReferenceEquals(key, HttpUserAgentStatics.s_defaultRobotKeys[index]))
-                    && ContainsIgnoreCase(ua, key))
+            int index = HttpUserAgentRules.RobotMatcher.Find(ua, 1, out _);
+            return index >= 0 ? robots[index].Value : null;
+        }
+
+        // The public array is mutable and callers replaced entries: default keys are filtered by group,
+        // replaced keys are checked one by one, in array order.
+        foreach (ref readonly PriorityTokenGroup group in HttpUserAgentRules.RobotMatcher.Groups)
+        {
+            bool mayMatchDefaultKey = group.MayMatch(ua);
+            for (int i = group.Start; i < group.End; i++)
+            {
+                (string key, string value) = robots[i];
+                if ((mayMatchDefaultKey || !ReferenceEquals(key, defaultKeys[i])) && ContainsIgnoreCase(ua, key))
                 {
                     return value;
                 }
@@ -225,38 +225,8 @@ public static class HttpUserAgentParser
     /// </summary>
     public static string? GetMobileDevice(string userAgent)
     {
-        ReadOnlySpan<char> ua = userAgent.AsSpan();
-#if NET9_0_OR_GREATER
-        ReadOnlySpan<string> keys = HttpUserAgentStatics.Mobiles.Keys.AsSpan();
-        ReadOnlySpan<string> values = HttpUserAgentStatics.Mobiles.Values.AsSpan();
-        for (int i = 0; i < HttpUserAgentStatics.s_mobileTokenGroups.Length; i++)
-        {
-            if (!ua.ContainsAny(HttpUserAgentStatics.s_mobileTokenGroups[i]))
-            {
-                continue;
-            }
-
-            int start = i * HttpUserAgentStatics.TokenGroupSize;
-            int end = Math.Min(start + HttpUserAgentStatics.TokenGroupSize, keys.Length);
-            for (int j = start; j < end; j++)
-            {
-                if (ContainsIgnoreCase(ua, keys[j]))
-                {
-                    return values[j];
-                }
-            }
-        }
-#else
-        foreach ((string key, string value) in HttpUserAgentStatics.Mobiles)
-        {
-            if (ContainsIgnoreCase(ua, key))
-            {
-                return value;
-            }
-        }
-#endif
-
-        return null;
+        int index = HttpUserAgentRules.MobileMatcher.Find(userAgent, 0, out _);
+        return index >= 0 ? HttpUserAgentRules.Mobiles[index].Value : null;
     }
 
     /// <summary>

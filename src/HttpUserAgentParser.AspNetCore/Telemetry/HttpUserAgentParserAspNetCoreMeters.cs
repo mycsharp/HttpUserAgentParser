@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using MyCSharp.HttpUserAgentParser.Telemetry;
@@ -15,7 +14,6 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 /// Instrument creation is performed once and guarded by a lock-free initialization
 /// check to minimize overhead on hot paths.
 /// </remarks>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserAspNetCoreMeters
 {
     /// <summary>
@@ -48,15 +46,6 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     private static Meter? s_meter;
     private static Counter<long>? s_userAgentPresent;
     private static Counter<long>? s_userAgentMissing;
-
-    /// <summary>
-    /// Gets a value indicating whether meter-based telemetry is enabled.
-    /// </summary>
-    /// <remarks>
-    /// Returns <see langword="true"/> once the meter and counters have been initialized.
-    /// </remarks>
-    public static bool IsEnabled
-        => Volatile.Read(ref s_initialized) != 0;
 
     /// <summary>
     /// Enables meter-based telemetry and initializes all metric instruments.

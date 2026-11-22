@@ -9,8 +9,13 @@ using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests.Telemetry;
 
-public class HttpUserAgentParserAspNetCoreTelemetryTests
+[Collection(TelemetryCollection.Name)]
+public sealed class HttpUserAgentParserAspNetCoreTelemetryTests : IDisposable
 {
+    public HttpUserAgentParserAspNetCoreTelemetryTests() => HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
+
+    public void Dispose() => HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
+
     [Fact]
     public void EventCounters_DoNotThrow_WhenEnabled()
     {

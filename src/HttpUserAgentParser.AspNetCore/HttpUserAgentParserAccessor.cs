@@ -6,10 +6,12 @@ using MyCSharp.HttpUserAgentParser.Providers;
 namespace MyCSharp.HttpUserAgentParser.AspNetCore;
 
 /// <summary>
-/// User Agent parser accessor. Implements <see cref="IHttpContextAccessor.HttpContext"/>
+/// User Agent parser accessor. Reads the User-Agent header of the given <see cref="HttpContext"/> and parses it
+/// with the registered <see cref="IHttpUserAgentParserProvider"/>.
 /// </summary>
 /// <remarks>
-/// Creates a new instance of <see cref="HttpUserAgentParserAccessor"/>
+/// The accessor does not depend on <see cref="IHttpContextAccessor"/>: the <see cref="HttpContext"/> is passed explicitly,
+/// e.g. from a controller, a minimal API handler or a middleware.
 /// </remarks>
 public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAgentParser)
     : IHttpUserAgentParserAccessor
@@ -17,13 +19,14 @@ public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAg
     private readonly IHttpUserAgentParserProvider _httpUserAgentParser = httpUserAgentParser;
 
     /// <summary>
-    /// User agent of current <see cref="IHttpContextAccessor"/>
+    /// Returns the User-Agent header of <paramref name="httpContext"/>
     /// </summary>
     public string? GetHttpContextUserAgent(HttpContext httpContext)
         => httpContext.GetUserAgentString();
 
     /// <summary>
-    /// Returns current <see cref="HttpUserAgentInformation"/> of current <see cref="IHttpContextAccessor"/>
+    /// Returns the parsed <see cref="HttpUserAgentInformation"/> of <paramref name="httpContext"/>,
+    /// or <see langword="null"/> if the request has no User-Agent header
     /// </summary>
     public HttpUserAgentInformation? Get(HttpContext httpContext)
     {

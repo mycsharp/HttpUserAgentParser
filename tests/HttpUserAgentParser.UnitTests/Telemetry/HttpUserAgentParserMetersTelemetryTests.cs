@@ -8,8 +8,13 @@ using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests.Telemetry;
 
-public class HttpUserAgentParserMetersTelemetryTests
+[Collection(TelemetryCollection.Name)]
+public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
 {
+    public HttpUserAgentParserMetersTelemetryTests() => HttpUserAgentParserTelemetry.ResetForTests();
+
+    public void Dispose() => HttpUserAgentParserTelemetry.ResetForTests();
+
     [Fact]
     public void Meters_DoNotEmit_WhenDisabled()
     {

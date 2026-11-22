@@ -40,6 +40,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.Benchma
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.TestHelpers", "tests\HttpUserAgentParser.TestHelpers\HttpUserAgentParser.TestHelpers.csproj", "{165EE915-1A4F-4875-90CE-1A2AE1540AE7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpUserAgentParser.NativeAot.Smoke", "tests\HttpUserAgentParser.NativeAot.Smoke\HttpUserAgentParser.NativeAot.Smoke.csproj", "{4E55304E-6429-429E-BBB6-7C096C38C96E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +80,10 @@ Global
 		{165EE915-1A4F-4875-90CE-1A2AE1540AE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{165EE915-1A4F-4875-90CE-1A2AE1540AE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{165EE915-1A4F-4875-90CE-1A2AE1540AE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E55304E-6429-429E-BBB6-7C096C38C96E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E55304E-6429-429E-BBB6-7C096C38C96E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E55304E-6429-429E-BBB6-7C096C38C96E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E55304E-6429-429E-BBB6-7C096C38C96E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,6 +97,7 @@ Global
 		{39FC1EC2-2AD3-411F-A545-AB6CCB94FB7E} = {F54C9296-4EF7-40F0-9F20-F23A2270ABC9}
 		{A0D213E9-6408-46D1-AFAF-5096C2F6E027} = {FAAD18A0-E1B8-448D-B611-AFBDA8A89808}
 		{165EE915-1A4F-4875-90CE-1A2AE1540AE7} = {F54C9296-4EF7-40F0-9F20-F23A2270ABC9}
+		{4E55304E-6429-429E-BBB6-7C096C38C96E} = {F54C9296-4EF7-40F0-9F20-F23A2270ABC9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E8B0C994-0BF2-4692-9E22-E48B265B2804}

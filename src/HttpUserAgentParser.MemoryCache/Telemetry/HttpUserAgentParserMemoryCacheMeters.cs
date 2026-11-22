@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using MyCSharp.HttpUserAgentParser.Telemetry;
@@ -10,7 +9,6 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 /// <summary>
 /// System.Diagnostics.Metrics instruments emitted by MyCSharp.HttpUserAgentParser.MemoryCache.
 /// </summary>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMemoryCacheMeters
 {
     private const string MeterNameSuffix = "http_user_agent_parser.memorycache";

@@ -5,6 +5,10 @@
         <Description>HTTP User Agent Parser Extensions for ASP.NET Core</Description>
     </PropertyGroup>
 
+    <PropertyGroup Label="Native AOT and trimming">
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+
     <PropertyGroup Label="Package">
         <IsPackable>true</IsPackable>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
