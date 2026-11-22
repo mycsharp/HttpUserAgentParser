@@ -33,20 +33,21 @@ internal static class HttpUserAgentRules
         ("windows nt 6.3", new(HttpUserAgentPlatformRegexId.WindowsNt63, "Windows 8.1", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.2", new(HttpUserAgentPlatformRegexId.WindowsNt62, "Windows 8", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.0", new(HttpUserAgentPlatformRegexId.WindowsNt60, "Windows Vista", HttpUserAgentPlatformType.Windows)),
+        // Windows Phone 8.1 and 10 user agents contain "Android" (and "iPhone"), so this comes first
+        ("windows phone", new(HttpUserAgentPlatformRegexId.WindowsPhone, "Windows Phone", HttpUserAgentPlatformType.Windows)),
         // Android (very common on mobile)
         ("android", new(HttpUserAgentPlatformRegexId.Android, "Android", HttpUserAgentPlatformType.Android)),
         // iOS devices (very common)
         ("iphone", new(HttpUserAgentPlatformRegexId.IPhone, "iOS", HttpUserAgentPlatformType.IOS)),
         ("ipad", new(HttpUserAgentPlatformRegexId.IPad, "iOS", HttpUserAgentPlatformType.IOS)),
         ("ipod", new(HttpUserAgentPlatformRegexId.IPod, "iOS", HttpUserAgentPlatformType.IOS)),
-        // ChromeOS (must be before "os x" to avoid false match with "CrOS")
-        ("cros", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)),
+        // ChromeOS ("CrOS x86_64"), before "os x", which "CrOS x86_64" contains; with the space, "Microsoft" does not match
+        ("cros ", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)),
         // Mac OS (common)
         ("os x", new(HttpUserAgentPlatformRegexId.OsX, "Mac OS X", HttpUserAgentPlatformType.MacOS)),
         // Linux (common)
         ("linux", new(HttpUserAgentPlatformRegexId.Linux, "Linux", HttpUserAgentPlatformType.Linux)),
         // Other Windows versions
-        ("windows phone", new(HttpUserAgentPlatformRegexId.WindowsPhone, "Windows Phone", HttpUserAgentPlatformType.Windows)),
         ("windows nt 5.2", new(HttpUserAgentPlatformRegexId.WindowsNt52, "Windows 2003", HttpUserAgentPlatformType.Windows)),
         ("windows nt 5.1", new(HttpUserAgentPlatformRegexId.WindowsNt51, "Windows XP", HttpUserAgentPlatformType.Windows)),
         ("windows nt 5.0", new(HttpUserAgentPlatformRegexId.WindowsNt50, "Windows 2000", HttpUserAgentPlatformType.Windows)),
@@ -110,7 +111,7 @@ internal static class HttpUserAgentRules
         ("Firefox", "Firefox", null),
         ("Firefox", "FxiOS", null),
         // Internet Explorer (legacy but still in use - MSIE before Trident to avoid false matches)
-        ("Internet Explorer", "MSIE", "MSIE "),
+        ("Internet Explorer", "MSIE", "MSIE"), // "MSIE 6.0"
         ("Internet Explorer", "Trident", "rv:"),
         ("Internet Explorer", "Internet Explorer", null),
         // Less common browsers
@@ -125,12 +126,15 @@ internal static class HttpUserAgentRules
         ("Phoenix", "Phoenix", null),
         ("iCab", "icab", null),
         ("Lynx", "Lynx", null),
+        ("ELinks", "ELinks", null),
         ("Links", "Links", null),
         ("HotJava", "hotjava", null),
         ("Amaya", "amaya", null),
         ("IBrowse", "IBrowse", null),
         ("Apple iPod", "ipod touch", null),
         ("Ubuntu Web Browser", "Ubuntu", null),
+        // Headless Chrome (automation): last, it costs other browsers nothing there
+        ("Chrome", "HeadlessChrome", null),
     ];
 
     /// <summary>
@@ -234,7 +238,7 @@ internal static class HttpUserAgentRules
         ( "MistralAI-User", "MistralAI-User" ),
         ( "DuckAssistBot", "DuckAssistBot" ),
         ( "AI2Bot", "AI2Bot" ),
-        ( "YouBot", "YouBot" ),
+        ( "YouBot/", "YouBot" ), // "YouBot" alone would match "ShowyouBot"
     ];
 
     /// <summary>

@@ -32,4 +32,15 @@ public class HttpUserAgentParserAccessorTests
         // verify
         _parserMock.Received(1).Parse(userAgent);
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Get_Returns_Null_For_An_Empty_User_Agent(string userAgent)
+    {
+        HttpUserAgentParserAccessor accessor = new(_parserMock);
+
+        Assert.Null(accessor.Get(HttpContextTestHelpers.GetHttpContext(userAgent)));
+        _parserMock.DidNotReceiveWithAnyArgs().Parse(default!);
+    }
 }

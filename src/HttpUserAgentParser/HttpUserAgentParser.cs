@@ -19,8 +19,9 @@ public static class HttpUserAgentParser
 
     /// <summary>
     /// Characters that end a product token ("product/version") or a comment entry of a user agent.
+    /// A token starts at the beginning of the user agent or after one of them; <c>+</c> stands for a space in URL-encoded logs.
     /// </summary>
-    private static readonly SearchValues<char> s_productTokenDelimiters = SearchValues.Create(" \t;(),");
+    private static readonly SearchValues<char> s_productTokenDelimiters = SearchValues.Create(" \t;(),+");
 
     /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
@@ -109,53 +110,65 @@ public static class HttpUserAgentParser
     /// <summary>
     /// returns the browser or null
     /// </summary>
+    /// <remarks>
+    /// Rules are evaluated in priority order (specific browsers before the browsers their user agents contain); the first rule
+    /// with a version wins. Browser and version tokens only count at the start of a token, i.e. at the beginning of the user agent
+    /// or after a space, tab, <c>+</c>, <c>;</c>, <c>(</c>, <c>)</c> or <c>,</c>.
+    /// </remarks>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
 
-        // Rules are evaluated in priority order (specific browsers before the browsers their user agents contain).
         foreach ((string name, string detectToken, string? versionToken) in HttpUserAgentRules.Browsers)
         {
-            if (TryIndexOf(ua, detectToken, out int detectIndex)
-                && TryReadBrowserVersion(ua, detectToken, detectIndex, versionToken, out Range version))
+            // Fast path: most rules do not match at all, and a match usually starts a token.
+            int detectIndex = ua.IndexOf(detectToken, StringComparison.OrdinalIgnoreCase);
+            if (detectIndex < 0)
+            {
+                continue;
+            }
+
+            if (!IsTokenStart(ua, detectIndex))
+            {
+                detectIndex = IndexOfTokenStart(ua, detectToken, detectIndex + 1);
+                if (detectIndex < 0)
+                {
+                    continue;
+                }
+            }
+
+            if (TryReadBrowserVersion(ua, detectToken, detectIndex, versionToken, out Range version))
             {
                 return (name, ua[version].ToString());
             }
-
-            // Token not found or without version: try the next rule
         }
 
         return null;
     }
 
     /// <summary>
-    /// Reads the version of a browser rule whose detect token occurs first at <paramref name="detectIndex"/>.
+    /// Reads the version of a browser rule whose detect token starts a token at <paramref name="detectIndex"/> first.
     /// </summary>
     private static bool TryReadBrowserVersion(ReadOnlySpan<char> ua, string detectToken, int detectIndex, string? versionToken, out Range version)
     {
         if (versionToken is null)
         {
-            // Pattern Token/<version>. Without '/' the token is likely a misspelling or part of another word (e.g. Edgg, Oprea, Chromee).
-            return TryReadVersionAfter(ua, detectToken, detectIndex, slashRequired: true, out version);
+            // "Token/1.2". Without '/' the token is likely a misspelling or another product (e.g. Edgg, Oprea, ChromeHelper).
+            return TryReadVersion(ua, detectToken, detectIndex, allowSpace: false, out version);
         }
 
-        // A separate version token (e.g. Safari "Version/") only counts at the start of a token:
-        // in "VendorVersion/120.0" or "Vendor-Version/120.0" the version belongs to another product.
-        bool sameToken = string.Equals(detectToken, versionToken, StringComparison.Ordinal);
-        int versionIndex = IndexOfTokenStart(ua, versionToken, sameToken ? detectIndex : 0);
+        // A separate version token ("Version/1.2", "rv:11.0"); with the same token as the detect token (Safari "Version/",
+        // "MSIE 6.0") the detect token has been found already.
+        int versionIndex = string.Equals(detectToken, versionToken, StringComparison.Ordinal)
+            ? detectIndex
+            : IndexOfTokenStart(ua, versionToken, 0);
         if (versionIndex >= 0)
         {
-            return TryReadVersionAfter(ua, versionToken, versionIndex, slashRequired: false, out version);
+            return TryReadVersion(ua, versionToken, versionIndex, allowSpace: true, out version);
         }
 
-        // Without version token the version follows the detect token (e.g. "Opera/9.80"), unless both are the same.
-        if (sameToken)
-        {
-            version = default;
-            return false;
-        }
-
-        return TryReadVersionAfter(ua, detectToken, detectIndex, slashRequired: false, out version);
+        // Without version token the version follows the detect token ("Opera/9.80", "Opera 9.50").
+        return TryReadVersion(ua, detectToken, detectIndex, allowSpace: true, out version);
     }
 
     /// <summary>
@@ -163,17 +176,24 @@ public static class HttpUserAgentParser
     /// if that one has none, after a later occurrence that starts a token.
     /// </summary>
     /// <remarks>
-    /// The given occurrence may continue a word, as before (<c>HeadlessChrome/120</c> is Chrome); later occurrences must start
-    /// a token, so <c>MyChrome/2.0</c> does not count. The search continues behind the product token examined before, because
-    /// a token cannot start inside it; so every character is examined once, independent of the number of occurrences.
+    /// <para>
+    /// The version follows the token as <c>Token/1.2</c> (the first digits of the product token, which ends at the next
+    /// delimiter), directly after a token that ends with its separator (<c>Version/1.2</c>, <c>rv:11.0</c>) or, if
+    /// <paramref name="allowSpace"/> is set, as <c>Token 1.2</c> (<c>MSIE 6.0</c>, <c>Opera 9.50</c>, also with <c>+</c>).
+    /// </para>
+    /// <para>
+    /// The search continues behind the characters examined before, where no token can start; so every character is
+    /// examined a constant number of times, independent of the number of occurrences.
+    /// </para>
     /// </remarks>
-    private static bool TryReadVersionAfter(ReadOnlySpan<char> ua, string token, int index, bool slashRequired, out Range version)
+    private static bool TryReadVersion(ReadOnlySpan<char> ua, string token, int index, bool allowSpace, out Range version)
     {
+        bool separatorIncluded = token[^1] is '/' or ':';
         do
         {
             int end = index + token.Length;
             int next = index + 1;
-            if (!slashRequired || (end < ua.Length && ua[end] == '/'))
+            if (separatorIncluded || (end < ua.Length && ua[end] == '/'))
             {
                 if (TryExtractVersion(ua[end..], out Range range, out int productTokenLength))
                 {
@@ -183,6 +203,23 @@ public static class HttpUserAgentParser
 
                 next = end + productTokenLength;
             }
+            else if (allowSpace && end < ua.Length && IsSpace(ua[end]))
+            {
+                int versionStart = end + 1;
+                while (versionStart < ua.Length && IsSpace(ua[versionStart]))
+                {
+                    versionStart++;
+                }
+
+                if (versionStart < ua.Length && char.IsAsciiDigit(ua[versionStart]))
+                {
+                    int length = ua[versionStart..].IndexOfAnyExcept(s_versionCharacters);
+                    version = new Range(versionStart, length < 0 ? ua.Length : versionStart + length);
+                    return true;
+                }
+
+                next = versionStart;
+            }
 
             index = IndexOfTokenStart(ua, token, next);
         }
@@ -191,6 +228,19 @@ public static class HttpUserAgentParser
         version = default;
         return false;
     }
+
+    /// <summary>
+    /// Returns whether a token at <paramref name="index"/> starts a token of its own (at the beginning or after a delimiter).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsTokenStart(ReadOnlySpan<char> ua, int index)
+        => index == 0 || s_productTokenDelimiters.Contains(ua[index - 1]);
+
+    /// <summary>
+    /// Returns whether <paramref name="c"/> separates a product name from its version in <c>Token 1.2</c>
+    /// (<c>+</c> stands for a space in URL-encoded logs).
+    /// </summary>
+    private static bool IsSpace(char c) => c is ' ' or '\t' or '+';
 
     /// <summary>
     /// Returns the index of the first occurrence of <paramref name="token"/> at or after <paramref name="start"/>
@@ -207,7 +257,7 @@ public static class HttpUserAgentParser
             }
 
             int index = start + offset;
-            if (index == 0 || s_productTokenDelimiters.Contains(ua[index - 1]))
+            if (IsTokenStart(ua, index))
             {
                 return index;
             }

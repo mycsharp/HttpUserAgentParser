@@ -116,6 +116,9 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
         Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("acme"));
         Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("acme-"));
         Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("acme.."));
+        Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("."));
+        Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("\u00E4."));
+        Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("\uFF11."));
     }
 
     [Fact]
@@ -128,34 +131,76 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
             options.WithMeterTelemetryPrefix("repeated.");
         }
 
-        Assert.Equal(1, CountLiveMeters("repeated.http_user_agent_parser"));
+        Assert.Equal((1, 5), CountLiveMeters("repeated.http_user_agent_parser"));
     }
 
     [Fact]
-    public void A_Replaced_Own_Meter_Is_Disposed_But_A_Meter_Of_The_Caller_Is_Not()
+    public void Own_Meters_Are_Reused_Per_Name_And_Meters_Of_The_Caller_Stay_Alive()
     {
         HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
         using Meter callerMeter = new("caller.http_user_agent_parser");
 
         options.WithMeterTelemetryPrefix("first.");
         options.WithMeterTelemetryPrefix("second.");
-        Assert.Equal(0, CountLiveMeters("first.http_user_agent_parser"));
-        Assert.Equal(1, CountLiveMeters("second.http_user_agent_parser"));
-
+        options.WithMeterTelemetryPrefix("first."); // reuses the meter and the instruments of the first registration
         options.WithMeterTelemetry(callerMeter);
-        Assert.Equal(0, CountLiveMeters("second.http_user_agent_parser"));
+        options.WithMeterTelemetry();
 
-        options.WithMeterTelemetry(); // the default meter replaces the meter of the caller
-        Assert.Equal(1, CountLiveMeters("caller.http_user_agent_parser"));
-        Assert.Equal(1, CountLiveMeters("mycsharp.http_user_agent_parser"));
+        Assert.Equal((1, 5), CountLiveMeters("first.http_user_agent_parser"));
+        Assert.Equal((1, 5), CountLiveMeters("second.http_user_agent_parser"));
+        Assert.Equal((1, 5), CountLiveMeters("caller.http_user_agent_parser"));
+        Assert.Equal((1, 5), CountLiveMeters("mycsharp.http_user_agent_parser"));
+    }
+
+    [Fact]
+    public async Task No_Measurement_Is_Lost_While_Own_Meters_Are_Switched()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        long recorded = 0;
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (instrument.Meter.Name.StartsWith("switch.", StringComparison.Ordinal)
+                    && string.Equals(instrument.Name, "parse.requests", StringComparison.Ordinal))
+                {
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        listener.SetMeasurementEventCallback<long>((_, value, _, _) => Interlocked.Add(ref recorded, value));
+        listener.Start();
+
+        HttpUserAgentParserMeters.EnableOwnedMeter("switch.a");
+        using CancellationTokenSource stop = new(TimeSpan.FromMilliseconds(300));
+        Task switcher = Task.Run(
+            () =>
+            {
+                for (int i = 0; !stop.IsCancellationRequested; i++)
+                {
+                    HttpUserAgentParserMeters.EnableOwnedMeter(i % 2 == 0 ? "switch.b" : "switch.a");
+                }
+            },
+            cancellationToken);
+
+        long measurements = 0;
+        while (!stop.IsCancellationRequested)
+        {
+            HttpUserAgentParserMeters.ParseRequest();
+            measurements++;
+        }
+
+        await switcher;
+        Assert.Equal(measurements, Interlocked.Read(ref recorded));
     }
 
     /// <summary>
     /// Counts the meters with instruments that a new listener sees, i.e. the meters that are not disposed.
     /// </summary>
-    private static int CountLiveMeters(string meterName)
+    private static (int Meters, int Instruments) CountLiveMeters(string meterName)
     {
         HashSet<Meter> meters = [];
+        int instruments = 0;
         using MeterListener listener = new()
         {
             InstrumentPublished = (instrument, _) =>
@@ -163,10 +208,44 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
                 if (string.Equals(instrument.Meter.Name, meterName, StringComparison.Ordinal))
                 {
                     meters.Add(instrument.Meter);
+                    instruments++;
                 }
             },
         };
         listener.Start();
-        return meters.Count;
+        return (meters.Count, instruments);
+    }
+
+    [Fact]
+    public void Core_And_MemoryCache_Cannot_Share_A_Meter()
+    {
+        using Meter shared = new("test.guard.shared");
+        using Meter other = new("test.guard.other");
+        using Meter third = new("test.guard.third");
+
+        HttpUserAgentParserCacheMeterGuard.UseForCore(shared);
+        Assert.Throws<ArgumentException>(() => HttpUserAgentParserCacheMeterGuard.UseForMemoryCache(shared));
+
+        HttpUserAgentParserCacheMeterGuard.UseForMemoryCache(other);
+        Assert.Throws<ArgumentException>(() => HttpUserAgentParserCacheMeterGuard.UseForCore(other));
+
+        // The core package moves to another meter, so the MemoryCache package may use the first one.
+        HttpUserAgentParserCacheMeterGuard.UseForCore(third);
+        HttpUserAgentParserCacheMeterGuard.UseForMemoryCache(shared);
+
+        HttpUserAgentParserCacheMeterGuard.ResetMemoryCacheForTests();
+    }
+
+    [Fact]
+    public void WithMeterTelemetry_Rejects_The_Meter_Of_The_MemoryCache_Package()
+    {
+        using Meter shared = new("test.guard.memorycache");
+        HttpUserAgentParserCacheMeterGuard.UseForMemoryCache(shared);
+
+        HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
+        Assert.Throws<ArgumentException>(() => options.WithMeterTelemetry(shared));
+        Assert.False(HttpUserAgentParserTelemetry.IsEnabled);
+
+        HttpUserAgentParserCacheMeterGuard.ResetMemoryCacheForTests();
     }
 }

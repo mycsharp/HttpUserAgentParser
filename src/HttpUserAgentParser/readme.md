@@ -2,7 +2,8 @@
 
 Fast HTTP User-Agent parsing for .NET.
 
-- Allocation-free detection with vectorized `SearchValues` (only the version string is allocated), no regular expressions in the parser
+- Allocation-free detection with vectorized searches (`SearchValues<string>` on .NET 9+); for a user agent without surrounding
+  white space only the version string is allocated; no regular expressions in the parser
 - Trimming and Native AOT compatible
 - Detects the most used browsers and current search engine, SEO and AI crawlers
 
@@ -27,7 +28,7 @@ HttpUserAgentInformation info = HttpUserAgentParser.Parse(userAgent);
 
 The parser itself does not execute regular expressions. `HttpUserAgentStatics.Platforms`, `HttpUserAgentStatics.Browsers`
 and `HttpUserAgentPlatformInformation.Regex` provide source-generated regular expressions (`[GeneratedRegex]`) for your own
-matching; they are created on first access. They use `RegexOptions.IgnoreCase` with culture-invariant case mapping and
+matching; the browser regexes are created when `HttpUserAgentStatics` is first used, a platform regex on first access. They use `RegexOptions.IgnoreCase` with culture-invariant case mapping and
 no `RegexOptions.Compiled`, because the source generator already emits the matching code.
 
 ## Native AOT
@@ -109,7 +110,9 @@ services
 
 Pass your own `Meter` to `WithMeterTelemetry(meter)` to record to it. A later registration with another meter replaces the
 previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
-Meters the package creates itself (without argument or with a prefix) are created once per name and disposed when they are replaced.
+Meters the package creates itself (without argument or with a prefix) are created once per name and reused.
+The core and the MemoryCache package need separate meters (both create `cache.hit`, `cache.miss` and `cache.size`); passing the meter
+of one to the other throws an `ArgumentException`.
 
 ### Meter + instruments
 

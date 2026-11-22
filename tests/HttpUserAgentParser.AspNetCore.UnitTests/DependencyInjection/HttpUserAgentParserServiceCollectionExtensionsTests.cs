@@ -52,4 +52,28 @@ public class HttpUserAgentParserDependencyInjectionOptionsExtensionsTests
         Assert.IsType<HttpUserAgentParserAccessor>(provider.GetRequiredService<IHttpUserAgentParserAccessor>());
         Assert.IsType<HttpUserAgentParserContextAccessor>(provider.GetRequiredService<IHttpUserAgentParserContextAccessor>());
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Accessor_Registrations_Are_Idempotent_In_Any_Order(bool contextAccessorFirst)
+    {
+        ServiceCollection services = new();
+        HttpUserAgentParserDependencyInjectionOptions options = services.AddHttpUserAgentParser();
+
+        if (contextAccessorFirst)
+        {
+            options.AddHttpUserAgentParserContextAccessor().AddHttpUserAgentParserAccessor();
+        }
+        else
+        {
+            options.AddHttpUserAgentParserAccessor().AddHttpUserAgentParserContextAccessor();
+        }
+
+        options.AddHttpUserAgentParserContextAccessor().AddHttpUserAgentParserAccessor();
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Single(provider.GetServices<IHttpUserAgentParserAccessor>());
+        Assert.Single(provider.GetServices<IHttpUserAgentParserContextAccessor>());
+    }
 }

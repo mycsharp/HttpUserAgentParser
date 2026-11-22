@@ -30,7 +30,7 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// </summary>
     /// <param name="meterPrefix">
     /// The prefix to use. When null, the default prefix is used. When empty,
-    /// no prefix is applied. Otherwise, the prefix must be alphanumeric and end with '.'.
+    /// no prefix is applied. Otherwise, the prefix must be ASCII letters or digits followed by '.'.
     /// </param>
     /// <returns>The full meter name.</returns>
     /// <exception cref="ArgumentException">Thrown when the prefix is not empty and does not match the required format.</exception>
@@ -44,9 +44,9 @@ internal static class HttpUserAgentParserAspNetCoreMeters
 #endif
 
     /// <summary>
-    /// The meter this class created and uses (the default meter or a meter with a prefixed name), if any.
+    /// The meters this class created (the default meter and meters with a prefixed name), by name.
     /// </summary>
-    private static Meter? s_ownedMeter;
+    private static readonly Dictionary<string, Meter> s_ownedMeters = new(StringComparer.Ordinal);
 
     private static Instruments? s_instruments;
 
@@ -71,7 +71,7 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// Creates the metric instruments on a meter named <paramref name="meterName"/> that this class creates and owns.
     /// </summary>
     /// <remarks>
-    /// An owned meter is created once per name; it is disposed when another meter replaces it.
+    /// An owned meter is created once per name and reused when the name is registered again.
     /// </remarks>
     public static void EnableOwnedMeter(string meterName) => Use(null, meterName);
 
@@ -82,28 +82,16 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     {
         lock (s_lock)
         {
-            Meter? previousOwnedMeter = s_ownedMeter;
-            if (meter is null)
+            // Own meters are created once per name and kept: a replaced meter is not disposed, so a measurement that read
+            // the previous instruments just before the switch is still recorded. Meters of the caller are never disposed.
+            if (meter is null && !s_ownedMeters.TryGetValue(ownedMeterName, out meter))
             {
-                meter = previousOwnedMeter is not null && string.Equals(previousOwnedMeter.Name, ownedMeterName, StringComparison.Ordinal)
-                    ? previousOwnedMeter
-                    : new Meter(ownedMeterName);
-                s_ownedMeter = meter;
-            }
-            else
-            {
-                s_ownedMeter = null;
+                meter = new Meter(ownedMeterName);
+                s_ownedMeters.Add(ownedMeterName, meter);
             }
 
             // Instruments are created once per meter and published only after all of them exist.
             Volatile.Write(ref s_instruments, s_instrumentsByMeter.GetValue(meter, static m => new Instruments(m)));
-
-            // A replaced owned meter is no longer used: dispose it, so repeated registrations do not keep meters alive.
-            // Meters passed in by the caller are never disposed.
-            if (previousOwnedMeter is not null && !ReferenceEquals(previousOwnedMeter, meter))
-            {
-                previousOwnedMeter.Dispose();
-            }
         }
     }
 
@@ -129,8 +117,12 @@ internal static class HttpUserAgentParserAspNetCoreMeters
         lock (s_lock)
         {
             Volatile.Write(ref s_instruments, null);
-            s_ownedMeter?.Dispose();
-            s_ownedMeter = null;
+            foreach (Meter ownedMeter in s_ownedMeters.Values)
+            {
+                ownedMeter.Dispose();
+            }
+
+            s_ownedMeters.Clear();
             s_instrumentsByMeter.Clear();
         }
     }

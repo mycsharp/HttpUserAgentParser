@@ -316,9 +316,24 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 Version/ XVersion/1.0 Version/17.0 Safari/604.1", "Safari", "17.0")]
     [InlineData("Version/17.0 Safari/604.1", "Safari", "17.0")]
     [InlineData("Opera/9.80 Vendor-Version/120.0", "Opera", "9.80")]
-    // Later occurrences only count at the start of a token; the first one may continue a word, as before
+    // Browser tokens only count at the start of a token
     [InlineData("ChromeHelper/1 MyChrome/2.0 Firefox/126.0", "Firefox", "126.0")]
+    [InlineData("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) MyChrome/2.0 Chrome/120.0.0.0 Safari/537.36", "Chrome", "120.0.0.0")]
+    [InlineData("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Knowledge/1.0", "Chrome", "120.0.0.0")]
     [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.109 Safari/537.36", "Chrome", "120.0.6099.109")]
+    [InlineData("ELinks/0.12pre6 (textmode; Linux; 80x24-2)", "ELinks", "0.12")]
+    // "+" separates tokens like a space (URL-encoded logs, e.g. IIS)
+    [InlineData("Mozilla/5.0+(iPhone;+CPU+iPhone+OS+9_3_1+like+Mac+OS+X)+AppleWebKit/601.1.46+(KHTML,+like+Gecko)+Version/9.0+Mobile/13E238+Safari/601.1", "Safari", "9.0")]
+    [InlineData("Mozilla/5.0+(Windows+NT+10.0;+WOW64;+Trident/7.0;+rv:11.0)+like+Gecko", "Internet Explorer", "11.0")]
+    [InlineData("Opera/9.80+(Windows+NT+6.1;+WOW64)+Presto/2.12.388+Version/12.18", "Opera", "12.18")]
+    [InlineData("Mozilla/4.0+(compatible;+MSIE+8.0;+Windows+NT+6.1;+Trident/4.0)", "Internet Explorer", "8.0")]
+    // "Token 1.2" for rules with a version token
+    [InlineData("Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; en) Opera 8.50", "Opera", "8.50")]
+    [InlineData("Mozilla/5.0 (Windows NT 6.0; U; en; rv:1.8.1) Gecko/20061208 Firefox/2.0.0 Opera 9.51", "Opera", "9.51")]
+    [InlineData("LG-GD710/V10f; Mozilla/5.0 (Profile/MIDP-2.0 Configuration/CLDC-1.1; Opera Mini/att/4.2.14812; U; en) Opera 9.50", "Opera", "9.50")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE  6.0; Windows NT 5.1)", "Internet Explorer", "6.0")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE	6.0; Windows NT 5.1)", "Internet Explorer", "6.0")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE MSIE 7.0; Windows NT 5.1)", "Internet Explorer", "7.0")]
     public void GetBrowser_Reads_The_Version_Of_Its_Own_Product_Token(string userAgent, string expectedName, string expectedVersion)
     {
         (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(userAgent);
@@ -332,6 +347,10 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 Firefox/(X11) 120")]
     [InlineData("Mozilla/5.0 VendorVersion/120.0 Safari/604.1")]
     [InlineData("Mozilla/5.0 Chrome/ Chrome")]
+    [InlineData("Checklinks/1.3 (pywikipedia robot; http://toolserver.org/~dispenser/view/Checklinks)")]
+    [InlineData("Mozilla/5.0 (compatible; TridentSpider/3.1)")]
+    [InlineData("Mozilla/5.0 Opera")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE ")]
     public void GetBrowser_Does_Not_Take_The_Version_Of_Another_Product(string userAgent)
     {
         Assert.Null(HttpUserAgentParser.GetBrowser(userAgent));
@@ -342,6 +361,8 @@ public class HttpUserAgentParserTests
     [InlineData("Chrome/a ")] // many product tokens
     [InlineData("Version/a")]
     [InlineData("Version/a ")]
+    [InlineData("MSIE ")]
+    [InlineData("Opera+a ")]
     public void GetBrowser_Time_Grows_Linearly_With_Repeated_Tokens(string repeated)
     {
         // A search that rescans the rest of the user agent for every occurrence needs seconds for 1,000,000 characters.
@@ -361,5 +382,22 @@ public class HttpUserAgentParserTests
     public void GetBrowser_ExtractsAsciiVersion(string userAgent, string expectedVersion)
     {
         Assert.Equal(expectedVersion, HttpUserAgentParser.GetBrowser(userAgent)?.Version);
+    }
+
+    [Theory]
+    [InlineData("Microsoft Office/16.0 (Macintosh; Mac OS X 10.15.7; Microsoft Outlook 16.80.23121017; Pro)", "Mac OS X")]
+    [InlineData("Microsoft-CryptoAPI/10.0", null)]
+    [InlineData("Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "ChromeOS")]
+    [InlineData("Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Mobile Safari/537.36 Edge/15.15063", "Windows Phone")]
+    public void GetPlatform_Detects_ChromeOS_And_Windows_Phone_Only_By_Their_Own_Tokens(string userAgent, string? expectedPlatform)
+    {
+        Assert.Equal(expectedPlatform, HttpUserAgentParser.GetPlatform(userAgent)?.Name);
+    }
+
+    [Fact]
+    public void GetRobot_Does_Not_Match_YouBot_Inside_Another_Name()
+    {
+        Assert.Null(HttpUserAgentParser.GetRobot("ShowyouBot (http://showyou.com/crawler)"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; YouBot/1.0; +https://docs.you.com/youbot; env:prod) Chrome/X.X.X.X Safari/537.36"));
     }
 }

@@ -18,10 +18,14 @@ public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
     /// the <see cref="HttpContext"/> is passed explicitly, e.g. <c>accessor.Get(httpContext)</c>.
     ///  Requires a registered <see cref="IHttpUserAgentParserProvider"/>
     /// </summary>
+    /// <remarks>
+    /// Does nothing if an <see cref="IHttpUserAgentParserAccessor"/> is already registered, e.g. by
+    /// <see cref="AddHttpUserAgentParserContextAccessor"/>, whose accessor supports <c>Get(httpContext)</c> as well.
+    /// </remarks>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParserAccessor(
         this HttpUserAgentParserDependencyInjectionOptions options)
     {
-        options.Services.AddSingleton<IHttpUserAgentParserAccessor, HttpUserAgentParserAccessor>();
+        options.Services.TryAddSingleton<IHttpUserAgentParserAccessor, HttpUserAgentParserAccessor>();
         return options;
     }
 
@@ -33,13 +37,13 @@ public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
     /// </summary>
     /// <remarks>
     /// <see cref="IHttpContextAccessor"/> has a small cost on every request; prefer <see cref="AddHttpUserAgentParserAccessor"/>
-    /// when the <see cref="HttpContext"/> is at hand.
+    /// when the <see cref="HttpContext"/> is at hand. Calling this method again has no effect.
     /// </remarks>
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParserContextAccessor(
         this HttpUserAgentParserDependencyInjectionOptions options)
     {
         options.Services.AddHttpContextAccessor();
-        options.Services.AddSingleton<IHttpUserAgentParserContextAccessor, HttpUserAgentParserContextAccessor>();
+        options.Services.TryAddSingleton<IHttpUserAgentParserContextAccessor, HttpUserAgentParserContextAccessor>();
         options.Services.TryAddSingleton<IHttpUserAgentParserAccessor>(
             static serviceProvider => serviceProvider.GetRequiredService<IHttpUserAgentParserContextAccessor>());
         return options;

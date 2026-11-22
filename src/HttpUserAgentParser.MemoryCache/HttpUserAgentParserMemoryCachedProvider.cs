@@ -6,11 +6,14 @@ using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache;
 
-/// <inheritdoc/>
+/// <inheritdoc cref="IHttpUserAgentParserProvider"/>
 /// <summary>
 /// <see cref="IHttpUserAgentParserProvider"/> that caches the results in an <see cref="IMemoryCache"/>.
 /// </summary>
-public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvider
+/// <remarks>
+/// The provider owns its <see cref="IMemoryCache"/>; disposing the provider disposes the cache.
+/// </remarks>
+public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvider, IDisposable
 {
     /// <summary>
     /// The name of the Meter used for metrics.
@@ -60,18 +63,31 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
     }
 
     /// <summary>
+    /// Disposes the internal <see cref="IMemoryCache"/>; the provider must not be used afterwards.
+    /// </summary>
+    public void Dispose()
+    {
+        HttpUserAgentParserMemoryCacheTelemetryState.Unregister(this);
+        _memoryCache.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Parses the user agent and adds the result to the cache (miss path).
     /// </summary>
     /// <remarks>
+    /// Every entry gets all <see cref="HttpUserAgentParserMemoryCachedProviderOptions.CacheEntryOptions"/>
+    /// (expiration, priority, expiration tokens, eviction callbacks) and the size 1, unless the options specify a size.
     /// Like other cache implementations, concurrent misses of the same user agent may parse it more than once; the last result is kept.
     /// </remarks>
     private HttpUserAgentInformation ParseAndCache(string userAgent)
     {
         HttpUserAgentInformation information = HttpUserAgentParser.Parse(userAgent);
 
+        MemoryCacheEntryOptions entryOptions = _options.CacheEntryOptions;
         using ICacheEntry entry = _memoryCache.CreateEntry(userAgent);
-        entry.SlidingExpiration = _options.CacheEntryOptions.SlidingExpiration;
-        entry.Size = 1;
+        entry.SetOptions(entryOptions);
+        entry.Size = entryOptions.Size ?? 1;
         entry.Value = information;
 
         if (HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)

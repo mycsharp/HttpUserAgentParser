@@ -19,7 +19,7 @@ public interface IHttpUserAgentParserAccessor
 
     /// <summary>
     /// Returns the parsed <see cref="HttpUserAgentInformation"/> of <paramref name="httpContext"/>,
-    /// or <see langword="null"/> without User-Agent header
+    /// or <see langword="null"/> without User-Agent header (or with only white space)
     /// </summary>
     HttpUserAgentInformation? Get(HttpContext httpContext);
 }

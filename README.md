@@ -87,7 +87,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-> `AddHttpUserAgentMemoryCachedParser` registers `HttpUserAgentParserMemoryCachedProvider` as singleton which contains an isolated `MemoryCache` object.
+> `AddHttpUserAgentMemoryCachedParser` registers `HttpUserAgentParserMemoryCachedProvider` as singleton which contains an isolated `MemoryCache` object; the container disposes the provider and its cache. Every entry gets all `CacheEntryOptions` (e.g. `AbsoluteExpirationRelativeToNow`, `Priority`, expiration tokens, eviction callbacks) and the size 1, unless `CacheEntryOptions.Size` is set.
 
 ### ASP.NET Core
 
@@ -119,7 +119,7 @@ Now you can use
 // e.g. in a controller, a minimal API handler or a middleware
 public void MyMethod(IHttpUserAgentParserAccessor parserAccessor, HttpContext httpContext)
 {
-    HttpUserAgentInformation? info = parserAccessor.Get(httpContext); // null if the request has no User-Agent header
+    HttpUserAgentInformation? info = parserAccessor.Get(httpContext); // null if the request has no (or an empty) User-Agent header
 }
 
 // in any service, with AddHttpUserAgentParserContextAccessor()
@@ -140,11 +140,13 @@ If you only need the raw header value, use `httpContext.GetUserAgentString()`.
 3. **Mobile device**: devices and manufacturers before operating systems before mobile browsers before generic tokens (e.g. a Samsung phone reports `Samsung`, an Android phone without manufacturer token `Android`)
 4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Yandex Browser, UC Browser and others
 
-In every list the first matching entry wins. A browser version is read from the browser's own product token (`Chrome/131.0.0.0`), which ends at the next space, tab, `;`, `(`, `)` or `,`. A token starts at the beginning or after one of these characters. A separate version token such as Safari's `Version/` only counts at the start of a token, so `VendorVersion/1.0` and `Vendor-Version/1.0` are ignored. If the browser token has no version, later occurrences that start a token are checked, then the next rule. Brave and Vivaldi send the same user agent as Chrome and are reported as Chrome; iPadOS sends the macOS user agent by default.
+In every list the first matching entry wins. Browser and version tokens only count at the start of a token: at the beginning of the user agent or after a space, tab, `+`, `;`, `(`, `)` or `,`, so `Knowledge/1.0` is no Edge and `VendorVersion/1.0` no version token. The version is read from the browser's own product token (`Chrome/131.0.0.0`), which ends at the next of these characters; Opera and Internet Explorer also accept `Opera 9.50` and `MSIE 6.0`. If a token has no version, later occurrences of the token are checked, then the next rule. `+` stands for a space as in URL-encoded logs (IIS); decode other encodings such as `%20` before parsing, e.g. with `WebUtility.UrlDecode`.
+
+Brave and Vivaldi send the same user agent as Chrome and are reported as Chrome, as is Headless Chrome; iPadOS sends the macOS user agent by default.
 
 ### `HttpUserAgentStatics` and regular expressions
 
-The parser does not execute regular expressions. `HttpUserAgentStatics.Platforms`, `HttpUserAgentStatics.Browsers` and `HttpUserAgentPlatformInformation.Regex` still provide regular expressions for your own matching. They are generated at compile time with `[GeneratedRegex]` (no runtime compilation, trimming and Native AOT compatible) and are only created on first access; the browser patterns capture the version in group 1.
+The parser does not execute regular expressions. `HttpUserAgentStatics.Platforms`, `HttpUserAgentStatics.Browsers` and `HttpUserAgentPlatformInformation.Regex` still provide regular expressions for your own matching. They are generated at compile time with `[GeneratedRegex]` (no runtime compilation, trimming and Native AOT compatible) and are created on first use: the browser regexes when `HttpUserAgentStatics` is first used (including `HttpUserAgentStatics.Robots`), a platform regex on first access of `HttpUserAgentPlatformInformation.Regex`. The browser patterns capture the version in group 1.
 
 The patterns use `RegexOptions.IgnoreCase` with culture-invariant case mapping, so a match does not depend on the current culture (e.g. `LINUX` matches `linux` under `tr-TR` as well). `RegexOptions.Compiled` is not set, because the source generator already emits the matching code.
 
@@ -284,7 +286,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments. The package creates its own meters (without argument or with a prefix) once per name and disposes them when they are replaced; meters you pass in are never disposed.
+Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments. The package creates its own meters (without argument or with a prefix) once per name and reuses them; meters you pass in are never disposed. The core and the MemoryCache package need separate meters, because both create the instruments `cache.hit`, `cache.miss` and `cache.size`; passing the meter that one of them uses to the other throws an `ArgumentException`. The ASP.NET Core package may share a meter with either.
 
 ### Meter names and instruments
 
@@ -323,7 +325,7 @@ public void ConfigureServices(IServiceCollection services)
 Rules:
 
 - `""` (empty) is allowed and removes the prefix.
-- Otherwise the prefix must be **alphanumeric** and **end with `.`**.
+- Otherwise the prefix must be **ASCII letters or digits** followed by **`.`** (e.g. `acme.`).
 
 Example results:
 
@@ -456,9 +458,9 @@ Mixed workload: the catalog user agents parsed in a loop, mean time per user age
 
 | Workload | .NET 8.0.34 | .NET 9.0.23 | .NET 10.0.15 | .NET 11.0.0 | Allocated |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 44 browser user agents | 758.5 ns | 372.0 ns | 353.1 ns | 302.1 ns | 38 B |
-| 48 crawler user agents | 369.9 ns | 192.6 ns | 167.4 ns | 159.4 ns | 0 B |
-| All 96 user agents | 589.0 ns | 291.1 ns | 285.7 ns | 240.7 ns | 18 B |
+| 44 browser user agents | 764.5 ns | 367.4 ns | 365.5 ns | 298.4 ns | 38 B |
+| 48 crawler user agents | 385.4 ns | 186.2 ns | 177.3 ns | 160.5 ns | 0 B |
+| All 96 user agents | 597.6 ns | 295.1 ns | 282.0 ns | 247.5 ns | 18 B |
 
 .NET 8 has no `SearchValues<string>`; the parser checks the tokens one by one there.
 
@@ -466,13 +468,13 @@ Single user agents on .NET 11:
 
 | User agent | Mean | Allocated |
 | --- | ---: | ---: |
-| Chrome on Windows | 255.8 ns | 40 B |
-| Firefox on Linux | 352.8 ns | 32 B |
-| Chrome on Android | 282.1 ns | 40 B |
-| Safari on iPhone | 302.5 ns | 32 B |
-| Applebot | 192.0 ns | 0 B |
-| Googlebot | 9.54 ns | 0 B |
-| Unknown client | 421.7 ns | 0 B |
+| Chrome on Windows | 254.7 ns | 40 B |
+| Firefox on Linux | 356.4 ns | 32 B |
+| Chrome on Android | 289.8 ns | 40 B |
+| Safari on iPhone | 306.0 ns | 32 B |
+| Applebot | 178.5 ns | 0 B |
+| Googlebot | 9.58 ns | 0 B |
+| Unknown client | 411.4 ns | 0 B |
 
 Startup in a new .NET 11 process (median of 7 runs):
 

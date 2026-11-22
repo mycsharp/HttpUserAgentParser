@@ -107,34 +107,76 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
             options.WithAspNetCoreMeterTelemetryPrefix("repeated.");
         }
 
-        Assert.Equal(1, CountLiveMeters("repeated.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), CountLiveMeters("repeated.http_user_agent_parser.aspnetcore"));
     }
 
     [Fact]
-    public void A_Replaced_Own_Meter_Is_Disposed_But_A_Meter_Of_The_Caller_Is_Not()
+    public void Own_Meters_Are_Reused_Per_Name_And_Meters_Of_The_Caller_Stay_Alive()
     {
         HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
         using Meter callerMeter = new("caller.http_user_agent_parser.aspnetcore");
 
         options.WithAspNetCoreMeterTelemetryPrefix("first.");
         options.WithAspNetCoreMeterTelemetryPrefix("second.");
-        Assert.Equal(0, CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
-        Assert.Equal(1, CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
-
+        options.WithAspNetCoreMeterTelemetryPrefix("first."); // reuses the meter and the instruments of the first registration
         options.WithAspNetCoreMeterTelemetry(callerMeter);
-        Assert.Equal(0, CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
+        options.WithAspNetCoreMeterTelemetry();
 
-        options.WithAspNetCoreMeterTelemetry(); // the default meter replaces the meter of the caller
-        Assert.Equal(1, CountLiveMeters("caller.http_user_agent_parser.aspnetcore"));
-        Assert.Equal(1, CountLiveMeters("mycsharp.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), CountLiveMeters("caller.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), CountLiveMeters("mycsharp.http_user_agent_parser.aspnetcore"));
+    }
+
+    [Fact]
+    public async Task No_Measurement_Is_Lost_While_Own_Meters_Are_Switched()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        long recorded = 0;
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (instrument.Meter.Name.StartsWith("switch.", StringComparison.Ordinal)
+                    && string.Equals(instrument.Name, "user_agent.present", StringComparison.Ordinal))
+                {
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        listener.SetMeasurementEventCallback<long>((_, value, _, _) => Interlocked.Add(ref recorded, value));
+        listener.Start();
+
+        HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter("switch.a");
+        using CancellationTokenSource stop = new(TimeSpan.FromMilliseconds(300));
+        Task switcher = Task.Run(
+            () =>
+            {
+                for (int i = 0; !stop.IsCancellationRequested; i++)
+                {
+                    HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter(i % 2 == 0 ? "switch.b" : "switch.a");
+                }
+            },
+            cancellationToken);
+
+        long measurements = 0;
+        while (!stop.IsCancellationRequested)
+        {
+            HttpUserAgentParserAspNetCoreMeters.UserAgentPresent();
+            measurements++;
+        }
+
+        await switcher;
+        Assert.Equal(measurements, Interlocked.Read(ref recorded));
     }
 
     /// <summary>
     /// Counts the meters with instruments that a new listener sees, i.e. the meters that are not disposed.
     /// </summary>
-    private static int CountLiveMeters(string meterName)
+    private static (int Meters, int Instruments) CountLiveMeters(string meterName)
     {
         HashSet<Meter> meters = [];
+        int instruments = 0;
         using MeterListener listener = new()
         {
             InstrumentPublished = (instrument, _) =>
@@ -142,10 +184,11 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
                 if (string.Equals(instrument.Meter.Name, meterName, StringComparison.Ordinal))
                 {
                     meters.Add(instrument.Meter);
+                    instruments++;
                 }
             },
         };
         listener.Start();
-        return meters.Count;
+        return (meters.Count, instruments);
     }
 }

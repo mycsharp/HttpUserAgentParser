@@ -24,6 +24,10 @@ public static class HttpUserAgentParserDependencyInjectionOptionsTelemetryExtens
     /// <summary>
     /// Enables native System.Diagnostics.Metrics telemetry for the MemoryCache provider.
     /// </summary>
+    /// <exception cref="System.ArgumentException">
+    /// <paramref name="meter"/> is used by the other cache package: the core and the MemoryCache package need separate meters,
+    /// because both create the instruments <c>cache.hit</c>, <c>cache.miss</c> and <c>cache.size</c>.
+    /// </exception>
     public static HttpUserAgentParserDependencyInjectionOptions WithMemoryCacheMeterTelemetry(
         this HttpUserAgentParserDependencyInjectionOptions options,
         Meter? meter = null)

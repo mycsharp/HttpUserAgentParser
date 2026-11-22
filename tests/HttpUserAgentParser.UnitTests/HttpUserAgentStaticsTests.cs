@@ -164,7 +164,9 @@ public class HttpUserAgentStaticsTests
     {
         foreach ((string token, HttpUserAgentPlatformInformation platform) in HttpUserAgentRules.Platforms)
         {
-            Assert.Equal(Regex.Escape(token), platform.Regex.ToString());
+            // The public pattern is the token; the parser token "cros " ends with a space, so "Microsoft" is no ChromeOS.
+            Assert.Equal(Regex.Escape(token.TrimEnd()), platform.Regex.ToString());
+            Assert.Matches(platform.Regex, token);
             Assert.Contains(platform, HttpUserAgentStatics.Platforms);
         }
     }

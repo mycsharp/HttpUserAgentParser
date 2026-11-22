@@ -27,12 +27,12 @@ public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAg
 
     /// <summary>
     /// Returns the parsed <see cref="HttpUserAgentInformation"/> of <paramref name="httpContext"/>,
-    /// or <see langword="null"/> if the request has no User-Agent header
+    /// or <see langword="null"/> if the request has no User-Agent header or only white space
     /// </summary>
     public HttpUserAgentInformation? Get(HttpContext httpContext)
     {
         string? httpUserAgent = GetHttpContextUserAgent(httpContext);
-        if (string.IsNullOrEmpty(httpUserAgent))
+        if (string.IsNullOrWhiteSpace(httpUserAgent))
         {
             return null;
         }

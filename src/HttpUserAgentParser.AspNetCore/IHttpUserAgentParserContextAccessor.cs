@@ -23,7 +23,7 @@ public interface IHttpUserAgentParserContextAccessor : IHttpUserAgentParserAcces
 
     /// <summary>
     /// Returns the parsed <see cref="HttpUserAgentInformation"/> of the current request,
-    /// or <see langword="null"/> outside of a request or without User-Agent header
+    /// or <see langword="null"/> outside of a request or without User-Agent header (or with only white space)
     /// </summary>
     HttpUserAgentInformation? Get();
 }

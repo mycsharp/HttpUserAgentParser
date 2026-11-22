@@ -25,6 +25,7 @@ Then inject `IHttpUserAgentParserProvider`:
 public sealed class MyService(IHttpUserAgentParserProvider parser)
 {
 	public HttpUserAgentInformation Parse(string userAgent) => parser.Parse(userAgent);
+}
 ```
 
 ### Configure cache
@@ -39,8 +40,11 @@ services.AddHttpUserAgentMemoryCachedParser(options =>
 
 Notes:
 
-- Each unique user-agent string counts as one cache entry.
-- The provider is registered as singleton and owns its internal `MemoryCache` instance.
+- Each unique user-agent string counts as one cache entry (the exact string, ordinal).
+- Every entry gets all `CacheEntryOptions` (e.g. `AbsoluteExpirationRelativeToNow`, `Priority`, expiration tokens, eviction callbacks)
+  and the size 1, unless `CacheEntryOptions.Size` is set.
+- The provider is registered as singleton and owns its internal `MemoryCache` instance; disposing the provider (the container does
+  that) disposes the cache.
 - Like any cache, concurrent requests for a new key can race; counters are best-effort.
 
 ## Telemetry (EventCounters)
@@ -101,7 +105,9 @@ services
 
 Pass your own `Meter` to `WithMemoryCacheMeterTelemetry(meter)` to record to it. A later registration with another meter
 replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
-Meters the package creates itself (without argument or with a prefix) are created once per name and disposed when they are replaced.
+Meters the package creates itself (without argument or with a prefix) are created once per name and reused.
+The core and the MemoryCache package need separate meters (both create `cache.hit`, `cache.miss` and `cache.size`); passing the meter
+of one to the other throws an `ArgumentException`.
 
 ### Meter + instruments
 

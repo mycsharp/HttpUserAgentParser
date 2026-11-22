@@ -25,6 +25,10 @@ public static class HttpUserAgentParserDependencyInjectionOptionsTelemetryExtens
     /// Enables native System.Diagnostics.Metrics telemetry for the parser.
     /// This is opt-in to keep the default path free of telemetry overhead.
     /// </summary>
+    /// <exception cref="System.ArgumentException">
+    /// <paramref name="meter"/> is used by the other cache package: the core and the MemoryCache package need separate meters,
+    /// because both create the instruments <c>cache.hit</c>, <c>cache.miss</c> and <c>cache.size</c>.
+    /// </exception>
     public static HttpUserAgentParserDependencyInjectionOptions WithMeterTelemetry(
         this HttpUserAgentParserDependencyInjectionOptions options,
         Meter? meter = null)

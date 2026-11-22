@@ -21,6 +21,16 @@ internal static class HttpUserAgentParserMemoryCacheTelemetryState
     public static void Register(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.Add(provider, null);
 
     /// <summary>
+    /// Removes a disposed provider, whose entries no longer count.
+    /// </summary>
+    public static void Unregister(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.Remove(provider);
+
+    /// <summary>
+    /// Gets whether the entries of <paramref name="provider"/> count towards <see cref="CacheSize"/>.
+    /// </summary>
+    public static bool IsRegistered(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.TryGetValue(provider, out _);
+
+    /// <summary>
     /// Gets the number of entries of all live memory caches.
     /// </summary>
     /// <remarks>
