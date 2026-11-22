@@ -100,7 +100,7 @@ services
 ```
 
 Pass your own `Meter` to `WithMemoryCacheMeterTelemetry(meter)` to record to it. A later registration with another meter
-replaces the previous one; registering the meter in use again has no effect.
+replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
 
 ### Meter + instruments
 

@@ -140,7 +140,7 @@ If you only need the raw header value, use `httpContext.GetUserAgentString()`.
 3. **Mobile device**: devices and manufacturers before operating systems before mobile browsers before generic tokens (e.g. a Samsung phone reports `Samsung`, an Android phone without manufacturer token `Android`)
 4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Yandex Browser, UC Browser and others
 
-In every list the first matching entry wins. Brave and Vivaldi send the same user agent as Chrome and are reported as Chrome; iPadOS sends the macOS user agent by default.
+In every list the first matching entry wins. A browser version is read from the browser's own product token (`Chrome/131.0.0.0`); a separate version token such as Safari's `Version/` only counts at the start of a token, so `VendorVersion/1.0` is ignored. If a token has no version, the next occurrence of the token and then the next rule is checked. Brave and Vivaldi send the same user agent as Chrome and are reported as Chrome; iPadOS sends the macOS user agent by default.
 
 ### `HttpUserAgentStatics` and regular expressions
 
@@ -284,7 +284,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one; registering the meter in use again has no effect.
+Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
 
 ### Meter names and instruments
 
@@ -456,9 +456,9 @@ Mixed workload: the catalog user agents parsed in a loop, mean time per user age
 
 | Workload | .NET 8.0.34 | .NET 9.0.23 | .NET 10.0.15 | .NET 11.0.0 | Allocated |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 44 browser user agents | 781.8 ns | 364.1 ns | 362.7 ns | 290.9 ns | 38 B |
-| 48 crawler user agents | 384.1 ns | 184.7 ns | 170.8 ns | 171.3 ns | 0 B |
-| All 96 user agents | 599.6 ns | 292.1 ns | 280.2 ns | 234.5 ns | 18 B |
+| 44 browser user agents | 751.2 ns | 359.9 ns | 358.0 ns | 291.3 ns | 38 B |
+| 48 crawler user agents | 370.5 ns | 187.1 ns | 175.2 ns | 164.4 ns | 0 B |
+| All 96 user agents | 586.1 ns | 290.4 ns | 276.2 ns | 243.6 ns | 18 B |
 
 .NET 8 has no `SearchValues<string>`; the parser checks the tokens one by one there.
 
@@ -466,13 +466,13 @@ Single user agents on .NET 11:
 
 | User agent | Mean | Allocated |
 | --- | ---: | ---: |
-| Chrome on Windows | 244.5 ns | 40 B |
-| Firefox on Linux | 345.3 ns | 32 B |
-| Chrome on Android | 262.6 ns | 40 B |
-| Safari on iPhone | 300.7 ns | 32 B |
-| Applebot | 179.2 ns | 0 B |
-| Googlebot | 9.44 ns | 0 B |
-| Unknown client | 422.1 ns | 0 B |
+| Chrome on Windows | 249.4 ns | 40 B |
+| Firefox on Linux | 352.4 ns | 32 B |
+| Chrome on Android | 267.1 ns | 40 B |
+| Safari on iPhone | 295.2 ns | 32 B |
+| Applebot | 182.5 ns | 0 B |
+| Googlebot | 9.45 ns | 0 B |
+| Unknown client | 404.8 ns | 0 B |
 
 Startup in a new .NET 11 process (median of 7 runs):
 

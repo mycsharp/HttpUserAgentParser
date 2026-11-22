@@ -11,7 +11,8 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// </summary>
 /// <remarks>
 /// All instruments of a meter are created before they become visible to the parser, so concurrent
-/// registrations never observe a partially initialized state. The last registered meter is used.
+/// registrations never observe a partially initialized state. The last registered meter is used; a replaced meter
+/// no longer reports the cache size.
 /// </remarks>
 internal static class HttpUserAgentParserMeters
 {
@@ -47,6 +48,11 @@ internal static class HttpUserAgentParserMeters
     private static Instruments? s_instruments;
 
     /// <summary>
+    /// The instruments of every registered meter; a meter registered again reuses its instruments.
+    /// </summary>
+    private static readonly ConditionalWeakTable<Meter, Instruments> s_instrumentsByMeter = new();
+
+    /// <summary>
     /// Gets whether meters have been initialized.
     /// </summary>
     public static bool IsEnabled => Volatile.Read(ref s_instruments) is not null;
@@ -60,20 +66,16 @@ internal static class HttpUserAgentParserMeters
     /// Creates the metric instruments on <paramref name="meter"/> (or on a default meter) and uses them from now on.
     /// </summary>
     /// <remarks>
-    /// Registering the meter that is already in use has no effect; another meter replaces it.
+    /// Another meter replaces the one in use. A meter that is registered again reuses its instruments.
     /// </remarks>
     public static void Enable(Meter? meter = null)
     {
         lock (s_lock)
         {
             meter ??= s_defaultMeter ??= new Meter(MeterName);
-            if (ReferenceEquals(s_instruments?.Meter, meter))
-            {
-                return;
-            }
 
-            // Publish the instruments only after all of them exist.
-            Volatile.Write(ref s_instruments, new Instruments(meter));
+            // Instruments are created once per meter and published only after all of them exist.
+            Volatile.Write(ref s_instruments, s_instrumentsByMeter.GetValue(meter, static m => new Instruments(m)));
         }
     }
 
@@ -110,40 +112,60 @@ internal static class HttpUserAgentParserMeters
         {
             Volatile.Write(ref s_instruments, null);
             s_defaultMeter = null;
+            s_instrumentsByMeter.Clear();
         }
     }
 
     /// <summary>
     /// The instruments of one meter.
     /// </summary>
-    private sealed class Instruments(Meter meter)
+    private sealed class Instruments
     {
-        public Meter Meter { get; } = meter;
+        public Instruments(Meter meter)
+        {
+            ParseRequests = meter.CreateCounter<long>(
+                name: "parse.requests",
+                unit: "{call}",
+                description: "User-Agent parse requests");
 
-        public Counter<long> ParseRequests { get; } = meter.CreateCounter<long>(
-            name: "parse.requests",
-            unit: "{call}",
-            description: "User-Agent parse requests");
+            ParseDuration = meter.CreateHistogram<double>(
+                name: "parse.duration",
+                unit: "s",
+                description: "Parse duration");
 
-        public Histogram<double> ParseDuration { get; } = meter.CreateHistogram<double>(
-            name: "parse.duration",
-            unit: "s",
-            description: "Parse duration");
+            CacheHit = meter.CreateCounter<long>(
+                name: "cache.hit",
+                unit: "{call}",
+                description: "Cache hit");
 
-        public Counter<long> CacheHit { get; } = meter.CreateCounter<long>(
-            name: "cache.hit",
-            unit: "{call}",
-            description: "Cache hit");
+            CacheMiss = meter.CreateCounter<long>(
+                name: "cache.miss",
+                unit: "{call}",
+                description: "Cache miss");
 
-        public Counter<long> CacheMiss { get; } = meter.CreateCounter<long>(
-            name: "cache.miss",
-            unit: "{call}",
-            description: "Cache miss");
+            CacheSize = meter.CreateObservableGauge(
+                name: "cache.size",
+                observeValues: ObserveCacheSize,
+                unit: "{entry}",
+                description: "Cache size");
+        }
 
-        public ObservableGauge<long> CacheSize { get; } = meter.CreateObservableGauge<long>(
-            name: "cache.size",
-            observeValue: static () => HttpUserAgentParserTelemetryState.ConcurrentCacheSize,
-            unit: "{entry}",
-            description: "Cache size");
+        public Counter<long> ParseRequests { get; }
+
+        public Histogram<double> ParseDuration { get; }
+
+        public Counter<long> CacheHit { get; }
+
+        public Counter<long> CacheMiss { get; }
+
+        public ObservableGauge<long> CacheSize { get; }
+
+        /// <summary>
+        /// Reports the cache size only while these instruments are in use, so a replaced meter does not report it as well.
+        /// </summary>
+        private IEnumerable<Measurement<long>> ObserveCacheSize()
+            => ReferenceEquals(Volatile.Read(ref s_instruments), this)
+                ? [new Measurement<long>(HttpUserAgentParserTelemetryState.ConcurrentCacheSize)]
+                : [];
     }
 }

@@ -47,6 +47,11 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     private static Instruments? s_instruments;
 
     /// <summary>
+    /// The instruments of every registered meter; a meter registered again reuses its instruments.
+    /// </summary>
+    private static readonly ConditionalWeakTable<Meter, Instruments> s_instrumentsByMeter = new();
+
+    /// <summary>
     /// Creates the metric instruments on <paramref name="meter"/> (or on a default meter) and uses them from now on.
     /// </summary>
     /// <param name="meter">
@@ -54,20 +59,16 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// a meter named <see cref="MeterName"/> is used.
     /// </param>
     /// <remarks>
-    /// Registering the meter that is already in use has no effect; another meter replaces it.
+    /// Another meter replaces the one in use. A meter that is registered again reuses its instruments.
     /// </remarks>
     public static void Enable(Meter? meter = null)
     {
         lock (s_lock)
         {
             meter ??= s_defaultMeter ??= new Meter(MeterName);
-            if (ReferenceEquals(s_instruments?.Meter, meter))
-            {
-                return;
-            }
 
-            // Publish the instruments only after all of them exist.
-            Volatile.Write(ref s_instruments, new Instruments(meter));
+            // Instruments are created once per meter and published only after all of them exist.
+            Volatile.Write(ref s_instruments, s_instrumentsByMeter.GetValue(meter, static m => new Instruments(m)));
         }
     }
 
@@ -94,6 +95,7 @@ internal static class HttpUserAgentParserAspNetCoreMeters
         {
             Volatile.Write(ref s_instruments, null);
             s_defaultMeter = null;
+            s_instrumentsByMeter.Clear();
         }
     }
 
@@ -102,8 +104,6 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// </summary>
     private sealed class Instruments(Meter meter)
     {
-        public Meter Meter { get; } = meter;
-
         public Counter<long> UserAgentPresent { get; } = meter.CreateCounter<long>(
             name: "user_agent.present",
             unit: "{call}",

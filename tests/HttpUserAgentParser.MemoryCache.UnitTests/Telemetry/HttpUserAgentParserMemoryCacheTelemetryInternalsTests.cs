@@ -48,6 +48,30 @@ public sealed class HttpUserAgentParserMemoryCacheTelemetryInternalsTests : IDis
     }
 
     [Fact]
+    public void Only_The_Meter_In_Use_Reports_The_Cache_Size()
+    {
+        using Meter first = new("test.memorycache.size.first");
+        using Meter second = new("test.memorycache.size.second");
+        using MeterTestListener firstListener = new("test.memorycache.size.first");
+        using MeterTestListener secondListener = new("test.memorycache.size.second");
+
+        HttpUserAgentParserMemoryCacheMeters.Enable(first);
+        HttpUserAgentParserMemoryCacheMeters.Enable(second);
+        firstListener.RecordObservableInstruments();
+        secondListener.RecordObservableInstruments();
+
+        Assert.Empty(firstListener.InstrumentNames);
+        Assert.Equal(new[] { "cache.size" }, secondListener.InstrumentNames, StringComparer.Ordinal);
+
+        HttpUserAgentParserMemoryCacheMeters.Enable(first); // reuses the instruments of the first meter
+        firstListener.RecordObservableInstruments();
+        secondListener.RecordObservableInstruments();
+
+        Assert.Equal(new[] { "cache.size" }, firstListener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Equal(new[] { "cache.size" }, secondListener.InstrumentNames, StringComparer.Ordinal);
+    }
+
+    [Fact]
     public void EventSource_Ignores_Calls_Without_Listener()
     {
         HttpUserAgentParserMemoryCacheEventSource source = HttpUserAgentParserMemoryCacheEventSource.Log;

@@ -22,127 +22,60 @@ public class HttpUserAgentParserMemoryCachedProvider(
     private readonly Microsoft.Extensions.Caching.Memory.MemoryCache _memoryCache = new(options.CacheOptions);
     private readonly HttpUserAgentParserMemoryCachedProviderOptions _options = options;
 
+    /// <summary>
+    /// Number of cached user agents.
+    /// </summary>
+    internal int CacheEntryCount => _memoryCache.Count;
+
     /// <inheritdoc/>
     /// <remarks>
-    /// This method includes performance optimizations for telemetry:
-    /// <list type="bullet">
-    /// <item><description>Telemetry checks use a volatile flag to ensure zero overhead when disabled.</description></item>
-    /// <item><description>Cache size tracking (via <see cref="Interlocked"/> and <see cref="CacheEntryExtensions.RegisterPostEvictionCallback(ICacheEntry, PostEvictionDelegate)"/>) is skipped entirely if the size metric is not enabled to avoid allocations.</description></item>
-    /// </list>
+    /// The user agent string itself is the cache key (ordinal comparison), so a cache hit does not allocate.
+    /// Telemetry checks use a volatile flag to ensure zero overhead when disabled; cache size tracking
+    /// (via <see cref="Interlocked"/> and <see cref="CacheEntryExtensions.RegisterPostEvictionCallback(ICacheEntry, PostEvictionDelegate)"/>)
+    /// is skipped entirely if the size metric is not enabled.
     /// </remarks>
     public HttpUserAgentInformation Parse(string userAgent)
     {
-        CacheKey key = GetKey(userAgent);
-
-        if (!HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)
+        if (_memoryCache.TryGetValue(userAgent, out HttpUserAgentInformation cached))
         {
-            return ParseWithoutTelemetry(key);
-        }
+            if (HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)
+            {
+                HttpUserAgentParserMemoryCacheTelemetry.CacheHit();
+            }
 
-        if (_memoryCache.TryGetValue(key, out HttpUserAgentInformation cached))
-        {
-            HttpUserAgentParserMemoryCacheTelemetry.CacheHit();
             return cached;
         }
 
-        return _memoryCache.GetOrCreate(key, static entry =>
-        {
-            CacheKey key = (entry.Key as CacheKey)!;
-            entry.SlidingExpiration = key.Options.CacheEntryOptions.SlidingExpiration;
-            entry.SetSize(1);
+        return ParseAndCache(userAgent);
+    }
 
-            // Miss path. Note: Like other cache implementations, races can happen; counters are best-effort.
+    /// <summary>
+    /// Parses the user agent and adds the result to the cache (miss path).
+    /// </summary>
+    /// <remarks>
+    /// Like other cache implementations, concurrent misses of the same user agent may parse it more than once; the last result is kept.
+    /// </remarks>
+    private HttpUserAgentInformation ParseAndCache(string userAgent)
+    {
+        HttpUserAgentInformation information = HttpUserAgentParser.Parse(userAgent);
+
+        using ICacheEntry entry = _memoryCache.CreateEntry(userAgent);
+        entry.SlidingExpiration = _options.CacheEntryOptions.SlidingExpiration;
+        entry.Size = 1;
+        entry.Value = information;
+
+        if (HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)
+        {
             HttpUserAgentParserMemoryCacheTelemetry.CacheMiss();
 
             if (HttpUserAgentParserMemoryCacheTelemetry.IsCacheSizeEnabled)
             {
-                // Optimization: Avoid Interlocked overhead and delegate allocation if telemetry is disabled.
+                // The eviction callback also runs if the cache rejects the entry because of its size limit.
                 HttpUserAgentParserMemoryCacheTelemetry.CacheSizeIncrement();
                 entry.RegisterPostEvictionCallback(static (_, _, _, _) => HttpUserAgentParserMemoryCacheTelemetry.CacheSizeDecrement());
             }
+        }
 
-            return HttpUserAgentParser.Parse(key.UserAgent);
-        });
-    }
-
-    /// <summary>
-    /// Parses the user agent string using the memory cache without emitting telemetry.
-    /// </summary>
-    private HttpUserAgentInformation ParseWithoutTelemetry(CacheKey key)
-    {
-        return _memoryCache.GetOrCreate(key, static entry =>
-        {
-            CacheKey key = (entry.Key as CacheKey)!;
-
-            entry.SlidingExpiration = key.Options.CacheEntryOptions.SlidingExpiration;
-            entry.SetSize(1);
-
-            return HttpUserAgentParser.Parse(key.UserAgent);
-        });
-    }
-
-    /// <summary>
-    /// Thread-local reusable cache key instance to avoid per-call allocations.
-    /// </summary>
-    /// <remarks>
-    /// Marked as <see langword="ThreadStatic"/> to ensure thread safety without locking.
-    /// </remarks>
-    [ThreadStatic]
-    private static CacheKey? s_tKey;
-
-    /// <summary>
-    /// Gets a cache key instance initialized for the specified user agent.
-    /// </summary>
-    /// <remarks>
-    /// Reuses a thread-local instance to minimize allocations. The returned instance
-    /// must not be stored or shared across threads.
-    /// </remarks>
-    private CacheKey GetKey(string userAgent)
-    {
-        CacheKey key = s_tKey ??= new CacheKey();
-
-        key.UserAgent = userAgent;
-        key.Options = _options;
-
-        return key;
-    }
-
-    /// <summary>
-    /// Cache key used for memory-cached HTTP User-Agent parsing.
-    /// </summary>
-    /// <remarks>
-    /// Implements <see cref="IEquatable{T}"/> as required by <c>IMemoryCache</c>
-    /// to ensure correct key comparison semantics.
-    /// </remarks>
-    internal sealed class CacheKey : IEquatable<CacheKey> // required for IMemoryCache
-    {
-        /// <summary>
-        /// Gets or sets the raw User-Agent string.
-        /// </summary>
-        public string UserAgent { get; set; } = null!;
-
-        /// <summary>
-        /// Gets or sets the cache configuration options associated with this key.
-        /// </summary>
-        public HttpUserAgentParserMemoryCachedProviderOptions Options { get; set; } = null!;
-
-        /// <summary>
-        /// Determines equality based on the User-Agent string, ignoring case.
-        /// </summary>
-        public bool Equals(CacheKey? other)
-            => string.Equals(UserAgent, other?.UserAgent, StringComparison.OrdinalIgnoreCase);
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-            => Equals(obj as CacheKey);
-
-        /// <summary>
-        /// Returns a hash code based on the User-Agent string.
-        /// </summary>
-        /// <remarks>
-        /// Uses ordinal comparison for performance and consistency with the cache.
-        /// </remarks>
-        public override int GetHashCode()
-            => UserAgent.GetHashCode(StringComparison.Ordinal);
+        return information;
     }
 }

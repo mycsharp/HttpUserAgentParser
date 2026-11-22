@@ -48,6 +48,25 @@ public sealed class HttpUserAgentParserAspNetCoreTelemetryInternalsTests : IDisp
     }
 
     [Fact]
+    public void A_Meter_Registered_Again_Reuses_Its_Instruments()
+    {
+        using Meter first = new("test.aspnetcore.again.first");
+        using Meter second = new("test.aspnetcore.again.second");
+        int published = 0;
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) => published += instrument.Meter == first ? 1 : 0,
+        };
+        listener.Start();
+
+        HttpUserAgentParserAspNetCoreMeters.Enable(first);
+        HttpUserAgentParserAspNetCoreMeters.Enable(second);
+        HttpUserAgentParserAspNetCoreMeters.Enable(first);
+
+        Assert.Equal(2, published); // user_agent.present and user_agent.missing, once
+    }
+
+    [Fact]
     public void EventSource_Ignores_Calls_Without_Listener()
     {
         HttpUserAgentParserAspNetCoreEventSource source = HttpUserAgentParserAspNetCoreEventSource.Log;

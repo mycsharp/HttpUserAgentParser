@@ -307,6 +307,13 @@ public class HttpUserAgentParserTests
     [InlineData("SamsungBrowser/ Chrome/131.0.0.0 Safari/537.36", "Chrome", "131.0.0.0")]
     [InlineData("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)", "Internet Explorer", "8.0")]
     [InlineData("Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko", "Internet Explorer", "11.0")]
+    // A later occurrence of the same token carries the version
+    [InlineData("Chrome/ Chrome/131.0", "Chrome", "131.0")]
+    [InlineData("Mozilla/5.0 Version/ Mobile Version/17.0 Safari/604.1", "Safari", "17.0")]
+    // A version token inside another word belongs to another product
+    [InlineData("Opera/9.80 VendorVersion/120.0", "Opera", "9.80")]
+    [InlineData("Mozilla/5.0 Version/ XVersion/1.0 Version/17.0 Safari/604.1", "Safari", "17.0")]
+    [InlineData("Version/17.0 Safari/604.1", "Safari", "17.0")]
     public void GetBrowser_Reads_The_Version_Of_Its_Own_Product_Token(string userAgent, string expectedName, string expectedVersion)
     {
         (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(userAgent);
@@ -318,6 +325,8 @@ public class HttpUserAgentParserTests
     [InlineData("Chrome/ Safari/537.36")]
     [InlineData("Mozilla/5.0 (iPhone) Version/ Mobile/15E148 Safari/604.1")]
     [InlineData("Mozilla/5.0 Firefox/(X11) 120")]
+    [InlineData("Mozilla/5.0 VendorVersion/120.0 Safari/604.1")]
+    [InlineData("Mozilla/5.0 Chrome/ Chrome")]
     public void GetBrowser_Does_Not_Take_The_Version_Of_Another_Product(string userAgent)
     {
         Assert.Null(HttpUserAgentParser.GetBrowser(userAgent));

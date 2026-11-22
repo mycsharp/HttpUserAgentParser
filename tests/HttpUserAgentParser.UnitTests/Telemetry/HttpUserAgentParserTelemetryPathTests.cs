@@ -75,6 +75,30 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
     }
 
     [Fact]
+    public void Only_The_Meter_In_Use_Reports_The_Cache_Size()
+    {
+        using Meter first = new("test.size.first");
+        using Meter second = new("test.size.second");
+        using MeterTestListener firstListener = new("test.size.first");
+        using MeterTestListener secondListener = new("test.size.second");
+
+        HttpUserAgentParserTelemetry.EnableMeters(first);
+        HttpUserAgentParserTelemetry.EnableMeters(second);
+        firstListener.RecordObservableInstruments();
+        secondListener.RecordObservableInstruments();
+
+        Assert.Empty(firstListener.InstrumentNames);
+        Assert.Equal(new[] { "cache.size" }, secondListener.InstrumentNames, StringComparer.Ordinal);
+
+        HttpUserAgentParserTelemetry.EnableMeters(first); // reuses the instruments of the first meter
+        firstListener.RecordObservableInstruments();
+        secondListener.RecordObservableInstruments();
+
+        Assert.Equal(new[] { "cache.size" }, firstListener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Equal(new[] { "cache.size" }, secondListener.InstrumentNames, StringComparer.Ordinal);
+    }
+
+    [Fact]
     public void Registering_The_Same_Meter_Again_Keeps_The_Instruments()
     {
         using Meter meter = new("test.same");

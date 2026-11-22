@@ -116,40 +116,93 @@ public static class HttpUserAgentParser
         // Rules are evaluated in priority order (specific browsers before the browsers their user agents contain).
         foreach ((string name, string detectToken, string? versionToken) in HttpUserAgentRules.Browsers)
         {
-            if (!TryIndexOf(ua, detectToken, out int detectIndex))
+            if (TryIndexOf(ua, detectToken, out int detectIndex)
+                && TryReadBrowserVersion(ua, detectToken, detectIndex, versionToken, out Range version))
             {
-                continue;
+                return (name, ua[version].ToString());
             }
 
-            int versionSearchStart = detectIndex + detectToken.Length;
-
-            if (versionToken is null)
-            {
-                // For rules without a specific version token, ensure pattern Token/<digits>
-                if (versionSearchStart >= ua.Length || ua[versionSearchStart] != '/')
-                {
-                    // Likely a misspelling or partial token (e.g., Edgg, Oprea, Chromee)
-                    continue;
-                }
-            }
-            else if (TryIndexOf(ua, versionToken, out int versionTokenIndex))
-            {
-                // Version token may differ (e.g., Safari uses "Version/")
-                versionSearchStart = versionTokenIndex + versionToken.Length;
-            }
-
-            // Otherwise (version token not found) the version is searched after the detect token.
-            ReadOnlySpan<char> search = ua[versionSearchStart..];
-            if (TryExtractVersion(search, out Range range))
-            {
-                return (name, search[range].ToString());
-            }
-
-            // If we didn't find a version for this rule, try next rule
+            // Token not found or without version: try the next rule
         }
 
         return null;
     }
+
+    /// <summary>
+    /// Reads the version of a browser rule whose detect token occurs at <paramref name="detectIndex"/> (first occurrence).
+    /// </summary>
+    private static bool TryReadBrowserVersion(ReadOnlySpan<char> ua, string detectToken, int detectIndex, string? versionToken, out Range version)
+    {
+        if (versionToken is null)
+        {
+            // Pattern Token/<version>; every occurrence of the token may carry the version ("Chrome/ Chrome/131.0").
+            // Without '/' the token is likely a misspelling or part of another word (e.g. Edgg, Oprea, Chromee).
+            return TryReadVersionAfter(ua, detectToken, detectIndex, tokenStartOnly: false, slashRequired: true, out version);
+        }
+
+        // A separate version token (e.g. Safari "Version/") only counts at the start of a token:
+        // in "VendorVersion/120.0" the version belongs to another product.
+        bool sameToken = string.Equals(detectToken, versionToken, StringComparison.Ordinal);
+        int versionIndex = sameToken ? detectIndex : ua.IndexOf(versionToken, StringComparison.OrdinalIgnoreCase);
+        while (versionIndex >= 0 && !IsTokenStart(ua, versionIndex))
+        {
+            versionIndex = IndexOfNext(ua, versionToken, versionIndex);
+        }
+
+        if (versionIndex >= 0)
+        {
+            return TryReadVersionAfter(ua, versionToken, versionIndex, tokenStartOnly: true, slashRequired: false, out version);
+        }
+
+        // Without version token the version follows the detect token (e.g. "Opera/9.80").
+        if (sameToken)
+        {
+            version = default;
+            return false;
+        }
+
+        return TryReadVersionAfter(ua, detectToken, detectIndex, tokenStartOnly: false, slashRequired: false, out version);
+    }
+
+    /// <summary>
+    /// Reads the version of the first occurrence of <paramref name="token"/>, starting at <paramref name="index"/>, that has one.
+    /// </summary>
+    private static bool TryReadVersionAfter(ReadOnlySpan<char> ua, string token, int index, bool tokenStartOnly, bool slashRequired, out Range version)
+    {
+        for (; index >= 0; index = IndexOfNext(ua, token, index))
+        {
+            int end = index + token.Length;
+            if ((tokenStartOnly && !IsTokenStart(ua, index))
+                || (slashRequired && (end >= ua.Length || ua[end] != '/')))
+            {
+                continue;
+            }
+
+            if (TryExtractVersion(ua[end..], out Range range))
+            {
+                version = new Range(end + range.Start.Value, end + range.End.Value);
+                return true;
+            }
+        }
+
+        version = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the index of the next occurrence of <paramref name="token"/> after <paramref name="index"/>, or -1.
+    /// </summary>
+    private static int IndexOfNext(ReadOnlySpan<char> ua, string token, int index)
+    {
+        int next = ua[(index + 1)..].IndexOf(token, StringComparison.OrdinalIgnoreCase);
+        return next < 0 ? -1 : index + 1 + next;
+    }
+
+    /// <summary>
+    /// Returns whether a token at <paramref name="index"/> starts a token of its own, i.e. does not continue a word.
+    /// </summary>
+    private static bool IsTokenStart(ReadOnlySpan<char> ua, int index)
+        => index == 0 || !char.IsAsciiLetterOrDigit(ua[index - 1]);
 
     /// <summary>
     /// returns true if browser was found
