@@ -59,12 +59,15 @@ internal sealed class PriorityTokenMatcher<TDetector>
     /// The token groups.
     /// </summary>
     internal ReadOnlySpan<PriorityTokenGroup> Groups => _groups;
+#endif
 
     /// <summary>
-    /// Returns <see langword="true"/> if any token occurs in <paramref name="input"/>; only checks the group filters.
+    /// Returns <see langword="true"/> if any token occurs in <paramref name="input"/>.
     /// </summary>
     public bool ContainsAny(ReadOnlySpan<char> input)
     {
+#if NET9_0_OR_GREATER
+        // The group filters alone answer the question.
         foreach (ref readonly PriorityTokenGroup group in _groups.AsSpan())
         {
             if (group.MayMatch(input))
@@ -72,10 +75,18 @@ internal sealed class PriorityTokenMatcher<TDetector>
                 return true;
             }
         }
+#else
+        foreach (string token in _tokens)
+        {
+            if (input.Contains(token, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+#endif
 
         return false;
     }
-#endif
 
     /// <summary>
     /// Returns the index of the first token at or after <paramref name="startIndex"/> that occurs in <paramref name="input"/>,

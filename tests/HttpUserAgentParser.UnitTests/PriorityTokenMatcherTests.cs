@@ -160,6 +160,7 @@ public class PriorityTokenMatcherTests
         // Googlebot, by far the most common robot, is checked on its own.
         Assert.Equal((0, 1), (HttpUserAgentRules.RobotMatcher.Groups[0].Start, HttpUserAgentRules.RobotMatcher.Groups[0].End));
     }
+#endif
 
     [Fact]
     public void ContainsAny_Checks_All_Groups()
@@ -182,7 +183,7 @@ public class PriorityTokenMatcherTests
     [Fact]
     public void Curated_Robot_Anchors_Cover_All_Default_Robot_Keys()
     {
-        // When a new robot key is not covered, it becomes an anchor on its own (correct, but an extra vectorized pass).
+        // When a new robot key is not covered, it becomes an anchor on its own (correct, but an extra search).
         // Extend the curated anchors instead.
         Assert.Equal(HttpUserAgentRules.CuratedRobotAnchors.Length, HttpUserAgentRules.RobotAnchorMatcher.Count);
     }
@@ -195,7 +196,6 @@ public class PriorityTokenMatcherTests
     {
         Assert.False(HttpUserAgentRules.RobotAnchorMatcher.ContainsAny(userAgent));
     }
-#endif
 
     [Theory]
     [MemberData(nameof(CatalogUserAgents))]
@@ -221,9 +221,7 @@ public class PriorityTokenMatcherTests
     public void Built_In_Matchers_Equal_Sequential_Scan(string userAgent)
     {
         AssertEqualsSequentialScan(HttpUserAgentRules.MobileMatcher, [.. HttpUserAgentRules.Mobiles.Select(static rule => rule.Key)], userAgent);
-#if NET9_0_OR_GREATER
         AssertEqualsSequentialScan(HttpUserAgentRules.RobotMatcher, HttpUserAgentRules.DefaultRobotKeys, userAgent);
-#endif
     }
 
     private static void AssertEqualsSequentialScan<T>(PriorityTokenMatcher<T> matcher, string[] tokens, string input)

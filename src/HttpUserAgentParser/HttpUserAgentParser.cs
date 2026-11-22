@@ -18,6 +18,11 @@ public static class HttpUserAgentParser
     private static readonly SearchValues<char> s_versionCharacters = SearchValues.Create("0123456789.");
 
     /// <summary>
+    /// Characters that end a product token ("product/version") or a comment entry of a user agent.
+    /// </summary>
+    private static readonly SearchValues<char> s_productTokenDelimiters = SearchValues.Create(" \t;(),");
+
+    /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
     /// <remarks>
@@ -162,7 +167,6 @@ public static class HttpUserAgentParser
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
         (string Key, string Value)[] robots = HttpUserAgentRules.Robots;
-#if NET9_0_OR_GREATER
         string[] defaultKeys = HttpUserAgentRules.DefaultRobotKeys;
 
         // Googlebot, by far the most common robot, comes first: if the entry is unchanged and matches, it wins.
@@ -172,9 +176,9 @@ public static class HttpUserAgentParser
             return firstValue;
         }
 
-        if (HttpUserAgentRules.AreRobotsUnchanged())
+        if (HttpUserAgentRules.AreRobotKeysUnchanged())
         {
-            // Few vectorized passes over the anchors rule out most user agents (browsers) before the full key search.
+            // The few anchors rule out most user agents (browsers) before the full key search.
             if (!HttpUserAgentRules.RobotAnchorMatcher.ContainsAny(ua))
             {
                 return null;
@@ -184,8 +188,9 @@ public static class HttpUserAgentParser
             return index >= 0 ? robots[index].Value : null;
         }
 
-        // The public array is mutable and callers replaced entries: default keys are filtered by group,
-        // replaced keys are checked one by one, in array order.
+        // The public array is mutable and callers replaced keys: they are checked one by one, in array order.
+#if NET9_0_OR_GREATER
+        // Default keys are filtered by group.
         foreach (ref readonly PriorityTokenGroup group in HttpUserAgentRules.RobotMatcher.Groups)
         {
             bool mayMatchDefaultKey = group.MayMatch(ua);
@@ -250,12 +255,19 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// Finds the first ASCII digit and reads subsequent digits and dots within the search window.
+    /// Finds the first ASCII digit and reads subsequent digits and dots within the current product token.
     /// </summary>
+    /// <remarks>
+    /// The search ends at the next delimiter, so an empty version never takes the version of the next product
+    /// (<c>SamsungBrowser/ Chrome/131.0</c> has no Samsung Internet version).
+    /// </remarks>
     private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range)
     {
-        const int SearchWindow = 128;
-        haystack = haystack[..Math.Min(haystack.Length, SearchWindow)];
+        int end = haystack.IndexOfAny(s_productTokenDelimiters);
+        if (end >= 0)
+        {
+            haystack = haystack[..end];
+        }
 
         int start = haystack.IndexOfAnyInRange('0', '9');
         if (start < 0)

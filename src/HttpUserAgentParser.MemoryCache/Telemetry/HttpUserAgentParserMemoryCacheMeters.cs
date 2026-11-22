@@ -9,6 +9,10 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 /// <summary>
 /// System.Diagnostics.Metrics instruments emitted by MyCSharp.HttpUserAgentParser.MemoryCache.
 /// </summary>
+/// <remarks>
+/// All instruments of a meter are created before they become visible to the provider, so concurrent
+/// registrations never observe a partially initialized state. The last registered meter is used.
+/// </remarks>
 internal static class HttpUserAgentParserMemoryCacheMeters
 {
     private const string MeterNameSuffix = "http_user_agent_parser.memorycache";
@@ -27,54 +31,74 @@ internal static class HttpUserAgentParserMemoryCacheMeters
     public static string GetMeterName(string? meterPrefix)
         => HttpUserAgentParserMeterNameHelper.GetMeterName(meterPrefix, MeterNameSuffix);
 
-    private static int s_initialized;
+#if NET9_0_OR_GREATER
+    private static readonly Lock s_lock = new();
+#else
+    private static readonly object s_lock = new();
+#endif
 
-    private static Meter? s_meter;
-    private static Counter<long>? s_cacheHit;
-    private static Counter<long>? s_cacheMiss;
-    private static ObservableGauge<long>? s_cacheSize;
+    private static Meter? s_defaultMeter;
+    private static Instruments? s_instruments;
 
-    public static bool IsEnabled => Volatile.Read(ref s_initialized) != 0;
+    public static bool IsEnabled => Volatile.Read(ref s_instruments) is not null;
 
+    /// <summary>
+    /// Creates the metric instruments on <paramref name="meter"/> (or on a default meter) and uses them from now on.
+    /// </summary>
+    /// <remarks>
+    /// Registering the meter that is already in use has no effect; another meter replaces it.
+    /// </remarks>
     public static void Enable(Meter? meter = null)
     {
-        if (Interlocked.Exchange(ref s_initialized, 1) == 1)
+        lock (s_lock)
         {
-            return;
+            meter ??= s_defaultMeter ??= new Meter(MeterName);
+            if (ReferenceEquals(s_instruments?.Meter, meter))
+            {
+                return;
+            }
+
+            // Publish the instruments only after all of them exist.
+            Volatile.Write(ref s_instruments, new Instruments(meter));
         }
+    }
 
-        s_meter = meter ?? new Meter(MeterName);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CacheHit() => Volatile.Read(ref s_instruments)?.CacheHit.Add(1);
 
-        s_cacheHit = s_meter.CreateCounter<long>(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CacheMiss() => Volatile.Read(ref s_instruments)?.CacheMiss.Add(1);
+
+    public static void ResetForTests()
+    {
+        lock (s_lock)
+        {
+            Volatile.Write(ref s_instruments, null);
+            s_defaultMeter = null;
+        }
+    }
+
+    /// <summary>
+    /// The instruments of one meter.
+    /// </summary>
+    private sealed class Instruments(Meter meter)
+    {
+        public Meter Meter { get; } = meter;
+
+        public Counter<long> CacheHit { get; } = meter.CreateCounter<long>(
             name: "cache.hit",
             unit: "{call}",
             description: "Cache hit");
 
-        s_cacheMiss = s_meter.CreateCounter<long>(
+        public Counter<long> CacheMiss { get; } = meter.CreateCounter<long>(
             name: "cache.miss",
             unit: "{call}",
             description: "Cache miss");
 
-        s_cacheSize = s_meter.CreateObservableGauge<long>(
+        public ObservableGauge<long> CacheSize { get; } = meter.CreateObservableGauge<long>(
             name: "cache.size",
             observeValue: static () => HttpUserAgentParserMemoryCacheTelemetryState.CacheSize,
             unit: "{entry}",
             description: "Cache size");
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CacheHit() => s_cacheHit?.Add(1);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CacheMiss() => s_cacheMiss?.Add(1);
-
-    public static void ResetForTests()
-    {
-        Volatile.Write(ref s_initialized, 0);
-
-        s_meter = null;
-        s_cacheHit = null;
-        s_cacheMiss = null;
-        s_cacheSize = null;
     }
 }

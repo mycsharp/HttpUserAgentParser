@@ -10,9 +10,8 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 /// System.Diagnostics.Metrics instruments emitted by MyCSharp.HttpUserAgentParser.AspNetCore.
 /// </summary>
 /// <remarks>
-/// Provides meter-based telemetry for User-Agent parsing and presence detection.
-/// Instrument creation is performed once and guarded by a lock-free initialization
-/// check to minimize overhead on hot paths.
+/// All instruments of a meter are created before they become visible, so concurrent registrations never observe
+/// a partially initialized state. The last registered meter is used.
 /// </remarks>
 internal static class HttpUserAgentParserAspNetCoreMeters
 {
@@ -38,76 +37,81 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     public static string GetMeterName(string? meterPrefix)
         => HttpUserAgentParserMeterNameHelper.GetMeterName(meterPrefix, MeterNameSuffix);
 
-    /// <summary>
-    /// Indicates whether the meter and its instruments have been initialized.
-    /// </summary>
-    private static int s_initialized;
+#if NET9_0_OR_GREATER
+    private static readonly Lock s_lock = new();
+#else
+    private static readonly object s_lock = new();
+#endif
 
-    private static Meter? s_meter;
-    private static Counter<long>? s_userAgentPresent;
-    private static Counter<long>? s_userAgentMissing;
+    private static Meter? s_defaultMeter;
+    private static Instruments? s_instruments;
 
     /// <summary>
-    /// Enables meter-based telemetry and initializes all metric instruments.
+    /// Creates the metric instruments on <paramref name="meter"/> (or on a default meter) and uses them from now on.
     /// </summary>
     /// <param name="meter">
     /// Optional externally managed <see cref="Meter"/> instance. If not provided,
-    /// a new meter is created using <see cref="MeterName"/>.
+    /// a meter named <see cref="MeterName"/> is used.
     /// </param>
     /// <remarks>
-    /// Initialization is performed at most once. Subsequent calls are ignored.
+    /// Registering the meter that is already in use has no effect; another meter replaces it.
     /// </remarks>
     public static void Enable(Meter? meter = null)
     {
-        if (Interlocked.Exchange(ref s_initialized, 1) == 1)
+        lock (s_lock)
         {
-            return;
+            meter ??= s_defaultMeter ??= new Meter(MeterName);
+            if (ReferenceEquals(s_instruments?.Meter, meter))
+            {
+                return;
+            }
+
+            // Publish the instruments only after all of them exist.
+            Volatile.Write(ref s_instruments, new Instruments(meter));
         }
-
-        s_meter = meter ?? new Meter(MeterName);
-
-        s_userAgentPresent = s_meter.CreateCounter<long>(
-            name: "user_agent.present",
-            unit: "{call}",
-            description: "User-Agent header present");
-
-        s_userAgentMissing = s_meter.CreateCounter<long>(
-            name: "user_agent.missing",
-            unit: "{call}",
-            description: "User-Agent header missing");
     }
 
     /// <summary>
     /// Records a metric indicating that a User-Agent header was present.
     /// </summary>
-    /// <remarks>
-    /// This method is optimized for hot paths and performs no work
-    /// if the counter has not been initialized.
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UserAgentPresent()
-        => s_userAgentPresent?.Add(1);
+        => Volatile.Read(ref s_instruments)?.UserAgentPresent.Add(1);
 
     /// <summary>
     /// Records a metric indicating that a User-Agent header was missing.
     /// </summary>
-    /// <remarks>
-    /// This method is optimized for hot paths and performs no work
-    /// if the counter has not been initialized.
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UserAgentMissing()
-        => s_userAgentMissing?.Add(1);
+        => Volatile.Read(ref s_instruments)?.UserAgentMissing.Add(1);
 
     /// <summary>
     /// Resets static state to support isolated unit tests.
     /// </summary>
     public static void ResetForTests()
     {
-        Volatile.Write(ref s_initialized, 0);
+        lock (s_lock)
+        {
+            Volatile.Write(ref s_instruments, null);
+            s_defaultMeter = null;
+        }
+    }
 
-        s_meter = null;
-        s_userAgentPresent = null;
-        s_userAgentMissing = null;
+    /// <summary>
+    /// The instruments of one meter.
+    /// </summary>
+    private sealed class Instruments(Meter meter)
+    {
+        public Meter Meter { get; } = meter;
+
+        public Counter<long> UserAgentPresent { get; } = meter.CreateCounter<long>(
+            name: "user_agent.present",
+            unit: "{call}",
+            description: "User-Agent header present");
+
+        public Counter<long> UserAgentMissing { get; } = meter.CreateCounter<long>(
+            name: "user_agent.missing",
+            unit: "{call}",
+            description: "User-Agent header missing");
     }
 }

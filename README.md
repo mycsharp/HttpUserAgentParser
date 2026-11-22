@@ -53,7 +53,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Likewise, an In Process Cache mechanism is provided, based on a `ConcurrentDictionary`.
+Likewise, an in-process cache based on a `ConcurrentDictionary` is provided.
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -64,7 +64,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
- This is especially recommended for tests. For web applications, the `IMemoryCache` implementation should be used, which offers a timed expiration of the entries.
+This cache has no size limit and no expiration: every distinct user agent string stays in memory as long as the provider lives. Clients choose the `User-Agent` header freely, so use it only for a known, limited set of user agents, e.g. in tests. For web applications, use the `IMemoryCache` implementation, which limits the number of entries and expires them.
 
 The package [MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache) is required to use the IMemoryCache. This enables the registration of the `IMemoryCache` implementation:
 
@@ -146,17 +146,27 @@ In every list the first matching entry wins. Brave and Vivaldi send the same use
 
 The parser does not execute regular expressions. `HttpUserAgentStatics.Platforms`, `HttpUserAgentStatics.Browsers` and `HttpUserAgentPlatformInformation.Regex` still provide regular expressions for your own matching. They are generated at compile time with `[GeneratedRegex]` (no runtime compilation, trimming and Native AOT compatible) and are only created on first access; the browser patterns capture the version in group 1.
 
+The patterns use `RegexOptions.IgnoreCase` with culture-invariant case mapping, so a match does not depend on the current culture (e.g. `LINUX` matches `linux` under `tr-TR` as well). `RegexOptions.Compiled` is not set, because the source generator already emits the matching code.
+
 `HttpUserAgentStatics.Robots` is the array the parser uses: if you replace an entry, the parser honors it.
 
 ## Native AOT and trimming
 
-All packages are annotated with `IsAotCompatible` and are verified by publishing a Native AOT smoke test for every target framework (`tests/HttpUserAgentParser.NativeAot.Smoke`):
+All packages are annotated with `IsAotCompatible`. The Native AOT smoke test (`tests/HttpUserAgentParser.NativeAot.Smoke`) is published and run with .NET 8, 9, 10 and 11 in every CI build of `main` and of pull requests:
 
 ```shell
 dotnet publish tests/HttpUserAgentParser.NativeAot.Smoke -c Release -f net11.0 -r linux-x64
 ```
 
-Meters work out of the box. EventCounters rely on `EventSource`, which is disabled by default in Native AOT apps; enable it with `<EventSourceSupport>true</EventSourceSupport>` in your app's project file if you use `WithTelemetry()`.
+The app roots all three library assemblies, so the trimmer and the AOT compiler analyze all of their code, and the publish fails on any trimming or AOT warning. At runtime it checks:
+
+- parsing of browsers, platforms, mobile devices and crawlers
+- the source-generated regular expressions of `HttpUserAgentStatics`
+- dependency injection with the cached providers and both ASP.NET Core accessors
+- measurements of the meters of all three packages, received by a `MeterListener`
+- the EventCounters of all three packages, received by an `EventListener`
+
+Meters work out of the box. EventCounters rely on `EventSource`, which is disabled by default in Native AOT apps; enable it with `<EventSourceSupport>true</EventSourceSupport>` in your app's project file if you use `WithTelemetry()`. The smoke test sets this property.
 
 ## Telemetry (EventCounters)
 
@@ -273,6 +283,8 @@ public void ConfigureServices(IServiceCollection services)
         .WithAspNetCoreMeterTelemetry();
 }
 ```
+
+Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one; registering the meter in use again has no effect.
 
 ### Meter names and instruments
 
@@ -423,7 +435,7 @@ Notes:
 
 ## Benchmark
 
-Run the parser benchmarks with the .NET 11 runtime.
+Run the parser benchmarks with the .NET 11 runtime (use `-f net8.0`, `net9.0` or `net10.0` for the other runtimes).
 
 ```shell
 # 7 typical user agents
@@ -436,36 +448,38 @@ dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -
 
 The user agents come from `tests/HttpUserAgentParser.TestHelpers/UserAgentCatalog.cs`, which the unit tests use as well.
 
-### Parser performance on .NET 11
+### Parser performance
 
-BenchmarkDotNet 0.15.8 on .NET 11.0.0 x64, Windows 10 and an AMD Ryzen 9 9950X, without caching. The only allocation is the version string.
+BenchmarkDotNet 0.15.8 in-process, x64, Windows 10 and an AMD Ryzen 9 9950X, without caching. For a user agent without leading or trailing white space, the only allocation is the version string; otherwise `Parse` also allocates the trimmed string.
 
 Mixed workload: the catalog user agents parsed in a loop, mean time per user agent.
 
-| Workload | Mean | Allocated |
-| --- | ---: | ---: |
-| 44 browser user agents | 291.6 ns | 38 B |
-| 49 crawler user agents | 143.1 ns | 0 B |
-| All 97 user agents | 223.5 ns | 18 B |
+| Workload | .NET 8.0.34 | .NET 9.0.23 | .NET 10.0.15 | .NET 11.0.0 | Allocated |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 44 browser user agents | 781.8 ns | 364.1 ns | 362.7 ns | 290.9 ns | 38 B |
+| 48 crawler user agents | 384.1 ns | 184.7 ns | 170.8 ns | 171.3 ns | 0 B |
+| All 96 user agents | 599.6 ns | 292.1 ns | 280.2 ns | 234.5 ns | 18 B |
 
-Single user agents:
+.NET 8 has no `SearchValues<string>`; the parser checks the tokens one by one there.
+
+Single user agents on .NET 11:
 
 | User agent | Mean | Allocated |
 | --- | ---: | ---: |
-| Chrome on Windows | 261.2 ns | 40 B |
-| Firefox on Linux | 372.0 ns | 32 B |
-| Chrome on Android | 276.6 ns | 40 B |
-| Safari on iPhone | 320.3 ns | 32 B |
-| Applebot | 170.7 ns | 0 B |
-| Googlebot | 9.96 ns | 0 B |
-| Unknown client | 422.3 ns | 0 B |
+| Chrome on Windows | 244.5 ns | 40 B |
+| Firefox on Linux | 345.3 ns | 32 B |
+| Chrome on Android | 262.6 ns | 40 B |
+| Safari on iPhone | 300.7 ns | 32 B |
+| Applebot | 179.2 ns | 0 B |
+| Googlebot | 9.44 ns | 0 B |
+| Unknown client | 422.1 ns | 0 B |
 
-Startup in a new process (median of 7 runs):
+Startup in a new .NET 11 process (median of 7 runs):
 
 | | Time | Allocated |
 | --- | ---: | ---: |
-| First `Parse` call | 9.6 ms | 129 KB |
-| First use of all `HttpUserAgentStatics` regular expressions (43 platforms, 35 browsers) | 16.6 ms | 114 KB |
+| First `Parse` call | 9.1 ms | 122 KB |
+| First use of all `HttpUserAgentStatics` regular expressions (43 platforms, 35 browsers) | 15.7 ms | 120 KB |
 
 ### Library comparison on .NET 11
 

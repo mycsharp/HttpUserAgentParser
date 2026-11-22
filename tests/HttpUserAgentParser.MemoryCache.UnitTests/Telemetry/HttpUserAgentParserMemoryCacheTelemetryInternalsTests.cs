@@ -27,19 +27,24 @@ public sealed class HttpUserAgentParserMemoryCacheTelemetryInternalsTests : IDis
     }
 
     [Fact]
-    public void Meters_Are_Enabled_Only_Once()
+    public void Meters_Use_The_Last_Registered_Meter()
     {
         using Meter first = new("test.memorycache.first");
         using Meter second = new("test.memorycache.second");
-        using MeterTestListener listener = new("test.memorycache.first");
+        using MeterTestListener firstListener = new("test.memorycache.first");
+        using MeterTestListener secondListener = new("test.memorycache.second");
 
         HttpUserAgentParserMemoryCacheMeters.Enable(first);
-        HttpUserAgentParserMemoryCacheMeters.Enable(second);
+        HttpUserAgentParserMemoryCacheMeters.Enable(first); // the meter in use: no effect
         HttpUserAgentParserMemoryCacheMeters.CacheHit();
+        HttpUserAgentParserMemoryCacheMeters.Enable(second);
         HttpUserAgentParserMemoryCacheMeters.CacheMiss();
+        HttpUserAgentParserMemoryCacheMeters.Enable(); // default meter
+        HttpUserAgentParserMemoryCacheMeters.Enable(); // default meter in use: no effect
 
         Assert.True(HttpUserAgentParserMemoryCacheMeters.IsEnabled);
-        Assert.Equal(new[] { "cache.hit", "cache.miss" }, listener.InstrumentNames.Order(StringComparer.Ordinal), StringComparer.Ordinal);
+        Assert.Equal(new[] { "cache.hit" }, firstListener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Equal(new[] { "cache.miss" }, secondListener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]

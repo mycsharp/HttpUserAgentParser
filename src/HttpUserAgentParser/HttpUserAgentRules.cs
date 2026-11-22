@@ -1,10 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
 using System.Collections.Frozen;
-#if NET9_0_OR_GREATER
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-#endif
 
 namespace MyCSharp.HttpUserAgentParser;
 
@@ -241,7 +237,6 @@ internal static class HttpUserAgentRules
         ( "YouBot", "YouBot" ),
     ];
 
-#if NET9_0_OR_GREATER
     /// <summary>
     /// The default robot keys, used to detect entries replaced by callers.
     /// </summary>
@@ -254,8 +249,8 @@ internal static class HttpUserAgentRules
 
     /// <summary>
     /// Short substrings ("anchors") of the default robot keys. Every key contains at least one anchor,
-    /// so a user agent without any anchor cannot match a default key. The few anchors need far fewer vectorized
-    /// passes than all keys, which makes the common case (a browser) cheap.
+    /// so a user agent without any anchor cannot match a default key. The few anchors need far fewer searches
+    /// than all keys, which makes the common case (a browser) cheap.
     /// </summary>
     internal static readonly string[] CuratedRobotAnchors =
     [
@@ -289,37 +284,26 @@ internal static class HttpUserAgentRules
     }
 
     /// <summary>
-    /// Raw contents (string references) of <see cref="Robots"/> at startup.
-    /// </summary>
-    private static readonly byte[] s_robotsSnapshot = CreateRobotsSnapshot();
-
-    /// <summary>
-    /// Returns <see langword="true"/> if no entry of <see cref="Robots"/> has been replaced.
+    /// Returns <see langword="true"/> if no key of <see cref="Robots"/> has been replaced.
     /// </summary>
     /// <remarks>
-    /// Compares the string references of all entries with the startup snapshot in a single vectorized operation,
-    /// which is much cheaper than checking every entry on each parse.
+    /// Compares the key references with <see cref="DefaultRobotKeys"/>. Replaced display names (values) do not matter:
+    /// the parser returns the current value of the matching entry.
     /// </remarks>
-    internal static bool AreRobotsUnchanged() => GetRawContents(Robots).SequenceEqual(s_robotsSnapshot);
-
-    private static byte[] CreateRobotsSnapshot()
+    internal static bool AreRobotKeysUnchanged()
     {
-        // Pin the default strings: their addresses must stay valid identities for the lifetime of the process.
-        // (String literals are allocated on the frozen heap anyway, so this does not restrict the GC in practice.)
-        foreach ((string key, string value) in Robots)
+        ReadOnlySpan<string> defaultKeys = DefaultRobotKeys;
+        ReadOnlySpan<(string Key, string Value)> robots = Robots.AsSpan(0, defaultKeys.Length);
+        for (int i = 0; i < defaultKeys.Length; i++)
         {
-            _ = GCHandle.Alloc(key, GCHandleType.Pinned);
-            _ = GCHandle.Alloc(value, GCHandleType.Pinned);
+            if (!ReferenceEquals(robots[i].Key, defaultKeys[i]))
+            {
+                return false;
+            }
         }
 
-        return GetRawContents(Robots).ToArray();
+        return true;
     }
-
-    private static ReadOnlySpan<byte> GetRawContents((string Key, string Value)[] robots)
-        => MemoryMarshal.CreateReadOnlySpan(
-            ref Unsafe.As<(string Key, string Value), byte>(ref MemoryMarshal.GetArrayDataReference(robots)),
-            robots.Length * Unsafe.SizeOf<(string Key, string Value)>());
-#endif
 
     /// <summary>
     /// Mobile device rules in priority order: the most specific match wins.

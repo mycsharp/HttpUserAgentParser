@@ -15,9 +15,7 @@ public class HttpUserAgentStaticsRobotsReplacementTests
     [Fact]
     public void Robots_Are_Unchanged_By_Default()
     {
-#if NET9_0_OR_GREATER
-        Assert.True(HttpUserAgentRules.AreRobotsUnchanged());
-#endif
+        Assert.True(HttpUserAgentRules.AreRobotKeysUnchanged());
         Assert.Equal("YouBot", HttpUserAgentParser.GetRobot(HttpUserAgentStatics.Robots[^1].Key));
     }
 
@@ -30,9 +28,7 @@ public class HttpUserAgentStaticsRobotsReplacementTests
         try
         {
             HttpUserAgentStatics.Robots[last] = ("CustomTestCrawler", "Custom crawler");
-#if NET9_0_OR_GREATER
-            Assert.False(HttpUserAgentRules.AreRobotsUnchanged());
-#endif
+            Assert.False(HttpUserAgentRules.AreRobotKeysUnchanged());
 
             Assert.Equal("Custom crawler", HttpUserAgentParser.GetRobot("customtestcrawler/1.0"));
             Assert.Equal("Googlebot", HttpUserAgentParser.GetRobot("customtestcrawler/1.0 googlebot/2.1"));
@@ -45,9 +41,27 @@ public class HttpUserAgentStaticsRobotsReplacementTests
             HttpUserAgentStatics.Robots[last] = original;
         }
 
-#if NET9_0_OR_GREATER
-        Assert.True(HttpUserAgentRules.AreRobotsUnchanged());
-#endif
+        Assert.True(HttpUserAgentRules.AreRobotKeysUnchanged());
+    }
+
+    [Fact]
+    public void GetRobot_Returns_Replaced_Display_Name()
+    {
+        int index = Array.FindIndex(HttpUserAgentStatics.Robots, static robot => string.Equals(robot.Key, "bingbot", StringComparison.Ordinal));
+        (string Key, string Value) original = HttpUserAgentStatics.Robots[index];
+
+        try
+        {
+            // Only the display name changes: the keys are unchanged, so the fast path stays active.
+            HttpUserAgentStatics.Robots[index] = (original.Key, "Bing crawler");
+            Assert.True(HttpUserAgentRules.AreRobotKeysUnchanged());
+
+            Assert.Equal("Bing crawler", HttpUserAgentParser.GetRobot("Mozilla/5.0 (compatible; bingbot/2.0)"));
+        }
+        finally
+        {
+            HttpUserAgentStatics.Robots[index] = original;
+        }
     }
 
     [Fact]

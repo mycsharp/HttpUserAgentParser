@@ -12,6 +12,8 @@
         <IsPackable>false</IsPackable>
         <PublishAot>true</PublishAot>
         <InvariantGlobalization>true</InvariantGlobalization>
+        <!-- EventSource is disabled by default in Native AOT apps; enabled to verify the EventCounters -->
+        <EventSourceSupport>true</EventSourceSupport>
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>

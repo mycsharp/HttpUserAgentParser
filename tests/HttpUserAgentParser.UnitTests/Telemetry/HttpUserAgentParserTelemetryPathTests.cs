@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
@@ -55,18 +56,89 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
     }
 
     [Fact]
-    public void Meters_Enable_Only_Once()
+    public void Meters_Use_The_Last_Registered_Meter()
     {
         HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
 
-        using System.Diagnostics.Metrics.Meter first = new("test.first");
-        using System.Diagnostics.Metrics.Meter second = new("test.second");
-        using MeterTestListener listener = new("test.first");
+        using Meter first = new("test.first");
+        using Meter second = new("test.second");
+        using MeterTestListener firstListener = new("test.first");
+        using MeterTestListener secondListener = new("test.second");
 
-        options.WithMeterTelemetry(first).WithMeterTelemetry(second);
+        options.WithMeterTelemetry(first);
+        _ = HttpUserAgentParser.Parse(UserAgent);
+        options.WithMeterTelemetry(second);
         _ = HttpUserAgentParser.Parse(UserAgent);
 
-        Assert.Contains("parse.requests", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Single(firstListener.InstrumentNames, static name => string.Equals(name, "parse.requests", StringComparison.Ordinal));
+        Assert.Single(secondListener.InstrumentNames, static name => string.Equals(name, "parse.requests", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Registering_The_Same_Meter_Again_Keeps_The_Instruments()
+    {
+        using Meter meter = new("test.same");
+        int published = 0;
+        int publishedOnDefaultMeter = 0;
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                published += instrument.Meter == meter ? 1 : 0;
+                publishedOnDefaultMeter += string.Equals(instrument.Meter.Name, HttpUserAgentParserMeters.MeterName, StringComparison.Ordinal) ? 1 : 0;
+            },
+        };
+        listener.Start();
+        publishedOnDefaultMeter = 0; // ignore instruments of earlier tests
+
+        HttpUserAgentParserTelemetry.EnableMeters(meter);
+        HttpUserAgentParserTelemetry.EnableMeters(meter);
+        Assert.Equal(5, published);
+
+        HttpUserAgentParserTelemetry.EnableMeters();
+        HttpUserAgentParserTelemetry.EnableMeters();
+        Assert.Equal(5, publishedOnDefaultMeter);
+    }
+
+    [Fact]
+    public async Task Concurrent_Registration_Returns_After_All_Instruments_Exist()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        using Meter meter = new("test.race");
+        using ManualResetEventSlim creating = new();
+        using ManualResetEventSlim release = new();
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (instrument.Meter != meter)
+                {
+                    return;
+                }
+
+                if (string.Equals(instrument.Name, "parse.requests", StringComparison.Ordinal))
+                {
+                    // The first registration stops while it creates its instruments.
+                    creating.Set();
+                    release.Wait(TimeSpan.FromSeconds(10), cancellationToken);
+                }
+
+                target.EnableMeasurementEvents(instrument);
+            },
+        };
+        listener.Start();
+
+        Task first = Task.Run(() => HttpUserAgentParserTelemetry.EnableMeters(meter), cancellationToken);
+        Assert.True(creating.Wait(TimeSpan.FromSeconds(10), cancellationToken));
+        Task second = Task.Run(() => HttpUserAgentParserTelemetry.EnableMeters(meter), cancellationToken);
+
+        // The second registration must not return while the instruments of the first one are incomplete.
+        Assert.NotSame(second, await Task.WhenAny(second, Task.Delay(200, cancellationToken)));
+
+        release.Set();
+        await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+
+        Assert.True(HttpUserAgentParserTelemetry.ShouldMeasureParseDuration);
     }
 
     private static void AssertParsesAndCaches()

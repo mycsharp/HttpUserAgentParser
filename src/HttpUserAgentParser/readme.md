@@ -2,7 +2,7 @@
 
 Fast HTTP User-Agent parsing for .NET.
 
-- Allocation-free detection with vectorized `SearchValues`, no regular expressions in the parser
+- Allocation-free detection with vectorized `SearchValues` (only the version string is allocated), no regular expressions in the parser
 - Trimming and Native AOT compatible
 - Detects the most used browsers and current search engine, SEO and AI crawlers
 
@@ -27,7 +27,8 @@ HttpUserAgentInformation info = HttpUserAgentParser.Parse(userAgent);
 
 The parser itself does not execute regular expressions. `HttpUserAgentStatics.Platforms`, `HttpUserAgentStatics.Browsers`
 and `HttpUserAgentPlatformInformation.Regex` provide source-generated regular expressions (`[GeneratedRegex]`) for your own
-matching; they are created on first access.
+matching; they are created on first access. They use `RegexOptions.IgnoreCase` with culture-invariant case mapping and
+no `RegexOptions.Compiled`, because the source generator already emits the matching code.
 
 ## Native AOT
 
@@ -52,6 +53,10 @@ services
 	.AddHttpUserAgentCachedParser();
 // or: .AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>();
 ```
+
+This cache has no size limit and no expiration: every distinct user agent string stays in memory as long as the provider lives.
+Use it only for a known, limited set of user agents (e.g. in tests); for web applications use
+[MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache).
 
 ## Telemetry (EventCounters)
 
@@ -100,6 +105,9 @@ services
 	.AddHttpUserAgentParser()
 	.WithMeterTelemetry();
 ```
+
+Pass your own `Meter` to `WithMeterTelemetry(meter)` to record to it. A later registration with another meter replaces the
+previous one; registering the meter in use again has no effect.
 
 ### Meter + instruments
 

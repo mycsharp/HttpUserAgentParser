@@ -99,6 +99,9 @@ services
 	.WithMemoryCacheMeterTelemetry();
 ```
 
+Pass your own `Meter` to `WithMemoryCacheMeterTelemetry(meter)` to record to it. A later registration with another meter
+replaces the previous one; registering the meter in use again has no effect.
+
 ### Meter + instruments
 
 Meter: `mycsharp.http_user_agent_parser.memorycache` (constant: `HttpUserAgentParserMemoryCachedProvider.MeterName`)

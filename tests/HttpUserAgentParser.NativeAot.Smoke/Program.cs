@@ -3,6 +3,7 @@
 // Native AOT smoke test: exercises the public API of all packages in a trimmed, natively compiled app.
 // Exit code 0 means success; every failed check is printed and makes the exit code non-zero.
 
+using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,7 @@ using MyCSharp.HttpUserAgentParser.AspNetCore;
 using MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
+using MyCSharp.HttpUserAgentParser.NativeAot.Smoke;
 using MyCSharp.HttpUserAgentParser.Providers;
 
 const string Chrome = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36";
@@ -48,13 +50,36 @@ Check(HttpUserAgentStatics.Platforms.Count == 43 && HttpUserAgentStatics.Platfor
 Regex chromeRegex = HttpUserAgentStatics.Browsers.First(static b => b.Key.ToString().StartsWith("Chrome", StringComparison.Ordinal)).Key;
 Check(string.Equals(chromeRegex.Match(Chrome).Groups[1].Value, "158.0.0.0", StringComparison.Ordinal), "browser regex version group");
 
-// Dependency injection, caching providers and ASP.NET Core accessor
-using Meter meter = new("smoke.http_user_agent_parser");
+// Telemetry listeners: meters and EventCounters must emit data in a Native AOT app (EventSourceSupport is enabled)
+ConcurrentDictionary<string, int> measurements = new(StringComparer.Ordinal);
+using MeterListener meterListener = new()
+{
+    InstrumentPublished = static (instrument, listener) =>
+    {
+        if (instrument.Meter.Name.StartsWith("smoke.", StringComparison.Ordinal))
+        {
+            listener.EnableMeasurementEvents(instrument);
+        }
+    },
+};
+meterListener.SetMeasurementEventCallback<long>((instrument, _, _, _) => measurements.AddOrUpdate(instrument.Name, 1, static (_, count) => count + 1));
+meterListener.SetMeasurementEventCallback<double>((instrument, _, _, _) => measurements.AddOrUpdate(instrument.Name, 1, static (_, count) => count + 1));
+meterListener.Start();
+using EventCounterListener counterListener = new();
+
+// Dependency injection, caching providers and ASP.NET Core accessors
+using Meter coreMeter = new("smoke.core");
+using Meter memoryCacheMeter = new("smoke.memorycache");
+using Meter aspNetCoreMeter = new("smoke.aspnetcore");
 ServiceCollection services = new();
 services.AddHttpUserAgentMemoryCachedParser(static options => options.CacheOptions.SizeLimit = 16)
     .AddHttpUserAgentParserContextAccessor()
-    .WithMeterTelemetry(meter)
-    .WithTelemetry();
+    .WithMeterTelemetry(coreMeter)
+    .WithMemoryCacheMeterTelemetry(memoryCacheMeter)
+    .WithAspNetCoreMeterTelemetry(aspNetCoreMeter)
+    .WithTelemetry()
+    .WithMemoryCacheTelemetry()
+    .WithAspNetCoreTelemetry();
 
 using (ServiceProvider provider = services.BuildServiceProvider())
 {
@@ -68,6 +93,13 @@ using (ServiceProvider provider = services.BuildServiceProvider())
     provider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
     Check(provider.GetRequiredService<IHttpUserAgentParserContextAccessor>().Get() is { Name: "Safari" }, "ASP.NET Core accessor (IHttpContextAccessor)");
 }
+
+foreach (string instrument in (string[])["parse.requests", "parse.duration", "cache.miss", "cache.hit", "user_agent.present"])
+{
+    Check(measurements.ContainsKey(instrument), $"meter measurement {instrument}");
+}
+
+Check(counterListener.WaitForCounters(TimeSpan.FromSeconds(10)), "EventCounters of all packages");
 
 ServiceCollection genericServices = new();
 genericServices.AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>();

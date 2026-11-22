@@ -28,18 +28,23 @@ public sealed class HttpUserAgentParserAspNetCoreTelemetryInternalsTests : IDisp
     }
 
     [Fact]
-    public void Meters_Are_Enabled_Only_Once()
+    public void Meters_Use_The_Last_Registered_Meter()
     {
         using Meter first = new("test.aspnetcore.first");
         using Meter second = new("test.aspnetcore.second");
-        using MeterTestListener listener = new("test.aspnetcore.first");
+        using MeterTestListener firstListener = new("test.aspnetcore.first");
+        using MeterTestListener secondListener = new("test.aspnetcore.second");
 
         HttpUserAgentParserAspNetCoreMeters.Enable(first);
-        HttpUserAgentParserAspNetCoreMeters.Enable(second);
+        HttpUserAgentParserAspNetCoreMeters.Enable(first); // the meter in use: no effect
         HttpUserAgentParserAspNetCoreMeters.UserAgentPresent();
+        HttpUserAgentParserAspNetCoreMeters.Enable(second);
         HttpUserAgentParserAspNetCoreMeters.UserAgentMissing();
+        HttpUserAgentParserAspNetCoreMeters.Enable(); // default meter
+        HttpUserAgentParserAspNetCoreMeters.Enable(); // default meter in use: no effect
 
-        Assert.Equal(new[] { "user_agent.missing", "user_agent.present" }, listener.InstrumentNames.Order(StringComparer.Ordinal), StringComparer.Ordinal);
+        Assert.Equal(new[] { "user_agent.present" }, firstListener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Equal(new[] { "user_agent.missing" }, secondListener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]

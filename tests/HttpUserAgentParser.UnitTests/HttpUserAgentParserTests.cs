@@ -304,6 +304,26 @@ public class HttpUserAgentParserTests
     }
 
     [Theory]
+    [InlineData("SamsungBrowser/ Chrome/131.0.0.0 Safari/537.36", "Chrome", "131.0.0.0")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)", "Internet Explorer", "8.0")]
+    [InlineData("Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko", "Internet Explorer", "11.0")]
+    public void GetBrowser_Reads_The_Version_Of_Its_Own_Product_Token(string userAgent, string expectedName, string expectedVersion)
+    {
+        (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(userAgent);
+
+        Assert.Equal((expectedName, expectedVersion), browser);
+    }
+
+    [Theory]
+    [InlineData("Chrome/ Safari/537.36")]
+    [InlineData("Mozilla/5.0 (iPhone) Version/ Mobile/15E148 Safari/604.1")]
+    [InlineData("Mozilla/5.0 Firefox/(X11) 120")]
+    public void GetBrowser_Does_Not_Take_The_Version_Of_Another_Product(string userAgent)
+    {
+        Assert.Null(HttpUserAgentParser.GetBrowser(userAgent));
+    }
+
+    [Theory]
     [InlineData("Chrome/ı1.2é3", "1.2")]
     [InlineData("Chrome/1.2ı3 followed by a long suffix", "1.2")]
     [InlineData("Chrome/1.2 release123", "1.2")]
