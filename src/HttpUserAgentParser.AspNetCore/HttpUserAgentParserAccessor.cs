@@ -12,6 +12,7 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore;
 /// <remarks>
 /// The accessor does not depend on <see cref="IHttpContextAccessor"/>: the <see cref="HttpContext"/> is passed explicitly,
 /// e.g. from a controller, a minimal API handler or a middleware.
+/// <see cref="HttpUserAgentParserContextAccessor"/> additionally parses the current request via <see cref="IHttpContextAccessor"/>.
 /// </remarks>
 public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAgentParser)
     : IHttpUserAgentParserAccessor

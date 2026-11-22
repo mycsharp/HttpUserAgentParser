@@ -15,15 +15,18 @@ dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore
 
 Register a provider (any of the available ones) and then add the accessor:
 
-The accessor reads the `User-Agent` header from the `HttpContext` you pass in and parses it using the registered provider. It does not depend on `IHttpContextAccessor`.
+The accessor reads the `User-Agent` header of a request and parses it using the registered provider. There are two options:
+
+- `AddHttpUserAgentParserAccessor()` registers `IHttpUserAgentParserAccessor`: you pass the `HttpContext` (`Get(httpContext)`). Recommended.
+- `AddHttpUserAgentParserContextAccessor()` registers `IHttpUserAgentParserContextAccessor` and `IHttpContextAccessor`: `Get()` uses the current request, `Get(httpContext)` works as well. Useful in services without access to the `HttpContext`; `IHttpContextAccessor` has a small cost on every request.
 
 ```csharp
 services
 	.AddHttpUserAgentMemoryCachedParser() // or: AddHttpUserAgentParser / AddHttpUserAgentCachedParser
-	.AddHttpUserAgentParserAccessor();
+	.AddHttpUserAgentParserAccessor(); // or: .AddHttpUserAgentParserContextAccessor()
 ```
 
-Usage:
+Usage with the `HttpContext`:
 
 ```csharp
 public sealed class MyController(IHttpUserAgentParserAccessor accessor) : ControllerBase
@@ -34,6 +37,15 @@ public sealed class MyController(IHttpUserAgentParserAccessor accessor) : Contro
 
 // Minimal API
 app.MapGet("/ua", (HttpContext context, IHttpUserAgentParserAccessor accessor) => accessor.Get(context));
+```
+
+Usage with the current request (`AddHttpUserAgentParserContextAccessor()`):
+
+```csharp
+public sealed class MyService(IHttpUserAgentParserContextAccessor accessor)
+{
+	public bool IsRobot() => accessor.Get()?.IsRobot() ?? false; // null outside of a request or without User-Agent header
+}
 ```
 
 The package is trimming and Native AOT compatible.

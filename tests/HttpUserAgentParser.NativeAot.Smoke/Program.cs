@@ -52,7 +52,7 @@ Check(string.Equals(chromeRegex.Match(Chrome).Groups[1].Value, "158.0.0.0", Stri
 using Meter meter = new("smoke.http_user_agent_parser");
 ServiceCollection services = new();
 services.AddHttpUserAgentMemoryCachedParser(static options => options.CacheOptions.SizeLimit = 16)
-    .AddHttpUserAgentParserAccessor()
+    .AddHttpUserAgentParserContextAccessor()
     .WithMeterTelemetry(meter)
     .WithTelemetry();
 
@@ -63,7 +63,10 @@ using (ServiceProvider provider = services.BuildServiceProvider())
 
     DefaultHttpContext context = new();
     context.Request.Headers.UserAgent = Safari;
-    Check(provider.GetRequiredService<IHttpUserAgentParserAccessor>().Get(context) is { Name: "Safari" }, "ASP.NET Core accessor");
+    Check(provider.GetRequiredService<IHttpUserAgentParserAccessor>().Get(context) is { Name: "Safari" }, "ASP.NET Core accessor (explicit HttpContext)");
+
+    provider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
+    Check(provider.GetRequiredService<IHttpUserAgentParserContextAccessor>().Get() is { Name: "Safari" }, "ASP.NET Core accessor (IHttpContextAccessor)");
 }
 
 ServiceCollection genericServices = new();

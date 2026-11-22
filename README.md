@@ -91,7 +91,16 @@ public void ConfigureServices(IServiceCollection services)
 
 ### ASP.NET Core
 
-For ASP.NET Core applications, an accessor (`IHttpUserAgentParserAccessor`) can be registered additionally. It reads the `User-Agent` header of the `HttpContext` you pass in and parses it with the registered `IHttpUserAgentParserProvider`. It does not depend on `IHttpContextAccessor`. This requires the package [MyCSharp.HttpUserAgentParser.AspNetCore](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore)
+For ASP.NET Core applications, an accessor can be registered additionally. It reads the `User-Agent` header of a request and parses it with the registered `IHttpUserAgentParserProvider`. This requires the package [MyCSharp.HttpUserAgentParser.AspNetCore](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore)
+
+There are two options:
+
+| Registration | Service | Usage |
+| --- | --- | --- |
+| `AddHttpUserAgentParserAccessor()` | `IHttpUserAgentParserAccessor` | `Get(httpContext)`: you pass the `HttpContext` |
+| `AddHttpUserAgentParserContextAccessor()` | `IHttpUserAgentParserContextAccessor` | `Get()`: the current request via `IHttpContextAccessor`, plus `Get(httpContext)` |
+
+Passing the `HttpContext` is the recommended option: `IHttpContextAccessor` has a small cost on every request. The context accessor is useful in services that do not have the `HttpContext` at hand.
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -100,6 +109,7 @@ public void ConfigureServices(IServiceCollection services)
         .AddHttpUserAgentMemoryCachedParser() // registers Parser, returns HttpUserAgentParserDependencyInjectionOptions
         // or use any other Parser registration like services.AddHttpUserAgentParser<TParser>(); above
         .AddHttpUserAgentParserAccessor(); // registers IHttpUserAgentParserAccessor, uses IHttpUserAgentParserProvider
+        // or: .AddHttpUserAgentParserContextAccessor(); // additionally registers IHttpUserAgentParserContextAccessor and IHttpContextAccessor
 }
 ```
 
@@ -110,6 +120,12 @@ Now you can use
 public void MyMethod(IHttpUserAgentParserAccessor parserAccessor, HttpContext httpContext)
 {
     HttpUserAgentInformation? info = parserAccessor.Get(httpContext); // null if the request has no User-Agent header
+}
+
+// in any service, with AddHttpUserAgentParserContextAccessor()
+public void MyMethod(IHttpUserAgentParserContextAccessor parserAccessor)
+{
+    HttpUserAgentInformation? info = parserAccessor.Get(); // null outside of a request or without User-Agent header
 }
 ```
 
