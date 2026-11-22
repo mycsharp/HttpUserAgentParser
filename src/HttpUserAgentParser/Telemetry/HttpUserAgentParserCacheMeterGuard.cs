@@ -1,6 +1,7 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
 using System.Diagnostics.Metrics;
+using System.Runtime.CompilerServices;
 
 namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
@@ -10,7 +11,8 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// <remarks>
 /// Both packages create the instruments <c>cache.hit</c>, <c>cache.miss</c> and <c>cache.size</c>. On one meter, the counters
 /// with the same name, unit and description are the same instrument, and exporters keep only one of the two gauges, so the
-/// values of both packages would mix. The ASP.NET Core package has no instrument in common with them and may share a meter.
+/// values of both packages would mix. The ASP.NET Core package has no instrument in common with them and may share a meter. A meter that one of the two packages
+/// has used stays reserved for it, also after a switch to another meter, because its instruments remain on the meter.
 /// </remarks>
 internal static class HttpUserAgentParserCacheMeterGuard
 {
@@ -23,65 +25,57 @@ internal static class HttpUserAgentParserCacheMeterGuard
     private static readonly object s_lock = new();
 #endif
 
-    private static Meter? s_coreMeter;
-    private static Meter? s_memoryCacheMeter;
+    // A meter keeps its instruments until it is disposed, so a reservation lasts as long as the meter (held weakly).
+    private static readonly ConditionalWeakTable<Meter, object?> s_coreMeters = new();
+    private static readonly ConditionalWeakTable<Meter, object?> s_memoryCacheMeters = new();
 
     /// <summary>
-    /// Records that the core package uses <paramref name="meter"/> from now on.
+    /// Reserves <paramref name="meter"/> for the core package before it creates its instruments on it.
     /// </summary>
-    /// <exception cref="ArgumentException">The MemoryCache package uses <paramref name="meter"/>.</exception>
-    public static void UseForCore(Meter meter)
-    {
-        lock (s_lock)
-        {
-            ThrowIfUsed(meter, s_memoryCacheMeter, MemoryCachePackage);
-            s_coreMeter = meter;
-        }
-    }
+    /// <exception cref="ArgumentException">The MemoryCache package has used <paramref name="meter"/>.</exception>
+    public static void ReserveForCore(Meter meter) => Reserve(meter, s_coreMeters, s_memoryCacheMeters, MemoryCachePackage);
 
     /// <summary>
-    /// Records that the MemoryCache package uses <paramref name="meter"/> from now on.
+    /// Reserves <paramref name="meter"/> for the MemoryCache package before it creates its instruments on it.
     /// </summary>
-    /// <exception cref="ArgumentException">The core package uses <paramref name="meter"/>.</exception>
-    public static void UseForMemoryCache(Meter meter)
-    {
-        lock (s_lock)
-        {
-            ThrowIfUsed(meter, s_coreMeter, CorePackage);
-            s_memoryCacheMeter = meter;
-        }
-    }
+    /// <exception cref="ArgumentException">The core package has used <paramref name="meter"/>.</exception>
+    public static void ReserveForMemoryCache(Meter meter) => Reserve(meter, s_memoryCacheMeters, s_coreMeters, CorePackage);
 
     /// <summary>
-    /// Forgets the meter of the core package (unit tests).
+    /// Forgets the reservations of the core package (unit tests).
     /// </summary>
     public static void ResetCoreForTests()
     {
         lock (s_lock)
         {
-            s_coreMeter = null;
+            s_coreMeters.Clear();
         }
     }
 
     /// <summary>
-    /// Forgets the meter of the MemoryCache package (unit tests).
+    /// Forgets the reservations of the MemoryCache package (unit tests).
     /// </summary>
     public static void ResetMemoryCacheForTests()
     {
         lock (s_lock)
         {
-            s_memoryCacheMeter = null;
+            s_memoryCacheMeters.Clear();
         }
     }
 
-    private static void ThrowIfUsed(Meter meter, Meter? meterOfOtherPackage, string otherPackage)
+    private static void Reserve(Meter meter, ConditionalWeakTable<Meter, object?> reservations, ConditionalWeakTable<Meter, object?> otherReservations, string otherPackage)
     {
-        if (ReferenceEquals(meter, meterOfOtherPackage))
+        lock (s_lock)
         {
-            throw new ArgumentException(
-                $"The meter '{meter.Name}' is already used by {otherPackage}. The core and the MemoryCache package both create the instruments "
-                + "cache.hit, cache.miss and cache.size, so each of them needs its own meter.",
-                nameof(meter));
+            if (otherReservations.TryGetValue(meter, out _))
+            {
+                throw new ArgumentException(
+                    $"The meter '{meter.Name}' is used by {otherPackage}. The core and the MemoryCache package both create the instruments "
+                    + "cache.hit, cache.miss and cache.size, and a meter keeps them until it is disposed, so each package needs its own meter.",
+                    nameof(meter));
+            }
+
+            reservations.AddOrUpdate(meter, null);
         }
     }
 }

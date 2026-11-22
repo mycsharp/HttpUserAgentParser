@@ -313,6 +313,9 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 Version/ Mobile Version/17.0 Safari/604.1", "Safari", "17.0")]
     // A version token inside another word belongs to another product
     [InlineData("Opera/9.80 VendorVersion/120.0", "Opera", "9.80")]
+    // A version token only counts after the browser token
+    [InlineData("Version/99.0 Opera/9.80 Version/12.16", "Opera", "12.16")]
+    [InlineData("rv:99.0; Trident/7.0; rv:11.0", "Internet Explorer", "11.0")]
     [InlineData("Mozilla/5.0 Version/ XVersion/1.0 Version/17.0 Safari/604.1", "Safari", "17.0")]
     [InlineData("Version/17.0 Safari/604.1", "Safari", "17.0")]
     [InlineData("Opera/9.80 Vendor-Version/120.0", "Opera", "9.80")]
@@ -388,6 +391,7 @@ public class HttpUserAgentParserTests
     [InlineData("Microsoft Office/16.0 (Macintosh; Mac OS X 10.15.7; Microsoft Outlook 16.80.23121017; Pro)", "Mac OS X")]
     [InlineData("Microsoft-CryptoAPI/10.0", null)]
     [InlineData("Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "ChromeOS")]
+    [InlineData("Mozilla/5.0+(X11;+CrOS+x86_64+14541.0.0)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/120.0.0.0+Safari/537.36", "ChromeOS")]
     [InlineData("Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Mobile Safari/537.36 Edge/15.15063", "Windows Phone")]
     public void GetPlatform_Detects_ChromeOS_And_Windows_Phone_Only_By_Their_Own_Tokens(string userAgent, string? expectedPlatform)
     {
@@ -398,6 +402,7 @@ public class HttpUserAgentParserTests
     public void GetRobot_Does_Not_Match_YouBot_Inside_Another_Name()
     {
         Assert.Null(HttpUserAgentParser.GetRobot("ShowyouBot (http://showyou.com/crawler)"));
+        Assert.Null(HttpUserAgentParser.GetRobot("ShowyouBot/1.0"));
         Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; YouBot/1.0; +https://docs.you.com/youbot; env:prod) Chrome/X.X.X.X Safari/537.36"));
     }
 }

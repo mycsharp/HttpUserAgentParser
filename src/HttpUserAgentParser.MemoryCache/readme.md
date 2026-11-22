@@ -105,9 +105,10 @@ services
 
 Pass your own `Meter` to `WithMemoryCacheMeterTelemetry(meter)` to record to it. A later registration with another meter
 replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
-Meters the package creates itself (without argument or with a prefix) are created once per name and reused.
-The core and the MemoryCache package need separate meters (both create `cache.hit`, `cache.miss` and `cache.size`); passing the meter
-of one to the other throws an `ArgumentException`.
+The meter the package creates itself (without argument or with a prefix) is reused for the same name and disposed when another
+meter replaces it; a measurement that runs exactly during that switch may be lost. Meters you pass in are never disposed.
+The core and the MemoryCache package need separate meters (both create `cache.hit`, `cache.miss` and `cache.size`, and a meter keeps
+its instruments): a meter that one of them has used is rejected by the other with an `ArgumentException`, also after a switch.
 
 ### Meter + instruments
 

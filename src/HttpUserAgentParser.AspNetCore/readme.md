@@ -101,7 +101,8 @@ services
 
 Pass your own `Meter` to `WithAspNetCoreMeterTelemetry(meter)` to record to it. A later registration with another meter
 replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
-Meters the package creates itself (without argument or with a prefix) are created once per name and reused.
+The meter the package creates itself (without argument or with a prefix) is reused for the same name and disposed when another
+meter replaces it; a measurement that runs exactly during that switch may be lost. Meters you pass in are never disposed.
 
 ### Meter + instruments
 

@@ -43,6 +43,7 @@ internal static class HttpUserAgentRules
         ("ipod", new(HttpUserAgentPlatformRegexId.IPod, "iOS", HttpUserAgentPlatformType.IOS)),
         // ChromeOS ("CrOS x86_64"), before "os x", which "CrOS x86_64" contains; with the space, "Microsoft" does not match
         ("cros ", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)),
+        ("cros+", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)), // URL-encoded logs
         // Mac OS (common)
         ("os x", new(HttpUserAgentPlatformRegexId.OsX, "Mac OS X", HttpUserAgentPlatformType.MacOS)),
         // Linux (common)
@@ -238,7 +239,7 @@ internal static class HttpUserAgentRules
         ( "MistralAI-User", "MistralAI-User" ),
         ( "DuckAssistBot", "DuckAssistBot" ),
         ( "AI2Bot", "AI2Bot" ),
-        ( "YouBot/", "YouBot" ), // "YouBot" alone would match "ShowyouBot"
+        ( " YouBot/", "YouBot" ), // "YouBot/" alone would match "ShowyouBot/1.0"
     ];
 
     /// <summary>

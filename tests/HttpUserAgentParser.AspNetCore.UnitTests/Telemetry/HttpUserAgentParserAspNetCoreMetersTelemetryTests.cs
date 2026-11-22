@@ -111,27 +111,78 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
     }
 
     [Fact]
-    public void Own_Meters_Are_Reused_Per_Name_And_Meters_Of_The_Caller_Stay_Alive()
+    public void A_Replaced_Own_Meter_Is_Disposed_But_A_Meter_Of_The_Caller_Is_Not()
     {
         HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
         using Meter callerMeter = new("caller.http_user_agent_parser.aspnetcore");
 
         options.WithAspNetCoreMeterTelemetryPrefix("first.");
-        options.WithAspNetCoreMeterTelemetryPrefix("second.");
-        options.WithAspNetCoreMeterTelemetryPrefix("first."); // reuses the meter and the instruments of the first registration
-        options.WithAspNetCoreMeterTelemetry(callerMeter);
-        options.WithAspNetCoreMeterTelemetry();
-
+        options.WithAspNetCoreMeterTelemetryPrefix("first."); // the meter in use: kept
         Assert.Equal((1, 2), CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
+
+        options.WithAspNetCoreMeterTelemetryPrefix("second.");
+        Assert.Equal((0, 0), CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
         Assert.Equal((1, 2), CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
+
+        options.WithAspNetCoreMeterTelemetry(callerMeter);
+        Assert.Equal((0, 0), CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
+
+        options.WithAspNetCoreMeterTelemetry(); // the default meter replaces the meter of the caller
         Assert.Equal((1, 2), CountLiveMeters("caller.http_user_agent_parser.aspnetcore"));
         Assert.Equal((1, 2), CountLiveMeters("mycsharp.http_user_agent_parser.aspnetcore"));
     }
 
     [Fact]
-    public async Task No_Measurement_Is_Lost_While_Own_Meters_Are_Switched()
+    public void Changing_Prefixes_Keep_Only_The_Meter_In_Use()
+    {
+        HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
+
+        for (int i = 0; i < 32; i++)
+        {
+            options.WithAspNetCoreMeterTelemetryPrefix($"changing{i}.");
+        }
+
+        for (int i = 0; i < 31; i++)
+        {
+            Assert.Equal((0, 0), CountLiveMeters($"changing{i}.http_user_agent_parser.aspnetcore"));
+        }
+
+        Assert.Equal((1, 2), CountLiveMeters("changing31.http_user_agent_parser.aspnetcore"));
+    }
+
+    [Fact]
+    public void A_Throwing_Listener_Keeps_The_Meter_In_Use()
+    {
+        using Meter first = new("throwing.first");
+        using Meter second = new("throwing.second");
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (instrument.Meter.Name.StartsWith("throwing.", StringComparison.Ordinal) && !ReferenceEquals(instrument.Meter, first))
+                {
+                    throw new InvalidOperationException("listener failure");
+                }
+            },
+        };
+        listener.Start();
+
+        HttpUserAgentParserAspNetCoreMeters.Enable(first);
+        Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserAspNetCoreMeters.Enable(second));
+        Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter("throwing.own"));
+        Assert.Equal((0, 0), CountLiveMeters("throwing.own")); // the new own meter is disposed again
+
+        using MeterTestListener recorder = new("throwing.first");
+        HttpUserAgentParserAspNetCoreMeters.UserAgentPresent();
+        Assert.Equal(new[] { "user_agent.present" }, recorder.InstrumentNames, StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public async Task No_Measurement_Is_Lost_While_Meters_Of_The_Caller_Are_Switched()
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        using Meter a = new("switch.a");
+        using Meter b = new("switch.b");
         long recorded = 0;
         using MeterListener listener = new()
         {
@@ -147,14 +198,14 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
         listener.SetMeasurementEventCallback<long>((_, value, _, _) => Interlocked.Add(ref recorded, value));
         listener.Start();
 
-        HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter("switch.a");
+        HttpUserAgentParserAspNetCoreMeters.Enable(a);
         using CancellationTokenSource stop = new(TimeSpan.FromMilliseconds(300));
         Task switcher = Task.Run(
             () =>
             {
                 for (int i = 0; !stop.IsCancellationRequested; i++)
                 {
-                    HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter(i % 2 == 0 ? "switch.b" : "switch.a");
+                    HttpUserAgentParserAspNetCoreMeters.Enable(i % 2 == 0 ? b : a);
                 }
             },
             cancellationToken);

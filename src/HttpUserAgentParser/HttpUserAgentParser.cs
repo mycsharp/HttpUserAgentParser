@@ -157,11 +157,11 @@ public static class HttpUserAgentParser
             return TryReadVersion(ua, detectToken, detectIndex, allowSpace: false, out version);
         }
 
-        // A separate version token ("Version/1.2", "rv:11.0"); with the same token as the detect token (Safari "Version/",
-        // "MSIE 6.0") the detect token has been found already.
+        // A separate version token after the detect token ("Opera/9.80 ... Version/12.16", "Trident/7.0; rv:11.0"); with the same
+        // token as the detect token (Safari "Version/", "MSIE 6.0") the detect token has been found already.
         int versionIndex = string.Equals(detectToken, versionToken, StringComparison.Ordinal)
             ? detectIndex
-            : IndexOfTokenStart(ua, versionToken, 0);
+            : IndexOfTokenStart(ua, versionToken, detectIndex + detectToken.Length);
         if (versionIndex >= 0)
         {
             return TryReadVersion(ua, versionToken, versionIndex, allowSpace: true, out version);
