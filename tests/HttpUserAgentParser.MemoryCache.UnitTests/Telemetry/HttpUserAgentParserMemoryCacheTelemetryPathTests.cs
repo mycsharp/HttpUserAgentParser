@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
@@ -26,30 +27,47 @@ public sealed class HttpUserAgentParserMemoryCacheTelemetryPathTests : IDisposab
         Assert.False(HttpUserAgentParserMemoryCacheTelemetry.IsEnabled);
 
         AssertParsesAndCaches();
-        Assert.Equal(0, HttpUserAgentParserMemoryCacheTelemetryState.CacheSize);
     }
 
     [Fact]
-    public void Counters_Without_Listener_Do_Not_Track_Cache_Size()
+    public void Counters_Without_Listener_Parse_And_Cache()
     {
         new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection()).WithMemoryCacheTelemetry();
 
         Assert.True(HttpUserAgentParserMemoryCacheTelemetry.IsEnabled);
-        Assert.False(HttpUserAgentParserMemoryCacheTelemetry.IsCacheSizeEnabled);
 
         AssertParsesAndCaches();
-        Assert.Equal(0, HttpUserAgentParserMemoryCacheTelemetryState.CacheSize);
     }
 
     [Fact]
-    public void Meters_Track_Cache_Size()
+    public void Cache_Size_Includes_Entries_Cached_Before_Telemetry_Was_Enabled()
     {
-        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection()).WithMemoryCacheMeterTelemetry();
+        HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
+        _ = provider.Parse("Chrome/17");
+        _ = provider.Parse("Firefox/12");
 
-        Assert.True(HttpUserAgentParserMemoryCacheTelemetry.IsCacheSizeEnabled);
+        using Meter meter = new("test.memorycache.size.late");
+        long? size = null;
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (instrument.Meter == meter && string.Equals(instrument.Name, "cache.size", StringComparison.Ordinal))
+                {
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        listener.SetMeasurementEventCallback<long>((_, value, _, _) => size = value);
+        listener.Start();
 
-        AssertParsesAndCaches();
-        Assert.Equal(1, HttpUserAgentParserMemoryCacheTelemetryState.CacheSize);
+        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection()).WithMemoryCacheMeterTelemetry(meter);
+        _ = provider.Parse("Chrome/17"); // hit
+        listener.RecordObservableInstruments();
+
+        // Providers of tests running in parallel may add to the size.
+        Assert.True(size >= 2, $"cache.size: {size}");
+        GC.KeepAlive(provider);
     }
 
     private static void AssertParsesAndCaches()

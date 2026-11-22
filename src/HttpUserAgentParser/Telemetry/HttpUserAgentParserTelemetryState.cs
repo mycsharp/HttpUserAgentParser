@@ -1,35 +1,43 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Runtime.CompilerServices;
+using MyCSharp.HttpUserAgentParser.Providers;
+
 namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
 /// <summary>
-/// Holds shared telemetry state for the concurrent dictionary cache.
+/// Knows the live <see cref="HttpUserAgentParserCachedProvider"/> instances to report their cache size.
 /// </summary>
 /// <remarks>
-/// The state is updated independently of whether telemetry is currently enabled
-/// so that polling-based instruments can report correct values once a listener
-/// attaches.
+/// Every provider registers itself when it is created, independent of whether telemetry is enabled, so the
+/// reported size includes entries cached before telemetry was enabled. Providers are referenced weakly.
 /// </remarks>
 internal static class HttpUserAgentParserTelemetryState
 {
-    private static long s_concurrentCacheSize;
+    private static readonly ConditionalWeakTable<HttpUserAgentParserCachedProvider, object?> s_providers = new();
 
     /// <summary>
-    /// Gets the current size of the concurrent dictionary cache.
+    /// Registers a provider whose entries count towards <see cref="ConcurrentCacheSize"/>.
     /// </summary>
+    public static void Register(HttpUserAgentParserCachedProvider provider) => s_providers.Add(provider, null);
+
+    /// <summary>
+    /// Gets the number of entries of all live concurrent dictionary caches.
+    /// </summary>
+    /// <remarks>
+    /// Counting locks each dictionary briefly; it only runs when an instrument is observed, never on the parse path.
+    /// </remarks>
     public static long ConcurrentCacheSize
-        => Volatile.Read(ref s_concurrentCacheSize);
+    {
+        get
+        {
+            long size = 0;
+            foreach (KeyValuePair<HttpUserAgentParserCachedProvider, object?> provider in (IEnumerable<KeyValuePair<HttpUserAgentParserCachedProvider, object?>>)s_providers)
+            {
+                size += provider.Key.CacheEntryCount;
+            }
 
-    /// <summary>
-    /// Updates the current size of the concurrent dictionary cache.
-    /// </summary>
-    /// <param name="size">Current number of entries in the cache.</param>
-    public static void SetConcurrentCacheSize(int size)
-        => Volatile.Write(ref s_concurrentCacheSize, size);
-
-    /// <summary>
-    /// Resets the telemetry state for unit tests.
-    /// </summary>
-    public static void ResetForTests()
-        => Volatile.Write(ref s_concurrentCacheSize, 0);
+            return size;
+        }
+    }
 }

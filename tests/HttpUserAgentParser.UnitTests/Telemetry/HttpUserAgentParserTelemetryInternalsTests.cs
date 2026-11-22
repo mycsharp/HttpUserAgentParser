@@ -1,6 +1,7 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
 using System.Diagnostics.Metrics;
+using MyCSharp.HttpUserAgentParser.Providers;
 using MyCSharp.HttpUserAgentParser.Telemetry;
 using Xunit;
 
@@ -102,12 +103,15 @@ public sealed class HttpUserAgentParserTelemetryInternalsTests : IDisposable
     }
 
     [Fact]
-    public void Telemetry_State_Tracks_Concurrent_Cache_Size()
+    public void Telemetry_State_Counts_The_Entries_Of_Live_Providers()
     {
-        HttpUserAgentParserTelemetry.ConcurrentCacheSizeSet(42);
-        Assert.Equal(42, HttpUserAgentParserTelemetryState.ConcurrentCacheSize);
+        HttpUserAgentParserCachedProvider provider = new();
+        _ = provider.Parse("Chrome/17");
+        _ = provider.Parse("Firefox/12");
+        _ = provider.Parse("Chrome/17");
 
-        HttpUserAgentParserTelemetry.ResetForTests();
-        Assert.Equal(0, HttpUserAgentParserTelemetryState.ConcurrentCacheSize);
+        // Providers of tests running in parallel may add to the size.
+        Assert.True(HttpUserAgentParserTelemetryState.ConcurrentCacheSize >= 2);
+        GC.KeepAlive(provider);
     }
 }

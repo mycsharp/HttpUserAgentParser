@@ -65,6 +65,15 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
     }
 
     /// <summary>
+    /// Enables native System.Diagnostics.Metrics telemetry with a meter named <paramref name="meterName"/> that the package owns.
+    /// </summary>
+    public static void EnableMetersWithName(string meterName)
+    {
+        HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter(meterName);
+        Interlocked.Or(ref s_enabledFlags, MetersFlag);
+    }
+
+    /// <summary>
     /// Records telemetry indicating that a User-Agent header was present.
     /// </summary>
     /// <remarks>

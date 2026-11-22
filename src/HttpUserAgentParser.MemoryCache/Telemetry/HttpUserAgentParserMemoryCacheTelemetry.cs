@@ -27,27 +27,6 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     public static bool IsEnabled => Volatile.Read(ref s_enabledFlags) != 0;
 
     /// <summary>
-    /// Checks if EventCounters are specifically enabled.
-    /// </summary>
-    public static bool AreCountersEnabled
-        => (Volatile.Read(ref s_enabledFlags) & EventCountersFlag) != 0
-           && HttpUserAgentParserMemoryCacheEventSource.Log.IsEnabled();
-
-    /// <summary>
-    /// Checks if Meters are specifically enabled.
-    /// </summary>
-    public static bool AreMetersEnabled
-        => (Volatile.Read(ref s_enabledFlags) & MetersFlag) != 0
-           && HttpUserAgentParserMemoryCacheMeters.IsEnabled;
-
-    /// <summary>
-    /// Checks if cache size tracking is enabled for either system.
-    /// This is used to guard expensive operations like .Count or Interlocked updates.
-    /// </summary>
-    public static bool IsCacheSizeEnabled
-        => AreCountersEnabled || AreMetersEnabled;
-
-    /// <summary>
     /// Enables EventCounter telemetry for the MemoryCache provider.
     /// </summary>
     public static void Enable()
@@ -64,6 +43,15 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     public static void EnableMeters(Meter? meter = null)
     {
         HttpUserAgentParserMemoryCacheMeters.Enable(meter);
+        Interlocked.Or(ref s_enabledFlags, MetersFlag);
+    }
+
+    /// <summary>
+    /// Enables native System.Diagnostics.Metrics telemetry with a meter named <paramref name="meterName"/> that the package owns.
+    /// </summary>
+    public static void EnableMetersWithName(string meterName)
+    {
+        HttpUserAgentParserMemoryCacheMeters.EnableOwnedMeter(meterName);
         Interlocked.Or(ref s_enabledFlags, MetersFlag);
     }
 
@@ -104,34 +92,11 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     }
 
     /// <summary>
-    /// Increments the cache size counter.
-    /// </summary>
-    /// <remarks>
-    /// The operation is forwarded to the internal telemetry state and is safe
-    /// to call concurrently.
-    /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CacheSizeIncrement()
-        => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeIncrement();
-
-    /// <summary>
-    /// Decrements the cache size counter.
-    /// </summary>
-    /// <remarks>
-    /// The operation is forwarded to the internal telemetry state and is safe
-    /// to call concurrently.
-    /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CacheSizeDecrement()
-        => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeDecrement();
-
-    /// <summary>
     /// Resets telemetry state for unit tests.
     /// </summary>
     public static void ResetForTests()
     {
         Volatile.Write(ref s_enabledFlags, 0);
-        HttpUserAgentParserMemoryCacheTelemetryState.ResetForTests();
         HttpUserAgentParserMemoryCacheMeters.ResetForTests();
     }
 }

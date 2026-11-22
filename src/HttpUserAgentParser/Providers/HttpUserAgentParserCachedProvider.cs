@@ -13,17 +13,22 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     /// <summary>
     /// internal cache
     /// </summary>
-    private readonly ConcurrentDictionary<string, HttpUserAgentInformation> _cache = new(StringComparer.OrdinalIgnoreCase);
+    /// <remarks>
+    /// The key is the exact user agent (ordinal): the result contains the user agent, so a differently cased one is another entry.
+    /// </remarks>
+    private readonly ConcurrentDictionary<string, HttpUserAgentInformation> _cache = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Creates a provider with an empty cache.
+    /// </summary>
+    public HttpUserAgentParserCachedProvider() => HttpUserAgentParserTelemetryState.Register(this);
 
     /// <summary>
     /// Parses the user agent or uses the internal cached information
     /// </summary>
     /// <remarks>
-    /// This method includes performance optimizations for telemetry:
-    /// <list type="bullet">
-    /// <item><description>Telemetry checks use a volatile flag to ensure zero overhead when disabled.</description></item>
-    /// <item><description>Cache size reporting (which requires an expensive <see cref="ConcurrentDictionary{TKey,TValue}.Count"/> lock) is only executed if the specific metric is enabled.</description></item>
-    /// </list>
+    /// Telemetry checks use a volatile flag to ensure zero overhead when disabled. The cache size is counted only
+    /// when a cache size instrument is observed.
     /// </remarks>
     public HttpUserAgentInformation Parse(string userAgent)
     {
@@ -39,19 +44,11 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
         }
 
         // Note: ConcurrentDictionary can invoke the factory multiple times in races; counters are best-effort.
-        HttpUserAgentInformation result = _cache.GetOrAdd(userAgent, static ua =>
+        return _cache.GetOrAdd(userAgent, static ua =>
         {
             HttpUserAgentParserTelemetry.ConcurrentCacheMiss();
             return HttpUserAgentParser.Parse(ua);
         });
-
-        if (HttpUserAgentParserTelemetry.IsCacheSizeEnabled)
-        {
-            // Optimization: Avoid expensive .Count property access (locks all buckets) if telemetry is disabled.
-            HttpUserAgentParserTelemetry.ConcurrentCacheSizeSet(_cache.Count);
-        }
-
-        return result;
     }
 
     /// <summary>

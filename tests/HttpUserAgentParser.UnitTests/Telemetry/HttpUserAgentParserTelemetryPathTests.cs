@@ -31,28 +31,56 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
     }
 
     [Fact]
-    public void Counters_Without_Listener_Neither_Measure_Duration_Nor_Track_Cache_Size()
+    public void Counters_Without_Listener_Do_Not_Measure_Duration()
     {
         new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection()).WithTelemetry();
 
         Assert.True(HttpUserAgentParserTelemetry.IsEnabled);
         Assert.False(HttpUserAgentParserTelemetry.ShouldMeasureParseDuration);
-        Assert.False(HttpUserAgentParserTelemetry.IsCacheSizeEnabled);
 
         AssertParsesAndCaches();
     }
 
     [Fact]
-    public void Meters_Without_Duration_Listener_Track_Cache_Size_But_Do_Not_Measure_Duration()
+    public void Meters_Without_Duration_Listener_Do_Not_Measure_Duration()
     {
         new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection()).WithMeterTelemetry();
 
         Assert.True(HttpUserAgentParserTelemetry.IsEnabled);
         Assert.False(HttpUserAgentParserTelemetry.ShouldMeasureParseDuration);
-        Assert.True(HttpUserAgentParserTelemetry.IsCacheSizeEnabled);
 
         AssertParsesAndCaches();
-        Assert.Equal(1, HttpUserAgentParserTelemetryState.ConcurrentCacheSize);
+    }
+
+    [Fact]
+    public void Cache_Size_Includes_Entries_Cached_Before_Telemetry_Was_Enabled()
+    {
+        HttpUserAgentParserCachedProvider provider = new();
+        _ = provider.Parse("Chrome/17");
+        _ = provider.Parse("Firefox/12");
+
+        using Meter meter = new("test.size.late");
+        long? size = null;
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (instrument.Meter == meter && string.Equals(instrument.Name, "cache.size", StringComparison.Ordinal))
+                {
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        listener.SetMeasurementEventCallback<long>((_, value, _, _) => size = value);
+        listener.Start();
+
+        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection()).WithMeterTelemetry(meter);
+        _ = provider.Parse("Chrome/17"); // hit
+        listener.RecordObservableInstruments();
+
+        // Providers of tests running in parallel may add to the size.
+        Assert.True(size >= 2, $"cache.size: {size}");
+        GC.KeepAlive(provider);
     }
 
     [Fact]

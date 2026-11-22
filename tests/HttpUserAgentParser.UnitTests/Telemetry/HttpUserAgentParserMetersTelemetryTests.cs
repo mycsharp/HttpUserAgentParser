@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.Providers;
@@ -115,5 +116,57 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
         Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("acme"));
         Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("acme-"));
         Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("acme.."));
+    }
+
+    [Fact]
+    public void Repeated_Prefix_Registrations_Keep_One_Meter()
+    {
+        HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
+
+        for (int i = 0; i < 32; i++)
+        {
+            options.WithMeterTelemetryPrefix("repeated.");
+        }
+
+        Assert.Equal(1, CountLiveMeters("repeated.http_user_agent_parser"));
+    }
+
+    [Fact]
+    public void A_Replaced_Own_Meter_Is_Disposed_But_A_Meter_Of_The_Caller_Is_Not()
+    {
+        HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
+        using Meter callerMeter = new("caller.http_user_agent_parser");
+
+        options.WithMeterTelemetryPrefix("first.");
+        options.WithMeterTelemetryPrefix("second.");
+        Assert.Equal(0, CountLiveMeters("first.http_user_agent_parser"));
+        Assert.Equal(1, CountLiveMeters("second.http_user_agent_parser"));
+
+        options.WithMeterTelemetry(callerMeter);
+        Assert.Equal(0, CountLiveMeters("second.http_user_agent_parser"));
+
+        options.WithMeterTelemetry(); // the default meter replaces the meter of the caller
+        Assert.Equal(1, CountLiveMeters("caller.http_user_agent_parser"));
+        Assert.Equal(1, CountLiveMeters("mycsharp.http_user_agent_parser"));
+    }
+
+    /// <summary>
+    /// Counts the meters with instruments that a new listener sees, i.e. the meters that are not disposed.
+    /// </summary>
+    private static int CountLiveMeters(string meterName)
+    {
+        HashSet<Meter> meters = [];
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (string.Equals(instrument.Meter.Name, meterName, StringComparison.Ordinal))
+                {
+                    meters.Add(instrument.Meter);
+                }
+            },
+        };
+        listener.Start();
+        return meters.Count;
     }
 }

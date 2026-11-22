@@ -70,7 +70,7 @@ EventSource: `MyCSharp.HttpUserAgentParser.MemoryCache` (constant: `HttpUserAgen
 
 - `cache-hit` (incrementing)
 - `cache-miss` (incrementing)
-- `cache-size` (polling)
+- `cache-size` (polling): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ### Monitor with dotnet-counters
 
@@ -101,6 +101,7 @@ services
 
 Pass your own `Meter` to `WithMemoryCacheMeterTelemetry(meter)` to record to it. A later registration with another meter
 replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
+Meters the package creates itself (without argument or with a prefix) are created once per name and disposed when they are replaced.
 
 ### Meter + instruments
 
@@ -108,7 +109,7 @@ Meter: `mycsharp.http_user_agent_parser.memorycache` (constant: `HttpUserAgentPa
 
 - `cache.hit` (counter)
 - `cache.miss` (counter)
-- `cache.size` (observable gauge)
+- `cache.size` (observable gauge): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ## Export to OpenTelemetry / Application Insights
 

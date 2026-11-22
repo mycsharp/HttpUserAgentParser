@@ -95,17 +95,14 @@ public sealed class HttpUserAgentParserMemoryCacheTelemetryInternalsTests : IDis
     }
 
     [Fact]
-    public void Evicted_Entries_Decrement_The_Cache_Size()
+    public void Size_Limit_Bounds_The_Counted_Entries()
     {
-        using Meter meter = new("test.memorycache.eviction");
-        HttpUserAgentParserMemoryCacheTelemetry.EnableMeters(meter);
-
-        // A size limit of one entry: the second user agent exceeds the capacity and gets evicted.
+        // A size limit of one entry: the second user agent exceeds the capacity and is not cached.
         HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions(new MemoryCacheOptions { SizeLimit = 1 }));
         _ = provider.Parse("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/158.0.0.0");
         _ = provider.Parse("Mozilla/5.0 (X11; Linux x86_64; rv:160.0) Gecko/20100101 Firefox/160.0");
 
-        // Eviction callbacks run asynchronously.
-        Assert.True(SpinWait.SpinUntil(static () => HttpUserAgentParserMemoryCacheTelemetryState.CacheSize < 2, TimeSpan.FromSeconds(10)));
+        Assert.InRange(provider.CacheEntryCount, 0, 1);
+        Assert.True(HttpUserAgentParserMemoryCacheTelemetryState.CacheSize >= provider.CacheEntryCount);
     }
 }

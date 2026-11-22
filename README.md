@@ -64,7 +64,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-This cache has no size limit and no expiration: every distinct user agent string stays in memory as long as the provider lives. Clients choose the `User-Agent` header freely, so use it only for a known, limited set of user agents, e.g. in tests. For web applications, use the `IMemoryCache` implementation, which limits the number of entries and expires them.
+This cache has no size limit and no expiration: every distinct user agent string stays in memory as long as the provider lives. Both caches use the exact user agent string as key (ordinal), because the result contains the user agent. Clients choose the `User-Agent` header freely, so use it only for a known, limited set of user agents, e.g. in tests. For web applications, use the `IMemoryCache` implementation, which limits the number of entries and expires them.
 
 The package [MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache) is required to use the IMemoryCache. This enables the registration of the `IMemoryCache` implementation:
 
@@ -140,7 +140,7 @@ If you only need the raw header value, use `httpContext.GetUserAgentString()`.
 3. **Mobile device**: devices and manufacturers before operating systems before mobile browsers before generic tokens (e.g. a Samsung phone reports `Samsung`, an Android phone without manufacturer token `Android`)
 4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Yandex Browser, UC Browser and others
 
-In every list the first matching entry wins. A browser version is read from the browser's own product token (`Chrome/131.0.0.0`); a separate version token such as Safari's `Version/` only counts at the start of a token, so `VendorVersion/1.0` is ignored. If a token has no version, the next occurrence of the token and then the next rule is checked. Brave and Vivaldi send the same user agent as Chrome and are reported as Chrome; iPadOS sends the macOS user agent by default.
+In every list the first matching entry wins. A browser version is read from the browser's own product token (`Chrome/131.0.0.0`), which ends at the next space, tab, `;`, `(`, `)` or `,`. A token starts at the beginning or after one of these characters. A separate version token such as Safari's `Version/` only counts at the start of a token, so `VendorVersion/1.0` and `Vendor-Version/1.0` are ignored. If the browser token has no version, later occurrences that start a token are checked, then the next rule. Brave and Vivaldi send the same user agent as Chrome and are reported as Chrome; iPadOS sends the macOS user agent by default.
 
 ### `HttpUserAgentStatics` and regular expressions
 
@@ -220,13 +220,13 @@ Core (`MyCSharp.HttpUserAgentParser`)
 - `parse-duration` (s)
 - `cache-hit` (`HttpUserAgentParserCachedProvider`)
 - `cache-miss` (`HttpUserAgentParserCachedProvider`)
-- `cache-size` (`HttpUserAgentParserCachedProvider`)
+- `cache-size` (`HttpUserAgentParserCachedProvider`): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 MemoryCache (`MyCSharp.HttpUserAgentParser.MemoryCache`)
 
 - `cache-hit`
 - `cache-miss`
-- `cache-size`
+- `cache-size`: the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ASP.NET Core (`MyCSharp.HttpUserAgentParser.AspNetCore`)
 
@@ -284,7 +284,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
+Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments. The package creates its own meters (without argument or with a prefix) once per name and disposes them when they are replaced; meters you pass in are never disposed.
 
 ### Meter names and instruments
 
@@ -294,13 +294,13 @@ Core meter (default: `mycsharp.http_user_agent_parser`)
 - `parse.duration` (histogram, `s`)
 - `cache.hit` (counter, `{call}`)
 - `cache.miss` (counter, `{call}`)
-- `cache.size` (observable gauge, `{entry}`)
+- `cache.size` (observable gauge, `{entry}`): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 MemoryCache meter (default: `mycsharp.http_user_agent_parser.memorycache`)
 
 - `cache.hit` (counter, `{call}`)
 - `cache.miss` (counter, `{call}`)
-- `cache.size` (observable gauge, `{entry}`)
+- `cache.size` (observable gauge, `{entry}`): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ASP.NET Core meter (default: `mycsharp.http_user_agent_parser.aspnetcore`)
 
@@ -456,9 +456,9 @@ Mixed workload: the catalog user agents parsed in a loop, mean time per user age
 
 | Workload | .NET 8.0.34 | .NET 9.0.23 | .NET 10.0.15 | .NET 11.0.0 | Allocated |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 44 browser user agents | 751.2 ns | 359.9 ns | 358.0 ns | 291.3 ns | 38 B |
-| 48 crawler user agents | 370.5 ns | 187.1 ns | 175.2 ns | 164.4 ns | 0 B |
-| All 96 user agents | 586.1 ns | 290.4 ns | 276.2 ns | 243.6 ns | 18 B |
+| 44 browser user agents | 758.5 ns | 372.0 ns | 353.1 ns | 302.1 ns | 38 B |
+| 48 crawler user agents | 369.9 ns | 192.6 ns | 167.4 ns | 159.4 ns | 0 B |
+| All 96 user agents | 589.0 ns | 291.1 ns | 285.7 ns | 240.7 ns | 18 B |
 
 .NET 8 has no `SearchValues<string>`; the parser checks the tokens one by one there.
 
@@ -466,13 +466,13 @@ Single user agents on .NET 11:
 
 | User agent | Mean | Allocated |
 | --- | ---: | ---: |
-| Chrome on Windows | 249.4 ns | 40 B |
-| Firefox on Linux | 352.4 ns | 32 B |
-| Chrome on Android | 267.1 ns | 40 B |
-| Safari on iPhone | 295.2 ns | 32 B |
-| Applebot | 182.5 ns | 0 B |
-| Googlebot | 9.45 ns | 0 B |
-| Unknown client | 404.8 ns | 0 B |
+| Chrome on Windows | 255.8 ns | 40 B |
+| Firefox on Linux | 352.8 ns | 32 B |
+| Chrome on Android | 282.1 ns | 40 B |
+| Safari on iPhone | 302.5 ns | 32 B |
+| Applebot | 192.0 ns | 0 B |
+| Googlebot | 9.54 ns | 0 B |
+| Unknown client | 421.7 ns | 0 B |
 
 Startup in a new .NET 11 process (median of 7 runs):
 

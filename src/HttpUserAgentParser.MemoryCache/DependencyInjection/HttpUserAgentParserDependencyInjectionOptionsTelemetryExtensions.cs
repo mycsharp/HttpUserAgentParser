@@ -42,8 +42,7 @@ public static class HttpUserAgentParserDependencyInjectionOptionsTelemetryExtens
         this HttpUserAgentParserDependencyInjectionOptions options,
         string meterPrefix)
     {
-        Meter meter = new(HttpUserAgentParserMemoryCacheMeters.GetMeterName(meterPrefix));
-        HttpUserAgentParserMemoryCacheTelemetry.EnableMeters(meter);
+        HttpUserAgentParserMemoryCacheTelemetry.EnableMetersWithName(HttpUserAgentParserMemoryCacheMeters.GetMeterName(meterPrefix));
         return options;
     }
 }

@@ -129,80 +129,92 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// Reads the version of a browser rule whose detect token occurs at <paramref name="detectIndex"/> (first occurrence).
+    /// Reads the version of a browser rule whose detect token occurs first at <paramref name="detectIndex"/>.
     /// </summary>
     private static bool TryReadBrowserVersion(ReadOnlySpan<char> ua, string detectToken, int detectIndex, string? versionToken, out Range version)
     {
         if (versionToken is null)
         {
-            // Pattern Token/<version>; every occurrence of the token may carry the version ("Chrome/ Chrome/131.0").
-            // Without '/' the token is likely a misspelling or part of another word (e.g. Edgg, Oprea, Chromee).
-            return TryReadVersionAfter(ua, detectToken, detectIndex, tokenStartOnly: false, slashRequired: true, out version);
+            // Pattern Token/<version>. Without '/' the token is likely a misspelling or part of another word (e.g. Edgg, Oprea, Chromee).
+            return TryReadVersionAfter(ua, detectToken, detectIndex, slashRequired: true, out version);
         }
 
         // A separate version token (e.g. Safari "Version/") only counts at the start of a token:
-        // in "VendorVersion/120.0" the version belongs to another product.
+        // in "VendorVersion/120.0" or "Vendor-Version/120.0" the version belongs to another product.
         bool sameToken = string.Equals(detectToken, versionToken, StringComparison.Ordinal);
-        int versionIndex = sameToken ? detectIndex : ua.IndexOf(versionToken, StringComparison.OrdinalIgnoreCase);
-        while (versionIndex >= 0 && !IsTokenStart(ua, versionIndex))
-        {
-            versionIndex = IndexOfNext(ua, versionToken, versionIndex);
-        }
-
+        int versionIndex = IndexOfTokenStart(ua, versionToken, sameToken ? detectIndex : 0);
         if (versionIndex >= 0)
         {
-            return TryReadVersionAfter(ua, versionToken, versionIndex, tokenStartOnly: true, slashRequired: false, out version);
+            return TryReadVersionAfter(ua, versionToken, versionIndex, slashRequired: false, out version);
         }
 
-        // Without version token the version follows the detect token (e.g. "Opera/9.80").
+        // Without version token the version follows the detect token (e.g. "Opera/9.80"), unless both are the same.
         if (sameToken)
         {
             version = default;
             return false;
         }
 
-        return TryReadVersionAfter(ua, detectToken, detectIndex, tokenStartOnly: false, slashRequired: false, out version);
+        return TryReadVersionAfter(ua, detectToken, detectIndex, slashRequired: false, out version);
     }
 
     /// <summary>
-    /// Reads the version of the first occurrence of <paramref name="token"/>, starting at <paramref name="index"/>, that has one.
+    /// Reads the version after the occurrence of <paramref name="token"/> at <paramref name="index"/> or,
+    /// if that one has none, after a later occurrence that starts a token.
     /// </summary>
-    private static bool TryReadVersionAfter(ReadOnlySpan<char> ua, string token, int index, bool tokenStartOnly, bool slashRequired, out Range version)
+    /// <remarks>
+    /// The given occurrence may continue a word, as before (<c>HeadlessChrome/120</c> is Chrome); later occurrences must start
+    /// a token, so <c>MyChrome/2.0</c> does not count. The search continues behind the product token examined before, because
+    /// a token cannot start inside it; so every character is examined once, independent of the number of occurrences.
+    /// </remarks>
+    private static bool TryReadVersionAfter(ReadOnlySpan<char> ua, string token, int index, bool slashRequired, out Range version)
     {
-        for (; index >= 0; index = IndexOfNext(ua, token, index))
+        do
         {
             int end = index + token.Length;
-            if ((tokenStartOnly && !IsTokenStart(ua, index))
-                || (slashRequired && (end >= ua.Length || ua[end] != '/')))
+            int next = index + 1;
+            if (!slashRequired || (end < ua.Length && ua[end] == '/'))
             {
-                continue;
+                if (TryExtractVersion(ua[end..], out Range range, out int productTokenLength))
+                {
+                    version = new Range(end + range.Start.Value, end + range.End.Value);
+                    return true;
+                }
+
+                next = end + productTokenLength;
             }
 
-            if (TryExtractVersion(ua[end..], out Range range))
-            {
-                version = new Range(end + range.Start.Value, end + range.End.Value);
-                return true;
-            }
+            index = IndexOfTokenStart(ua, token, next);
         }
+        while (index >= 0);
 
         version = default;
         return false;
     }
 
     /// <summary>
-    /// Returns the index of the next occurrence of <paramref name="token"/> after <paramref name="index"/>, or -1.
+    /// Returns the index of the first occurrence of <paramref name="token"/> at or after <paramref name="start"/>
+    /// that starts a token (at the beginning or after a delimiter), or -1.
     /// </summary>
-    private static int IndexOfNext(ReadOnlySpan<char> ua, string token, int index)
+    private static int IndexOfTokenStart(ReadOnlySpan<char> ua, string token, int start)
     {
-        int next = ua[(index + 1)..].IndexOf(token, StringComparison.OrdinalIgnoreCase);
-        return next < 0 ? -1 : index + 1 + next;
-    }
+        while (true)
+        {
+            int offset = ua[start..].IndexOf(token, StringComparison.OrdinalIgnoreCase);
+            if (offset < 0)
+            {
+                return -1;
+            }
 
-    /// <summary>
-    /// Returns whether a token at <paramref name="index"/> starts a token of its own, i.e. does not continue a word.
-    /// </summary>
-    private static bool IsTokenStart(ReadOnlySpan<char> ua, int index)
-        => index == 0 || !char.IsAsciiLetterOrDigit(ua[index - 1]);
+            int index = start + offset;
+            if (index == 0 || s_productTokenDelimiters.Contains(ua[index - 1]))
+            {
+                return index;
+            }
+
+            start = index + 1;
+        }
+    }
 
     /// <summary>
     /// returns true if browser was found
@@ -314,13 +326,11 @@ public static class HttpUserAgentParser
     /// The search ends at the next delimiter, so an empty version never takes the version of the next product
     /// (<c>SamsungBrowser/ Chrome/131.0</c> has no Samsung Internet version).
     /// </remarks>
-    private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range)
+    private static bool TryExtractVersion(ReadOnlySpan<char> haystack, out Range range, out int productTokenLength)
     {
         int end = haystack.IndexOfAny(s_productTokenDelimiters);
-        if (end >= 0)
-        {
-            haystack = haystack[..end];
-        }
+        productTokenLength = end < 0 ? haystack.Length : end;
+        haystack = haystack[..productTokenLength];
 
         int start = haystack.IndexOfAnyInRange('0', '9');
         if (start < 0)

@@ -8,19 +8,30 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache;
 
 /// <inheritdoc/>
 /// <summary>
-/// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProvider"/>.
+/// <see cref="IHttpUserAgentParserProvider"/> that caches the results in an <see cref="IMemoryCache"/>.
 /// </summary>
-/// <param name="options">The options used to set expiration and size limit</param>
-public class HttpUserAgentParserMemoryCachedProvider(
-    HttpUserAgentParserMemoryCachedProviderOptions options) : IHttpUserAgentParserProvider
+public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvider
 {
     /// <summary>
     /// The name of the Meter used for metrics.
     /// </summary>
     public const string MeterName = "mycsharp.http_user_agent_parser.memorycache";
 
-    private readonly Microsoft.Extensions.Caching.Memory.MemoryCache _memoryCache = new(options.CacheOptions);
-    private readonly HttpUserAgentParserMemoryCachedProviderOptions _options = options;
+    private readonly Microsoft.Extensions.Caching.Memory.MemoryCache _memoryCache;
+    private readonly HttpUserAgentParserMemoryCachedProviderOptions _options;
+
+    /// <summary>
+    /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProvider"/>.
+    /// </summary>
+    /// <param name="options">The options used to set expiration and size limit</param>
+    public HttpUserAgentParserMemoryCachedProvider(HttpUserAgentParserMemoryCachedProviderOptions options)
+    {
+        _memoryCache = new(options.CacheOptions);
+        _options = options;
+
+        // Known independent of telemetry, so the cache size also includes entries cached before telemetry was enabled.
+        HttpUserAgentParserMemoryCacheTelemetryState.Register(this);
+    }
 
     /// <summary>
     /// Number of cached user agents.
@@ -30,9 +41,8 @@ public class HttpUserAgentParserMemoryCachedProvider(
     /// <inheritdoc/>
     /// <remarks>
     /// The user agent string itself is the cache key (ordinal comparison), so a cache hit does not allocate.
-    /// Telemetry checks use a volatile flag to ensure zero overhead when disabled; cache size tracking
-    /// (via <see cref="Interlocked"/> and <see cref="CacheEntryExtensions.RegisterPostEvictionCallback(ICacheEntry, PostEvictionDelegate)"/>)
-    /// is skipped entirely if the size metric is not enabled.
+    /// Telemetry checks use a volatile flag to ensure zero overhead when disabled; the cache size is counted only
+    /// when a cache size instrument is observed.
     /// </remarks>
     public HttpUserAgentInformation Parse(string userAgent)
     {
@@ -67,13 +77,6 @@ public class HttpUserAgentParserMemoryCachedProvider(
         if (HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)
         {
             HttpUserAgentParserMemoryCacheTelemetry.CacheMiss();
-
-            if (HttpUserAgentParserMemoryCacheTelemetry.IsCacheSizeEnabled)
-            {
-                // The eviction callback also runs if the cache rejects the entry because of its size limit.
-                HttpUserAgentParserMemoryCacheTelemetry.CacheSizeIncrement();
-                entry.RegisterPostEvictionCallback(static (_, _, _, _) => HttpUserAgentParserMemoryCacheTelemetry.CacheSizeDecrement());
-            }
         }
 
         return information;

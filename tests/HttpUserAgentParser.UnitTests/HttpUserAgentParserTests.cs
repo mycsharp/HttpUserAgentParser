@@ -1,5 +1,6 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Diagnostics;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -314,6 +315,10 @@ public class HttpUserAgentParserTests
     [InlineData("Opera/9.80 VendorVersion/120.0", "Opera", "9.80")]
     [InlineData("Mozilla/5.0 Version/ XVersion/1.0 Version/17.0 Safari/604.1", "Safari", "17.0")]
     [InlineData("Version/17.0 Safari/604.1", "Safari", "17.0")]
+    [InlineData("Opera/9.80 Vendor-Version/120.0", "Opera", "9.80")]
+    // Later occurrences only count at the start of a token; the first one may continue a word, as before
+    [InlineData("ChromeHelper/1 MyChrome/2.0 Firefox/126.0", "Firefox", "126.0")]
+    [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.109 Safari/537.36", "Chrome", "120.0.6099.109")]
     public void GetBrowser_Reads_The_Version_Of_Its_Own_Product_Token(string userAgent, string expectedName, string expectedVersion)
     {
         (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(userAgent);
@@ -330,6 +335,23 @@ public class HttpUserAgentParserTests
     public void GetBrowser_Does_Not_Take_The_Version_Of_Another_Product(string userAgent)
     {
         Assert.Null(HttpUserAgentParser.GetBrowser(userAgent));
+    }
+
+    [Theory]
+    [InlineData("Chrome/a")] // one product token without delimiter
+    [InlineData("Chrome/a ")] // many product tokens
+    [InlineData("Version/a")]
+    [InlineData("Version/a ")]
+    public void GetBrowser_Time_Grows_Linearly_With_Repeated_Tokens(string repeated)
+    {
+        // A search that rescans the rest of the user agent for every occurrence needs seconds for 1,000,000 characters.
+        string userAgent = string.Concat(Enumerable.Repeat(repeated, 1_000_000 / repeated.Length));
+
+        long start = Stopwatch.GetTimestamp();
+        Assert.Null(HttpUserAgentParser.GetBrowser(userAgent));
+        TimeSpan elapsed = Stopwatch.GetElapsedTime(start);
+
+        Assert.True(elapsed < TimeSpan.FromSeconds(1), $"GetBrowser took {elapsed.TotalMilliseconds:F0} ms");
     }
 
     [Theory]

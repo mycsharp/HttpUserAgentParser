@@ -55,6 +55,7 @@ services
 ```
 
 This cache has no size limit and no expiration: every distinct user agent string stays in memory as long as the provider lives.
+The key is the exact user agent string (ordinal).
 Use it only for a known, limited set of user agents (e.g. in tests); for web applications use
 [MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache).
 
@@ -81,7 +82,7 @@ EventSource: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserEvent
 - `parse-duration` (s, event counter)
 - `cache-hit` (incrementing, `HttpUserAgentParserCachedProvider`)
 - `cache-miss` (incrementing, `HttpUserAgentParserCachedProvider`)
-- `cache-size` (polling, `HttpUserAgentParserCachedProvider`)
+- `cache-size` (polling, `HttpUserAgentParserCachedProvider`): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ### Monitor with dotnet-counters
 
@@ -108,6 +109,7 @@ services
 
 Pass your own `Meter` to `WithMeterTelemetry(meter)` to record to it. A later registration with another meter replaces the
 previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
+Meters the package creates itself (without argument or with a prefix) are created once per name and disposed when they are replaced.
 
 ### Meter + instruments
 
@@ -117,7 +119,7 @@ Meter: `mycsharp.http_user_agent_parser` (the prefix `mycsharp.` can be changed 
 - `parse.duration` (histogram, s)
 - `cache.hit` (counter)
 - `cache.miss` (counter)
-- `cache.size` (observable gauge)
+- `cache.size` (observable gauge): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ## Export to OpenTelemetry
 

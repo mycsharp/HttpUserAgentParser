@@ -35,25 +35,11 @@ internal static class HttpUserAgentParserTelemetry
            && HttpUserAgentParserEventSource.Log.IsEnabled();
 
     /// <summary>
-    /// Checks if Meters are specifically enabled.
-    /// </summary>
-    public static bool AreMetersEnabled
-        => (Volatile.Read(ref s_enabledFlags) & MetersFlag) != 0
-           && HttpUserAgentParserMeters.IsEnabled;
-
-    /// <summary>
     /// Checks if parse duration should be measured.
     /// This is true if either EventCounters are enabled OR if the specific Meter instrument for duration is enabled.
     /// </summary>
     public static bool ShouldMeasureParseDuration
         => AreCountersEnabled || HttpUserAgentParserMeters.IsParseDurationEnabled;
-
-    /// <summary>
-    /// Checks if cache size tracking is enabled for either system.
-    /// This is used to guard expensive operations like .Count or Interlocked updates.
-    /// </summary>
-    public static bool IsCacheSizeEnabled
-        => AreCountersEnabled || AreMetersEnabled;
 
     /// <summary>
     /// Enables core EventCounter telemetry for the parser.
@@ -72,6 +58,15 @@ internal static class HttpUserAgentParserTelemetry
     public static void EnableMeters(Meter? meter = null)
     {
         HttpUserAgentParserMeters.Enable(meter);
+        Interlocked.Or(ref s_enabledFlags, MetersFlag);
+    }
+
+    /// <summary>
+    /// Enables native System.Diagnostics.Metrics telemetry with a meter named <paramref name="meterName"/> that the package owns.
+    /// </summary>
+    public static void EnableMetersWithName(string meterName)
+    {
+        HttpUserAgentParserMeters.EnableOwnedMeter(meterName);
         Interlocked.Or(ref s_enabledFlags, MetersFlag);
     }
 
@@ -149,20 +144,11 @@ internal static class HttpUserAgentParserTelemetry
     }
 
     /// <summary>
-    /// Updates the concurrent cache size.
-    /// </summary>
-    /// <param name="size">The current size of the cache.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ConcurrentCacheSizeSet(int size)
-        => HttpUserAgentParserTelemetryState.SetConcurrentCacheSize(size);
-
-    /// <summary>
     /// Resets telemetry state for unit testing.
     /// </summary>
     public static void ResetForTests()
     {
         Volatile.Write(ref s_enabledFlags, 0);
-        HttpUserAgentParserTelemetryState.ResetForTests();
         HttpUserAgentParserMeters.ResetForTests();
     }
 }

@@ -48,4 +48,16 @@ public class HttpUserAgentParserCachedProviderTests
         Assert.Equal(2, provider.CacheEntryCount);
         Assert.True(provider.HasCacheEntry(userAgentTwo));
     }
+
+    [Fact]
+    public void Keys_Are_Case_Sensitive()
+    {
+        HttpUserAgentParserCachedProvider provider = new();
+
+        // The result contains the original user agent, so a differently cased user agent is a different entry.
+        Assert.Equal("Chrome/17", provider.Parse("Chrome/17").UserAgent);
+        Assert.Equal("CHROME/17", provider.Parse("CHROME/17").UserAgent);
+        Assert.Equal(2, provider.CacheEntryCount);
+        Assert.False(provider.HasCacheEntry("chrome/17"));
+    }
 }
