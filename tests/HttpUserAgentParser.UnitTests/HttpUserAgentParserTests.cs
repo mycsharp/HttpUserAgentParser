@@ -261,6 +261,26 @@ public class HttpUserAgentParserTests
     }
 
     [Fact]
+    public void GetRobot_UsesReplacementRuleInOriginalOrder()
+    {
+        int last = HttpUserAgentStatics.Robots.Length - 1;
+        (string Key, string Value) original = HttpUserAgentStatics.Robots[last];
+
+        try
+        {
+            HttpUserAgentStatics.Robots[last] = ("CustomTestCrawler", "Custom crawler");
+
+            Assert.Equal("Custom crawler", HttpUserAgentParser.GetRobot("customtestcrawler/1.0"));
+            Assert.Equal("Googlebot", HttpUserAgentParser.GetRobot("customtestcrawler/1.0 googlebot/2.1"));
+            Assert.Null(HttpUserAgentParser.GetRobot(original.Key));
+        }
+        finally
+        {
+            HttpUserAgentStatics.Robots[last] = original;
+        }
+    }
+
+    [Fact]
     public void TryGetMobileDevice_True_And_False()
     {
         bool ok = HttpUserAgentParser.TryGetMobileDevice("(iPhone; CPU iPhone OS)", out string? device);
@@ -301,5 +321,14 @@ public class HttpUserAgentParserTests
 
         (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(ua);
         Assert.Null(browser); // Should fail to extract version and continue, ending with no browser match
+    }
+
+    [Theory]
+    [InlineData("Chrome/ı1.2é3", "1.2")]
+    [InlineData("Chrome/1.2ı3 followed by a long suffix", "1.2")]
+    [InlineData("Chrome/1.2 release123", "1.2")]
+    public void GetBrowser_ExtractsAsciiVersion(string userAgent, string expectedVersion)
+    {
+        Assert.Equal(expectedVersion, HttpUserAgentParser.GetBrowser(userAgent)?.Version);
     }
 }

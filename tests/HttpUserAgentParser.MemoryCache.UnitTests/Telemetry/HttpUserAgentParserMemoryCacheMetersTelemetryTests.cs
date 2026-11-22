@@ -31,9 +31,9 @@ public class HttpUserAgentParserMemoryCacheMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("cache.hit", listener.InstrumentNames);
-        Assert.Contains("cache.miss", listener.InstrumentNames);
-        Assert.Contains("cache.size", listener.InstrumentNames);
+        Assert.Contains("cache.hit", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.miss", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.size", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -58,9 +58,9 @@ public class HttpUserAgentParserMemoryCacheMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("cache.hit", listener.InstrumentNames);
-        Assert.Contains("cache.miss", listener.InstrumentNames);
-        Assert.Contains("cache.size", listener.InstrumentNames);
+        Assert.Contains("cache.hit", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.miss", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.size", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -81,8 +81,8 @@ public class HttpUserAgentParserMemoryCacheMetersTelemetryTests
 
         listener.RecordObservableInstruments();
 
-        Assert.Contains("cache.miss", listener.InstrumentNames);
-        Assert.Contains("cache.size", listener.InstrumentNames);
+        Assert.Contains("cache.miss", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Contains("cache.size", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]

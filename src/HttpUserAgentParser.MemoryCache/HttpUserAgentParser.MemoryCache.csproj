@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup Label="NuGet">
-        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Condition="'$(TargetFramework)' != 'net11.0'" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     </ItemGroup>
 
