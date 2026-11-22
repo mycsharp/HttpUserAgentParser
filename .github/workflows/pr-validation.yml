@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+    # ready_for_review: validate a draft as soon as it is marked as ready
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -12,6 +14,8 @@ permissions:
 jobs:
   validate:
     name: Test on .NET 8 through 11
+    # Draft pull requests are not validated
+    if: ${{ !github.event.pull_request.draft }}
     uses: ./.github/workflows/build-and-test.yml
     with:
       upload-test-results: true
