@@ -1,5 +1,9 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Collections;
+using System.Diagnostics.Metrics;
+using MyCSharp.HttpUserAgentParser.Providers;
+using MyCSharp.HttpUserAgentParser.Telemetry;
 using MyCSharp.HttpUserAgentParser.TestHelpers;
 using MyCSharp.HttpUserAgentParser.UnitTests.Telemetry;
 using Xunit;
@@ -25,6 +29,62 @@ public sealed class HttpUserAgentStaticsRobotsReplacementTests : IDisposable
         Assert.Equal(HttpUserAgentRules.DefaultRobots, HttpUserAgentStatics.Robots);
         Assert.IsNotType<(string Key, string Value)[]>(HttpUserAgentStatics.Robots, exactMatch: false);
         Assert.Throws<NotSupportedException>(() => ((IList<(string Key, string Value)>)HttpUserAgentStatics.Robots)[0] = ("x", "y"));
+        Assert.Same(HttpUserAgentStatics.Robots, ((ICollection)HttpUserAgentStatics.Robots).SyncRoot);
+    }
+
+    [Fact]
+    public void Cached_Provider_Uses_The_Current_Robot_Rules()
+    {
+        HttpUserAgentParserCachedProvider provider = new();
+        Assert.Equal(HttpUserAgentType.Browser, provider.Parse(Chrome).Type);
+
+        HttpUserAgentStatics.SetRobots([("Chrome", "Custom")]);
+        Assert.False(provider.HasCacheEntry(Chrome));
+        Assert.Equal(0, provider.CacheEntryCount);
+        Assert.Equal("Custom", provider.Parse(Chrome).Name);
+
+        HttpUserAgentStatics.SetRobots([]);
+        Assert.Equal(HttpUserAgentType.Browser, provider.Parse(Chrome).Type);
+        Assert.Equal(1, provider.CacheEntryCount);
+    }
+
+    [Fact]
+    public void Rule_Change_During_A_Cache_Miss_Keeps_The_Two_Generations_Separate()
+    {
+        HttpUserAgentParserCachedProvider provider = new();
+        using Meter meter = new("robots.concurrent");
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (instrument.Meter == meter && string.Equals(instrument.Name, "parse.requests", StringComparison.Ordinal))
+                {
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        int requests = 0;
+        listener.SetMeasurementEventCallback<long>((_, _, _, _) =>
+        {
+            if (++requests == 1)
+            {
+                HttpUserAgentStatics.SetRobots([("Chrome", "New robot")]);
+                Assert.Equal("New robot", provider.Parse(Chrome).Name);
+            }
+        });
+        listener.Start();
+
+        try
+        {
+            HttpUserAgentParserTelemetry.EnableMeters(meter);
+            Assert.Equal("Chrome", provider.Parse(Chrome).Name);
+            Assert.Equal("New robot", provider.Parse(Chrome).Name);
+            Assert.Equal(2, requests);
+        }
+        finally
+        {
+            HttpUserAgentParserTelemetry.ResetForTests();
+        }
     }
 
     [Fact]

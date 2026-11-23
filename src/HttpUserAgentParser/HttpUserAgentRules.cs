@@ -43,7 +43,6 @@ internal static class HttpUserAgentRules
         ("ipod", new(HttpUserAgentPlatformRegexId.IPod, "iOS", HttpUserAgentPlatformType.IOS)),
         // ChromeOS ("CrOS x86_64"), before "os x", which "CrOS x86_64" contains; with the space, "Microsoft" does not match
         ("cros ", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)),
-        ("cros+", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)), // URL-encoded logs
         // Mac OS (common)
         ("os x", new(HttpUserAgentPlatformRegexId.OsX, "Mac OS X", HttpUserAgentPlatformType.MacOS)),
         // Linux (common)
@@ -65,21 +64,21 @@ internal static class HttpUserAgentRules
         ("blackberry", new(HttpUserAgentPlatformRegexId.BlackBerry, "BlackBerry", HttpUserAgentPlatformType.BlackBerry)),
         ("ppc mac", new(HttpUserAgentPlatformRegexId.PpcMac, "Power PC Mac", HttpUserAgentPlatformType.MacOS)),
         ("debian", new(HttpUserAgentPlatformRegexId.Debian, "Debian", HttpUserAgentPlatformType.Linux)),
-        ("freebsd", new(HttpUserAgentPlatformRegexId.FreeBsd, "FreeBSD", HttpUserAgentPlatformType.Linux)),
-        ("ppc", new(HttpUserAgentPlatformRegexId.Ppc, "Macintosh", HttpUserAgentPlatformType.Linux)),
+        ("freebsd", new(HttpUserAgentPlatformRegexId.FreeBsd, "FreeBSD", HttpUserAgentPlatformType.Unix)),
         ("gnu", new(HttpUserAgentPlatformRegexId.Gnu, "GNU/Linux", HttpUserAgentPlatformType.Linux)),
-        ("unix", new(HttpUserAgentPlatformRegexId.Unix, "Unknown Unix OS", HttpUserAgentPlatformType.Unix)),
         ("openbsd", new(HttpUserAgentPlatformRegexId.OpenBsd, "OpenBSD", HttpUserAgentPlatformType.Unix)),
         ("symbian", new(HttpUserAgentPlatformRegexId.Symbian, "Symbian OS", HttpUserAgentPlatformType.Symbian)),
-        ("sunos", new(HttpUserAgentPlatformRegexId.SunOs, "Sun Solaris", HttpUserAgentPlatformType.Generic)),
+        ("sunos", new(HttpUserAgentPlatformRegexId.SunOs, "Sun Solaris", HttpUserAgentPlatformType.Unix)),
         ("beos", new(HttpUserAgentPlatformRegexId.BeOs, "BeOS", HttpUserAgentPlatformType.Generic)),
         ("apachebench", new(HttpUserAgentPlatformRegexId.ApacheBench, "ApacheBench", HttpUserAgentPlatformType.Generic)),
-        ("aix", new(HttpUserAgentPlatformRegexId.Aix, "AIX", HttpUserAgentPlatformType.Generic)),
-        ("irix", new(HttpUserAgentPlatformRegexId.Irix, "Irix", HttpUserAgentPlatformType.Generic)),
-        ("osf", new(HttpUserAgentPlatformRegexId.Osf, "DEC OSF", HttpUserAgentPlatformType.Generic)),
-        ("hp-ux", new(HttpUserAgentPlatformRegexId.HpUx, "HP-UX", HttpUserAgentPlatformType.Windows)),
-        ("netbsd", new(HttpUserAgentPlatformRegexId.NetBsd, "NetBSD", HttpUserAgentPlatformType.Generic)),
-        ("bsdi", new(HttpUserAgentPlatformRegexId.Bsdi, "BSDi", HttpUserAgentPlatformType.Generic)),
+        ("aix", new(HttpUserAgentPlatformRegexId.Aix, "AIX", HttpUserAgentPlatformType.Unix)),
+        ("irix", new(HttpUserAgentPlatformRegexId.Irix, "Irix", HttpUserAgentPlatformType.Unix)),
+        ("osf", new(HttpUserAgentPlatformRegexId.Osf, "DEC OSF", HttpUserAgentPlatformType.Unix)),
+        ("hp-ux", new(HttpUserAgentPlatformRegexId.HpUx, "HP-UX", HttpUserAgentPlatformType.Unix)),
+        ("netbsd", new(HttpUserAgentPlatformRegexId.NetBsd, "NetBSD", HttpUserAgentPlatformType.Unix)),
+        ("bsdi", new(HttpUserAgentPlatformRegexId.Bsdi, "BSDi", HttpUserAgentPlatformType.Unix)),
+        ("unix", new(HttpUserAgentPlatformRegexId.Unix, "Unknown Unix OS", HttpUserAgentPlatformType.Unix)),
+        ("ppc", new(HttpUserAgentPlatformRegexId.Ppc, "Macintosh", HttpUserAgentPlatformType.MacOS)),
     ];
 
     /// <summary>
@@ -92,7 +91,6 @@ internal static class HttpUserAgentRules
         // Most specific browsers first (contain Chrome/Mozilla in their UA)
         ("Opera", "OPR", null),
         ("Opera", "Opera", "Version/"),
-        ("Opera", "Opera", null),
         ("Edge", "Edg", null),
         ("Edge", "Edge", null),
         ("Edge", "EdgA", null),
@@ -155,7 +153,6 @@ internal static class HttpUserAgentRules
         ( "perplexity.ai/perplexitybot", "PerplexityBot" ),
         ( "developer.amazon.com/support/amazonbot", "Amazonbot" ),
         ( "trendictionbot", "trendictionbot" ),
-        ( "openai.com/searchbot", "OAI-SearchBot" ),
         ( "Bytespider", "Bytespider" ),
         ( "MojeekBot", "MojeekBot" ),
         ( "SeekportBot", "SeekportBot" ),

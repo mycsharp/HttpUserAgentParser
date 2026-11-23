@@ -314,6 +314,10 @@ public class HttpUserAgentParserTests
     // A version token inside another word belongs to another product
     [InlineData("Opera/9.80 VendorVersion/120.0", "Opera", "9.80")]
     // A version token only counts after the browser token
+    [InlineData("OperaHelper/1 Version/17.0 Safari/604.1", "Safari", "17.0")]
+    [InlineData("TridentSpider/3.1 rv:99 Trident/7.0 rv:11", "Internet Explorer", "11")]
+    [InlineData("Opera 9.50 Version/", "Opera", "9.50")]
+    [InlineData("Trident/7.0 rv:", "Internet Explorer", "7.0")]
     [InlineData("Version/99.0 Opera/9.80 Version/12.16", "Opera", "12.16")]
     [InlineData("rv:99.0; Trident/7.0; rv:11.0", "Internet Explorer", "11.0")]
     [InlineData("Mozilla/5.0 Version/ XVersion/1.0 Version/17.0 Safari/604.1", "Safari", "17.0")]
@@ -352,6 +356,7 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 Chrome/ Chrome")]
     [InlineData("Checklinks/1.3 (pywikipedia robot; http://toolserver.org/~dispenser/view/Checklinks)")]
     [InlineData("Mozilla/5.0 (compatible; TridentSpider/3.1)")]
+    [InlineData("TridentSpider/3.1 (rv:12.0)")]
     [InlineData("Mozilla/5.0 Opera")]
     [InlineData("Mozilla/4.0 (compatible; MSIE ")]
     public void GetBrowser_Does_Not_Take_The_Version_Of_Another_Product(string userAgent)
@@ -390,12 +395,47 @@ public class HttpUserAgentParserTests
     [Theory]
     [InlineData("Microsoft Office/16.0 (Macintosh; Mac OS X 10.15.7; Microsoft Outlook 16.80.23121017; Pro)", "Mac OS X")]
     [InlineData("Microsoft-CryptoAPI/10.0", null)]
+    [InlineData("Mozilla/5.0+(Windows+Phone+10.0;+Android+6.0)", "Windows Phone")]
+    [InlineData("Mozilla/5.0+(Windows+NT+10.0)", "Windows 10")]
+    [InlineData("Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X)", "Mac OS X")]
     [InlineData("Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "ChromeOS")]
     [InlineData("Mozilla/5.0+(X11;+CrOS+x86_64+14541.0.0)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/120.0.0.0+Safari/537.36", "ChromeOS")]
     [InlineData("Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Mobile Safari/537.36 Edge/15.15063", "Windows Phone")]
     public void GetPlatform_Detects_ChromeOS_And_Windows_Phone_Only_By_Their_Own_Tokens(string userAgent, string? expectedPlatform)
     {
         Assert.Equal(expectedPlatform, HttpUserAgentParser.GetPlatform(userAgent)?.Name);
+    }
+
+    [Fact]
+    public void Iis_Spaces_Inside_Product_Names_Are_Decoded_Only_For_Detection()
+    {
+        const string ua = "Mozilla/5.0+(Nintendo+DSi;+Windows+NT+10.0)+Brave+Chrome/99";
+        HttpUserAgentInformation parsed = HttpUserAgentParser.Parse(ua);
+        Assert.Equal(ua, parsed.UserAgent);
+        Assert.Equal("Brave", parsed.Name);
+        Assert.Equal(("Brave", "99"), HttpUserAgentParser.GetBrowser(ua));
+        Assert.Equal("Nintendo DSi", parsed.MobileDeviceType);
+        Assert.Equal("Nintendo DSi", HttpUserAgentParser.GetMobileDevice(ua));
+        Assert.Equal("Windows 10", parsed.Platform?.Name);
+    }
+
+    [Fact]
+    public void GetPlatform_Decodes_Long_Iis_Headers()
+    {
+        Assert.Equal("Windows Phone", HttpUserAgentParser.GetPlatform(new string('x', 512) + "+Windows+Phone")?.Name);
+    }
+
+    [Theory]
+    [InlineData("X11; HP-UX B.11.31", "HP-UX", HttpUserAgentPlatformType.Unix)]
+    [InlineData("X11; FreeBSD ppc", "FreeBSD", HttpUserAgentPlatformType.Unix)]
+    [InlineData("X11; Unix; HP-UX", "HP-UX", HttpUserAgentPlatformType.Unix)]
+    [InlineData("X11; Unix; NetBSD ppc", "NetBSD", HttpUserAgentPlatformType.Unix)]
+    [InlineData("Macintosh; U; PPC", "Macintosh", HttpUserAgentPlatformType.MacOS)]
+    public void Parse_Reports_The_Platform_Family(string comment, string expectedName, HttpUserAgentPlatformType expectedType)
+    {
+        HttpUserAgentPlatformInformation? platform = HttpUserAgentParser.Parse($"Mozilla/5.0 ({comment})").Platform;
+        Assert.Equal(expectedName, platform?.Name);
+        Assert.Equal(expectedType, platform?.PlatformType);
     }
 
     [Fact]

@@ -40,7 +40,8 @@ internal static class HttpUserAgentParserMeters
     private static readonly HttpUserAgentParserMeterRegistration<Instruments> s_registration = new(
         static meter => new Instruments(meter),
         HttpUserAgentParserCacheMeterGuard.ReserveForCore, // the core and the MemoryCache package must not share a meter
-        HttpUserAgentParserCacheMeterGuard.ResetCoreForTests);
+        HttpUserAgentParserCacheMeterGuard.ResetCoreForTests,
+        HttpUserAgentParserTelemetry.MarkMetersEnabled);
 
     /// <summary>
     /// Gets whether meters have been initialized.
@@ -112,10 +113,10 @@ internal static class HttpUserAgentParserMeters
 
         public override void CreateMissingInstruments()
         {
-            _parseRequests ??= Meter.CreateCounter<long>(name: "parse.requests", unit: "{call}", description: "User-Agent parse requests");
-            _parseDuration ??= Meter.CreateHistogram<double>(name: "parse.duration", unit: "s", description: "Parse duration");
-            _cacheHit ??= Meter.CreateCounter<long>(name: "cache.hit", unit: "{call}", description: "Cache hit");
-            _cacheMiss ??= Meter.CreateCounter<long>(name: "cache.miss", unit: "{call}", description: "Cache miss");
+            CreateInstrument(ref _parseRequests, Meter.CreateCounter<long>, "parse.requests", "{call}", "User-Agent parse requests");
+            CreateInstrument(ref _parseDuration, Meter.CreateHistogram<double>, "parse.duration", "s", "Parse duration");
+            CreateInstrument(ref _cacheHit, Meter.CreateCounter<long>, "cache.hit", "{call}", "Cache hit");
+            CreateInstrument(ref _cacheMiss, Meter.CreateCounter<long>, "cache.miss", "{call}", "Cache miss");
 
             // Observable instruments are not shared by the meter: created at most once, also if a listener threw.
             if (Interlocked.Exchange(ref _cacheSizeCreated, 1) == 0)

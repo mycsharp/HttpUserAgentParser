@@ -59,19 +59,15 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
     /// Enables native System.Diagnostics.Metrics telemetry for the AspNetCore package.
     /// </summary>
     public static void EnableMeters(Meter? meter = null)
-    {
-        HttpUserAgentParserAspNetCoreMeters.Enable(meter);
-        Interlocked.Or(ref s_enabledFlags, MetersFlag);
-    }
+        => HttpUserAgentParserAspNetCoreMeters.Enable(meter);
 
     /// <summary>
     /// Enables native System.Diagnostics.Metrics telemetry with a meter named <paramref name="meterName"/> that the package owns.
     /// </summary>
     public static void EnableMetersWithName(string meterName)
-    {
-        HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter(meterName);
-        Interlocked.Or(ref s_enabledFlags, MetersFlag);
-    }
+        => HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter(meterName);
+
+    internal static void MarkMetersEnabled() => Interlocked.Or(ref s_enabledFlags, MetersFlag);
 
     /// <summary>
     /// Records telemetry indicating that a User-Agent header was present.

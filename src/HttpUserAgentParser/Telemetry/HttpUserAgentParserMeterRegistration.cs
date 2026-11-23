@@ -11,6 +11,40 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// <param name="meter">The meter the instruments belong to.</param>
 internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
 {
+    // Shared across packages. Listener callbacks may synchronously register another package
+    // or delegate that work to a task and wait for it.
+    internal sealed class Publication : IDisposable
+    {
+        private static readonly AsyncLocal<Publication?> s_current = new();
+        private readonly Publication? _parent = s_current.Value;
+        private volatile bool _finished;
+
+        public Publication() => s_current.Value = this;
+
+        public static bool InProgress
+        {
+            get
+            {
+                for (Publication? scope = s_current.Value; scope is not null; scope = scope._parent)
+                {
+                    if (!scope._finished)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        public void Dispose()
+        {
+            // ExecutionContext may have been captured by a listener for work that runs later.
+            _finished = true;
+            s_current.Value = _parent;
+        }
+    }
+
     /// <summary>
     /// Gets the meter the instruments belong to.
     /// </summary>
@@ -22,10 +56,38 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
     /// <remarks>
     /// .NET runs the <see cref="MeterListener.InstrumentPublished"/> callbacks while an instrument is created, so listener code
     /// runs here and may throw or register meters itself; no lock is held. An instrument that was published before a listener
-    /// threw exists on the meter, so a later call must not create it again: counters and histograms with the same name, unit and
-    /// description are returned by the meter, observable instruments have to be created at most once by the implementation.
+    /// threw exists on the meter even when its factory did not return it.
     /// </remarks>
     public abstract void CreateMissingInstruments();
+
+    protected void CreateInstrument<T>(ref T? field, Func<string, string, string, T> create, string name, string unit, string description)
+        where T : Instrument
+    {
+        try
+        {
+            field ??= create(name, unit, description);
+        }
+        catch
+        {
+            // Publication precedes insertion in Meter's counter cache. Recover the published
+            // instance so retrying after a listener exception cannot create a second instrument.
+            T? published = null;
+            using MeterListener inventory = new()
+            {
+                InstrumentPublished = (instrument, _) =>
+                {
+                    if (instrument is T candidate && ReferenceEquals(instrument.Meter, Meter)
+                        && (instrument.Name, instrument.Unit, instrument.Description).Equals((name, unit, description)))
+                    {
+                        published = candidate;
+                    }
+                },
+            };
+            inventory.Start();
+            field = published;
+            throw;
+        }
+    }
 }
 
 /// <summary>
@@ -46,15 +108,15 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
 /// <param name="createInstruments">Creates the (still empty) instruments of a meter; must not create instruments itself.</param>
 /// <param name="reserve">Reserves a meter for the package before its instruments are created; throws if the meter must not be used.</param>
 /// <param name="resetReservations">Forgets the reservations of the package (unit tests).</param>
+/// <param name="markEnabled">Enables recording after the complete set of instruments is published.</param>
 internal sealed class HttpUserAgentParserMeterRegistration<TInstruments>(
-    Func<Meter, TInstruments> createInstruments, Action<Meter> reserve, Action resetReservations)
+    Func<Meter, TInstruments> createInstruments, Action<Meter> reserve, Action resetReservations, Action markEnabled)
     where TInstruments : HttpUserAgentParserMeterInstruments
 {
-#if NET9_0_OR_GREATER
-    private readonly Lock _lock = new();
-#else
+    // Monitor.Wait releases this lock while an independent registration finishes.
     private readonly object _lock = new();
-#endif
+    private readonly HashSet<Meter> _publishingMeters = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<string> _publishingNames = new(StringComparer.Ordinal);
 
     // Keyed by the non-generic base type: the table's value type needs a trimming annotation a generic argument cannot provide.
     private readonly ConditionalWeakTable<Meter, HttpUserAgentParserMeterInstruments> _instrumentsByMeter = new();
@@ -75,41 +137,66 @@ internal sealed class HttpUserAgentParserMeterRegistration<TInstruments>(
     public void Use(Meter? meter, string ownedMeterName)
     {
         bool own = meter is null;
+        Meter target;
         lock (_lock)
         {
-            // Already in use: nothing to do. This also keeps the own meter from being disposed if a caller passes it in.
-            bool inUse = own
-                ? _ownedMeter is not null && string.Equals(_ownedMeter.Name, ownedMeterName, StringComparison.Ordinal)
-                : ReferenceEquals(meter, _ownedMeter);
-            if (inUse)
+            while (meter is null ? _publishingNames.Contains(ownedMeterName) : _publishingMeters.Contains(meter))
+            {
+                if (HttpUserAgentParserMeterInstruments.Publication.InProgress)
+                {
+                    return; // the in-flight registration will finish publishing these instruments
+                }
+
+                Monitor.Wait(_lock);
+            }
+
+            if (own ? string.Equals(_ownedMeter?.Name, ownedMeterName, StringComparison.Ordinal) : ReferenceEquals(meter, _current?.Meter))
             {
                 return;
             }
+
+            target = meter ?? new Meter(ownedMeterName);
+            if (own)
+            {
+                _publishingNames.Add(ownedMeterName);
+            }
+
+            _publishingMeters.Add(target);
         }
 
-        // A new own meter is visible to nobody until it is published below.
-        meter ??= new Meter(ownedMeterName);
-
-        TInstruments instruments;
+        using HttpUserAgentParserMeterInstruments.Publication publication = new();
+        Meter? replacedOwnedMeter;
         try
         {
-            reserve(meter);
-            instruments = (TInstruments)_instrumentsByMeter.GetValue(meter, _createInstruments);
+            reserve(target);
+            TInstruments instruments = (TInstruments)_instrumentsByMeter.GetValue(target, _createInstruments);
             instruments.CreateMissingInstruments();
+
+            lock (_lock)
+            {
+                Volatile.Write(ref _current, instruments);
+                replacedOwnedMeter = _ownedMeter;
+                _ownedMeter = own ? target : null;
+                markEnabled();
+            }
         }
         catch when (own)
         {
-            meter.Dispose();
+            target.Dispose();
             throw;
         }
-
-        Meter? replacedOwnedMeter;
-        lock (_lock)
+        finally
         {
-            // Published only after all instruments exist.
-            Volatile.Write(ref _current, instruments);
-            replacedOwnedMeter = _ownedMeter;
-            _ownedMeter = own ? meter : null;
+            lock (_lock)
+            {
+                _publishingMeters.Remove(target);
+                if (own)
+                {
+                    _publishingNames.Remove(ownedMeterName);
+                }
+
+                Monitor.PulseAll(_lock);
+            }
         }
 
         // Disposing notifies listeners, so it runs outside of the lock.

@@ -302,6 +302,52 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
     }
 
     [Fact]
+    public void Retrying_After_A_Counter_Listener_Throws_Reuses_The_Published_Instance()
+    {
+        using Meter meter = new("retry.counter");
+        _ = meter.CreateCounter<long>("parse.requests", "other", "Other definition");
+        using (MeterListener failing = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (ReferenceEquals(instrument.Meter, meter) && string.Equals(instrument.Unit, "{call}", StringComparison.Ordinal))
+                {
+                    HttpUserAgentParserTelemetry.EnableMeters(meter);
+                    throw new InvalidOperationException("listener failure");
+                }
+            },
+        })
+        {
+            failing.Start();
+            Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserMeters.Enable(meter));
+            Assert.False(HttpUserAgentParserTelemetry.IsEnabled);
+        }
+
+        HttpUserAgentParserMeters.Enable(meter);
+        Assert.Equal((1, 6), CountLiveMeters(meter.Name)); // five parser instruments and the unrelated counter
+    }
+
+    [Fact]
+    public void Reentrant_Registration_Publishes_Each_Instrument_Once()
+    {
+        const string name = "reentrant.core";
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (string.Equals(instrument.Meter.Name, name, StringComparison.Ordinal))
+                {
+                    HttpUserAgentParserMeters.Enable(instrument.Meter);
+                    HttpUserAgentParserMeters.EnableOwnedMeter(name);
+                }
+            },
+        };
+        listener.Start();
+        HttpUserAgentParserMeters.EnableOwnedMeter(name);
+        Assert.Equal((1, 5), CountLiveMeters(name));
+    }
+
+    [Fact]
     public void A_Nested_Registration_Of_Another_Own_Meter_Leaves_No_Meter_Behind()
     {
         using Meter callerMeter = new("nested.caller");

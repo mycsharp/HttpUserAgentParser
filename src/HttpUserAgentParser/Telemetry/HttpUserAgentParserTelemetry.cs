@@ -56,19 +56,15 @@ internal static class HttpUserAgentParserTelemetry
     /// Enables native System.Diagnostics.Metrics telemetry for the parser.
     /// </summary>
     public static void EnableMeters(Meter? meter = null)
-    {
-        HttpUserAgentParserMeters.Enable(meter);
-        Interlocked.Or(ref s_enabledFlags, MetersFlag);
-    }
+        => HttpUserAgentParserMeters.Enable(meter);
 
     /// <summary>
     /// Enables native System.Diagnostics.Metrics telemetry with a meter named <paramref name="meterName"/> that the package owns.
     /// </summary>
     public static void EnableMetersWithName(string meterName)
-    {
-        HttpUserAgentParserMeters.EnableOwnedMeter(meterName);
-        Interlocked.Or(ref s_enabledFlags, MetersFlag);
-    }
+        => HttpUserAgentParserMeters.EnableOwnedMeter(meterName);
+
+    internal static void MarkMetersEnabled() => Interlocked.Or(ref s_enabledFlags, MetersFlag);
 
     /// <summary>
     /// Records a parse request event.

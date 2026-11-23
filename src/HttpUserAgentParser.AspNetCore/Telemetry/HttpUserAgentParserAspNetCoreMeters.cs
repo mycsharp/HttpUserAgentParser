@@ -39,7 +39,8 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     private static readonly HttpUserAgentParserMeterRegistration<Instruments> s_registration = new(
         static meter => new Instruments(meter),
         static _ => { }, // no instrument in common with the other packages: a meter may be shared
-        static () => { });
+        static () => { },
+        HttpUserAgentParserAspNetCoreTelemetry.MarkMetersEnabled);
 
     /// <summary>
     /// Creates the metric instruments on <paramref name="meter"/> (or on a default meter) and uses them from now on.
@@ -82,8 +83,8 @@ internal static class HttpUserAgentParserAspNetCoreMeters
 
         public override void CreateMissingInstruments()
         {
-            _userAgentPresent ??= Meter.CreateCounter<long>(name: "user_agent.present", unit: "{call}", description: "User-Agent header present");
-            _userAgentMissing ??= Meter.CreateCounter<long>(name: "user_agent.missing", unit: "{call}", description: "User-Agent header missing");
+            CreateInstrument(ref _userAgentPresent, Meter.CreateCounter<long>, "user_agent.present", "{call}", "User-Agent header present");
+            CreateInstrument(ref _userAgentMissing, Meter.CreateCounter<long>, "user_agent.missing", "{call}", "User-Agent header missing");
         }
     }
 }

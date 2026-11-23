@@ -1,7 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Collections.ObjectModel;
-
 namespace MyCSharp.HttpUserAgentParser;
 
 /// <summary>
@@ -19,7 +17,7 @@ internal sealed class HttpUserAgentRobotSet
     public HttpUserAgentRobotSet((string Key, string Value)[] robots)
     {
         Entries = robots;
-        ReadOnlyEntries = Array.AsReadOnly(robots);
+        ReadOnlyEntries = [.. robots];
         Keys = Array.ConvertAll(robots, static robot => robot.Key);
 
         // Without robots there is no first robot.
@@ -51,7 +49,7 @@ internal sealed class HttpUserAgentRobotSet
     /// <summary>
     /// Gets the robots as read-only list for <see cref="HttpUserAgentStatics.Robots"/>.
     /// </summary>
-    public ReadOnlyCollection<(string Key, string Value)> ReadOnlyEntries { get; }
+    public IReadOnlyList<(string Key, string Value)> ReadOnlyEntries { get; }
 
     /// <summary>
     /// Gets the keys of <see cref="Entries"/>.

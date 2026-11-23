@@ -92,6 +92,14 @@ using (ServiceProvider provider = services.BuildServiceProvider())
 
     provider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
     Check(provider.GetRequiredService<IHttpUserAgentParserContextAccessor>().Get() is { Name: "Safari" }, "ASP.NET Core accessor (IHttpContextAccessor)");
+
+    HttpUserAgentParserCachedProvider cached = new();
+    _ = cached.Parse(Chrome);
+    HttpUserAgentStatics.SetRobots([("Chrome/", "Custom robot")]);
+    Check(cached.Parse(Chrome) is { Type: HttpUserAgentType.Robot, Name: "Custom robot" }, "updated robot rules in dictionary cache");
+    Check(parser.Parse(Chrome) is { Type: HttpUserAgentType.Robot, Name: "Custom robot" }, "updated robot rules in memory cache");
+    HttpUserAgentStatics.SetRobots(HttpUserAgentStatics.DefaultRobots);
+    Check(parser.Parse(Chrome) is { Type: HttpUserAgentType.Browser }, "restored robot rules");
 }
 
 foreach (string instrument in (string[])["parse.requests", "parse.duration", "cache.miss", "cache.hit", "user_agent.present"])

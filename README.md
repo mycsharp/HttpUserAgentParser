@@ -152,7 +152,7 @@ The patterns use `RegexOptions.IgnoreCase` with culture-invariant case mapping, 
 
 ### Custom robots
 
-`HttpUserAgentStatics.Robots` lists the robots the parser detects (read-only, initially `HttpUserAgentStatics.DefaultRobots`). `HttpUserAgentStatics.SetRobots` replaces the list for all following parses in the process; the first entry whose key occurs in the user agent (ignoring case) wins. Set it once at startup, building the matchers takes a moment:
+`HttpUserAgentStatics.Robots` lists the robots in priority order. The first key found in the user agent wins, ignoring case. `SetRobots` replaces the list for the entire process, including existing instances of both built-in cache providers. A parse already in progress can finish with its previous rules. To extend the defaults at startup, pass the default entries followed by your own.
 
 ```csharp
 HttpUserAgentStatics.SetRobots([.. HttpUserAgentStatics.DefaultRobots, ("MyCrawler", "My Crawler")]);

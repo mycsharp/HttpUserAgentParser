@@ -49,19 +49,19 @@ public static class HttpUserAgentStatics
         new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS),
         new(HttpUserAgentPlatformRegexId.OsX, "Mac OS X", HttpUserAgentPlatformType.MacOS),
         new(HttpUserAgentPlatformRegexId.PpcMac, "Power PC Mac", HttpUserAgentPlatformType.MacOS),
-        new(HttpUserAgentPlatformRegexId.FreeBsd, "FreeBSD", HttpUserAgentPlatformType.Linux),
-        new(HttpUserAgentPlatformRegexId.Ppc, "Macintosh", HttpUserAgentPlatformType.Linux),
+        new(HttpUserAgentPlatformRegexId.FreeBsd, "FreeBSD", HttpUserAgentPlatformType.Unix),
+        new(HttpUserAgentPlatformRegexId.Ppc, "Macintosh", HttpUserAgentPlatformType.MacOS),
         new(HttpUserAgentPlatformRegexId.Linux, "Linux", HttpUserAgentPlatformType.Linux),
         new(HttpUserAgentPlatformRegexId.Debian, "Debian", HttpUserAgentPlatformType.Linux),
-        new(HttpUserAgentPlatformRegexId.SunOs, "Sun Solaris", HttpUserAgentPlatformType.Generic),
+        new(HttpUserAgentPlatformRegexId.SunOs, "Sun Solaris", HttpUserAgentPlatformType.Unix),
         new(HttpUserAgentPlatformRegexId.BeOs, "BeOS", HttpUserAgentPlatformType.Generic),
         new(HttpUserAgentPlatformRegexId.ApacheBench, "ApacheBench", HttpUserAgentPlatformType.Generic),
-        new(HttpUserAgentPlatformRegexId.Aix, "AIX", HttpUserAgentPlatformType.Generic),
-        new(HttpUserAgentPlatformRegexId.Irix, "Irix", HttpUserAgentPlatformType.Generic),
-        new(HttpUserAgentPlatformRegexId.Osf, "DEC OSF", HttpUserAgentPlatformType.Generic),
-        new(HttpUserAgentPlatformRegexId.HpUx, "HP-UX", HttpUserAgentPlatformType.Windows),
-        new(HttpUserAgentPlatformRegexId.NetBsd, "NetBSD", HttpUserAgentPlatformType.Generic),
-        new(HttpUserAgentPlatformRegexId.Bsdi, "BSDi", HttpUserAgentPlatformType.Generic),
+        new(HttpUserAgentPlatformRegexId.Aix, "AIX", HttpUserAgentPlatformType.Unix),
+        new(HttpUserAgentPlatformRegexId.Irix, "Irix", HttpUserAgentPlatformType.Unix),
+        new(HttpUserAgentPlatformRegexId.Osf, "DEC OSF", HttpUserAgentPlatformType.Unix),
+        new(HttpUserAgentPlatformRegexId.HpUx, "HP-UX", HttpUserAgentPlatformType.Unix),
+        new(HttpUserAgentPlatformRegexId.NetBsd, "NetBSD", HttpUserAgentPlatformType.Unix),
+        new(HttpUserAgentPlatformRegexId.Bsdi, "BSDi", HttpUserAgentPlatformType.Unix),
         new(HttpUserAgentPlatformRegexId.OpenBsd, "OpenBSD", HttpUserAgentPlatformType.Unix),
         new(HttpUserAgentPlatformRegexId.Gnu, "GNU/Linux", HttpUserAgentPlatformType.Linux),
         new(HttpUserAgentPlatformRegexId.Unix, "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
@@ -137,7 +137,8 @@ public static class HttpUserAgentStatics
     /// </summary>
     /// <remarks>
     /// The list applies to all following parses in the process; it is replaced atomically, so a parse running at the same
-    /// time uses either the previous or the new list. To extend the defaults, pass e.g.
+    /// time uses either the previous or the new list. Both built-in cache providers honor the change on the next call.
+    /// To extend the defaults, pass e.g.
     /// <c>[.. HttpUserAgentStatics.DefaultRobots, ("MyCrawler", "My Crawler")]</c>; <see cref="DefaultRobots"/> restores them.
     /// Building the matchers takes a moment, so set the list once at startup rather than per request.
     /// </remarks>

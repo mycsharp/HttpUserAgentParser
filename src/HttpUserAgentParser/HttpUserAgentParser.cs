@@ -21,7 +21,7 @@ public static class HttpUserAgentParser
     /// Characters that end a product token ("product/version") or a comment entry of a user agent.
     /// A token starts at the beginning of the user agent or after one of them; <c>+</c> stands for a space in URL-encoded logs.
     /// </summary>
-    private static readonly SearchValues<char> s_productTokenDelimiters = SearchValues.Create(" \t;(),+");
+    private static readonly SearchValues<char> s_productTokenDelimiters = SearchValues.Create(" \t;(),");
 
     /// <summary>
     /// Parses given <param name="userAgent">user agent</param>
@@ -31,10 +31,13 @@ public static class HttpUserAgentParser
     /// The telemetry check is designed to be zero-overhead when disabled (using a volatile boolean check).
     /// </remarks>
     public static HttpUserAgentInformation Parse(string userAgent)
+        => Parse(userAgent, HttpUserAgentRules.RobotSet);
+
+    internal static HttpUserAgentInformation Parse(string userAgent, HttpUserAgentRobotSet robots)
     {
         if (!HttpUserAgentParserTelemetry.IsEnabled)
         {
-            return ParseInternal(userAgent);
+            return ParseInternal(userAgent, robots);
         }
 
         bool measureDuration = HttpUserAgentParserTelemetry.ShouldMeasureParseDuration;
@@ -42,7 +45,7 @@ public static class HttpUserAgentParser
 
         HttpUserAgentParserTelemetry.ParseRequest();
 
-        HttpUserAgentInformation result = ParseInternal(userAgent);
+        HttpUserAgentInformation result = ParseInternal(userAgent, robots);
 
         if (measureDuration)
         {
@@ -52,26 +55,63 @@ public static class HttpUserAgentParser
         return result;
     }
 
-    private static HttpUserAgentInformation ParseInternal(string userAgent)
+    private static HttpUserAgentInformation ParseInternal(string userAgent, HttpUserAgentRobotSet robots)
     {
         // prepare
         userAgent = Cleanup(userAgent);
 
         // analyze
-        if (TryGetRobot(userAgent, out string? robotName))
+        if (GetRobot(userAgent, robots) is { } robotName)
         {
             return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
         }
 
-        HttpUserAgentPlatformInformation? platform = GetPlatform(userAgent);
-        string? mobileDeviceType = GetMobileDevice(userAgent);
+        return DetectProducts(userAgent, AnalyzeProducts);
+    }
 
-        if (GetBrowser(userAgent) is { } browser)
+    private static HttpUserAgentInformation AnalyzeProducts(string userAgent, ReadOnlySpan<char> ua)
+    {
+        HttpUserAgentPlatformInformation? platform = FindPlatform(ua);
+        string? mobileDeviceType = FindMobileDevice(ua);
+
+        if (FindBrowser(ua) is { } browser)
         {
             return HttpUserAgentInformation.CreateForBrowser(userAgent, platform, browser.Name, browser.Version, mobileDeviceType);
         }
 
         return HttpUserAgentInformation.CreateForUnknown(userAgent, platform, mobileDeviceType);
+    }
+
+    private delegate T ProductDetector<T>(string original, ReadOnlySpan<char> products);
+
+    // IIS logs use '+' for spaces, including spaces inside product names. Keep the original
+    // string in the result and use the decoded span for all three product detectors.
+    private static T DetectProducts<T>(string userAgent, ProductDetector<T> detect)
+    {
+        ReadOnlySpan<char> ua = userAgent.AsSpan();
+        if (!ua.Contains('+'))
+        {
+            return detect(userAgent, ua);
+        }
+
+        if (ua.Length <= 512)
+        {
+            Span<char> decoded = stackalloc char[ua.Length];
+            ua.Replace(decoded, '+', ' ');
+            return detect(userAgent, decoded);
+        }
+
+        char[] buffer = ArrayPool<char>.Shared.Rent(ua.Length);
+        try
+        {
+            Span<char> decoded = buffer.AsSpan(0, ua.Length);
+            ua.Replace(decoded, '+', ' ');
+            return detect(userAgent, decoded);
+        }
+        finally
+        {
+            ArrayPool<char>.Shared.Return(buffer);
+        }
     }
 
     /// <summary>
@@ -83,10 +123,12 @@ public static class HttpUserAgentParser
     /// returns the platform or null
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
+        => DetectProducts(userAgent, static (_, ua) => FindPlatform(ua));
+
+    private static HttpUserAgentPlatformInformation? FindPlatform(ReadOnlySpan<char> ua)
     {
         // Rules are sorted by frequency, so a sequential scan usually stops after a few tokens.
         // (Measured with a mixed real-world workload, this beats vectorized token groups here.)
-        ReadOnlySpan<char> ua = userAgent.AsSpan();
         foreach ((string token, HttpUserAgentPlatformInformation platform) in HttpUserAgentRules.Platforms)
         {
             if (ContainsIgnoreCase(ua, token))
@@ -116,9 +158,10 @@ public static class HttpUserAgentParser
     /// or after a space, tab, <c>+</c>, <c>;</c>, <c>(</c>, <c>)</c> or <c>,</c>.
     /// </remarks>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
-    {
-        ReadOnlySpan<char> ua = userAgent.AsSpan();
+        => DetectProducts(userAgent, static (_, ua) => FindBrowser(ua));
 
+    private static (string Name, string? Version)? FindBrowser(ReadOnlySpan<char> ua)
+    {
         foreach ((string name, string detectToken, string? versionToken) in HttpUserAgentRules.Browsers)
         {
             // Fast path: most rules do not match at all, and a match usually starts a token.
@@ -159,16 +202,31 @@ public static class HttpUserAgentParser
 
         // A separate version token after the detect token ("Opera/9.80 ... Version/12.16", "Trident/7.0; rv:11.0"); with the same
         // token as the detect token (Safari "Version/", "MSIE 6.0") the detect token has been found already.
-        int versionIndex = string.Equals(detectToken, versionToken, StringComparison.Ordinal)
-            ? detectIndex
-            : IndexOfTokenStart(ua, versionToken, detectIndex + detectToken.Length);
-        if (versionIndex >= 0)
+        if (string.Equals(detectToken, versionToken, StringComparison.Ordinal))
         {
-            return TryReadVersion(ua, versionToken, versionIndex, allowSpace: true, out version);
+            return TryReadVersion(ua, detectToken, detectIndex, allowSpace: true, out version);
         }
 
-        // Without version token the version follows the detect token ("Opera/9.80", "Opera 9.50").
-        return TryReadVersion(ua, detectToken, detectIndex, allowSpace: true, out version);
+        // A separate version belongs to a complete product name. Skip prefixes such as TridentSpider.
+        while (detectIndex >= 0)
+        {
+            int end = detectIndex + detectToken.Length;
+            if (end == ua.Length || ua[end] == '/' || s_productTokenDelimiters.Contains(ua[end]))
+            {
+                int versionIndex = IndexOfTokenStart(ua, versionToken, end);
+                if (versionIndex >= 0 && TryReadVersion(ua, versionToken, versionIndex, allowSpace: true, out version))
+                {
+                    return true;
+                }
+
+                return TryReadVersion(ua, detectToken, detectIndex, allowSpace: true, out version);
+            }
+
+            detectIndex = IndexOfTokenStart(ua, detectToken, end);
+        }
+
+        version = default;
+        return false;
     }
 
     /// <summary>
@@ -240,7 +298,7 @@ public static class HttpUserAgentParser
     /// Returns whether <paramref name="c"/> separates a product name from its version in <c>Token 1.2</c>
     /// (<c>+</c> stands for a space in URL-encoded logs).
     /// </summary>
-    private static bool IsSpace(char c) => c is ' ' or '\t' or '+';
+    private static bool IsSpace(char c) => c is ' ' or '\t';
 
     /// <summary>
     /// Returns the index of the first occurrence of <paramref name="token"/> at or after <paramref name="start"/>
@@ -279,9 +337,10 @@ public static class HttpUserAgentParser
     /// returns the robot or null
     /// </summary>
     public static string? GetRobot(string userAgent)
-    {
-        HttpUserAgentRobotSet robots = HttpUserAgentRules.RobotSet;
+        => GetRobot(userAgent, HttpUserAgentRules.RobotSet);
 
+    private static string? GetRobot(string userAgent, HttpUserAgentRobotSet robots)
+    {
         // The first robot (Googlebot in the default list, by far the most common robot) is checked on its own.
         if (robots.FirstKey is { } firstKey && ContainsIgnoreCase(userAgent, firstKey))
         {
@@ -292,7 +351,7 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
-    /// Finds the first robot after the first one; separate from <see cref="GetRobot"/>, so its check of the first robot stays small.
+    /// Finds the first robot after the first one; separate from <see cref="GetRobot(string)"/>, so its check of the first robot stays small.
     /// </summary>
     private static string? FindRobot(ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
     {
@@ -319,8 +378,11 @@ public static class HttpUserAgentParser
     /// returns the device or null
     /// </summary>
     public static string? GetMobileDevice(string userAgent)
+        => DetectProducts(userAgent, static (_, ua) => FindMobileDevice(ua));
+
+    private static string? FindMobileDevice(ReadOnlySpan<char> ua)
     {
-        int index = HttpUserAgentRules.MobileMatcher.Find(userAgent, 0, out _);
+        int index = HttpUserAgentRules.MobileMatcher.Find(ua, 0, out _);
         return index >= 0 ? HttpUserAgentRules.Mobiles[index].Value : null;
     }
 

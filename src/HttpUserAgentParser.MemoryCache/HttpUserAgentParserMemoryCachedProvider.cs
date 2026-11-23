@@ -1,6 +1,8 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 using MyCSharp.HttpUserAgentParser.Providers;
 
@@ -15,6 +17,18 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache;
 /// </remarks>
 public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvider, IDisposable
 {
+    // MemoryCache checks passive expiration tokens on every lookup, also when a miss from an
+    // older generation finishes after SetRobots. The cache key and callback value stay public types.
+    internal sealed class RobotRulesChangeToken(IReadOnlyList<(string Key, string Value)> entries) : IChangeToken
+    {
+        public bool HasChanged => !ReferenceEquals(entries, HttpUserAgentRules.RobotSet.ReadOnlyEntries);
+        public bool ActiveChangeCallbacks => false;
+        public IDisposable RegisterChangeCallback(Action<object?> callback, object? state)
+            => CancellationToken.None.Register(callback, state);
+    }
+
+    private static readonly ConditionalWeakTable<HttpUserAgentRobotSet, RobotRulesChangeToken> s_changeTokens = new();
+
     /// <summary>
     /// The name of the Meter used for metrics.
     /// </summary>
@@ -82,14 +96,19 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
     /// </remarks>
     private HttpUserAgentInformation ParseAndCache(string userAgent)
     {
-        HttpUserAgentInformation information = HttpUserAgentParser.Parse(userAgent);
+        HttpUserAgentRobotSet robots = HttpUserAgentRules.RobotSet;
+        HttpUserAgentInformation information = HttpUserAgentParser.Parse(userAgent, robots);
 
         MemoryCacheEntryOptions entryOptions = _options.CacheEntryOptions;
-        using ICacheEntry entry = _memoryCache.CreateEntry(userAgent);
-        entry.SetOptions(entryOptions);
-        entry.Size = entryOptions.Size ?? 1;
-        entry.Value = information;
+        using (ICacheEntry entry = _memoryCache.CreateEntry(userAgent))
+        {
+            entry.SetOptions(entryOptions);
+            entry.ExpirationTokens.Add(s_changeTokens.GetValue(robots, static rules => new RobotRulesChangeToken(rules.ReadOnlyEntries)));
+            entry.Size = entryOptions.Size ?? 1;
+            entry.Value = information;
+        }
 
+        // Listeners can parse the same user agent. Publish the entry before notifying them.
         if (HttpUserAgentParserMemoryCacheTelemetry.IsEnabled)
         {
             HttpUserAgentParserMemoryCacheTelemetry.CacheMiss();

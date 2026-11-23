@@ -44,19 +44,19 @@ public class HttpUserAgentStaticsTests
         ("cros", "ChromeOS", HttpUserAgentPlatformType.ChromeOS),
         ("os x", "Mac OS X", HttpUserAgentPlatformType.MacOS),
         ("ppc mac", "Power PC Mac", HttpUserAgentPlatformType.MacOS),
-        ("freebsd", "FreeBSD", HttpUserAgentPlatformType.Linux),
-        ("ppc", "Macintosh", HttpUserAgentPlatformType.Linux),
+        ("freebsd", "FreeBSD", HttpUserAgentPlatformType.Unix),
+        ("ppc", "Macintosh", HttpUserAgentPlatformType.MacOS),
         ("linux", "Linux", HttpUserAgentPlatformType.Linux),
         ("debian", "Debian", HttpUserAgentPlatformType.Linux),
-        ("sunos", "Sun Solaris", HttpUserAgentPlatformType.Generic),
+        ("sunos", "Sun Solaris", HttpUserAgentPlatformType.Unix),
         ("beos", "BeOS", HttpUserAgentPlatformType.Generic),
         ("apachebench", "ApacheBench", HttpUserAgentPlatformType.Generic),
-        ("aix", "AIX", HttpUserAgentPlatformType.Generic),
-        ("irix", "Irix", HttpUserAgentPlatformType.Generic),
-        ("osf", "DEC OSF", HttpUserAgentPlatformType.Generic),
-        ("hp-ux", "HP-UX", HttpUserAgentPlatformType.Windows),
-        ("netbsd", "NetBSD", HttpUserAgentPlatformType.Generic),
-        ("bsdi", "BSDi", HttpUserAgentPlatformType.Generic),
+        ("aix", "AIX", HttpUserAgentPlatformType.Unix),
+        ("irix", "Irix", HttpUserAgentPlatformType.Unix),
+        ("osf", "DEC OSF", HttpUserAgentPlatformType.Unix),
+        ("hp-ux", "HP-UX", HttpUserAgentPlatformType.Unix),
+        ("netbsd", "NetBSD", HttpUserAgentPlatformType.Unix),
+        ("bsdi", "BSDi", HttpUserAgentPlatformType.Unix),
         ("openbsd", "OpenBSD", HttpUserAgentPlatformType.Unix),
         ("gnu", "GNU/Linux", HttpUserAgentPlatformType.Linux),
         ("unix", "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
@@ -151,6 +151,7 @@ public class HttpUserAgentStaticsTests
     {
         Assert.Equal(HttpUserAgentRules.DefaultRobots, HttpUserAgentStatics.DefaultRobots);
         Assert.Contains(("googlebot", "Googlebot"), HttpUserAgentStatics.DefaultRobots);
+        Assert.Distinct(HttpUserAgentStatics.DefaultRobots.Select(static robot => robot.Key), StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]

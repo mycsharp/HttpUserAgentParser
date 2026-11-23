@@ -53,6 +53,35 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
     }
 
     [Fact]
+    public void Cache_Miss_Listener_Can_Read_The_New_Entry()
+    {
+        using Meter meter = new("test.cache.miss");
+        HttpUserAgentParserCachedProvider provider = new();
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, target) =>
+            {
+                if (instrument.Meter == meter && string.Equals(instrument.Name, "cache.miss", StringComparison.Ordinal))
+                {
+                    target.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        int misses = 0;
+        listener.SetMeasurementEventCallback<long>((_, _, _, _) =>
+        {
+            if (++misses == 1)
+            {
+                Assert.Equal("Chrome", provider.Parse(UserAgent).Name);
+            }
+        });
+        listener.Start();
+        HttpUserAgentParserTelemetry.EnableMeters(meter);
+        Assert.Equal("Chrome", provider.Parse(UserAgent).Name);
+        Assert.Equal(1, misses);
+    }
+
+    [Fact]
     public void Cache_Size_Includes_Entries_Cached_Before_Telemetry_Was_Enabled()
     {
         HttpUserAgentParserCachedProvider provider = new();
@@ -156,6 +185,8 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
     public async Task Concurrent_Registration_Returns_After_All_Instruments_Exist()
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        using Meter earlier = new("test.earlier");
+        ExecutionContext? captured = null;
         using Meter meter = new("test.race");
         using ManualResetEventSlim creating = new();
         using ManualResetEventSlim release = new();
@@ -163,6 +194,11 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
         {
             InstrumentPublished = (instrument, target) =>
             {
+                if (instrument.Meter == earlier)
+                {
+                    captured = ExecutionContext.Capture();
+                }
+
                 if (instrument.Meter != meter)
                 {
                     return;
@@ -180,9 +216,11 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
         };
         listener.Start();
 
+        HttpUserAgentParserTelemetry.EnableMeters(earlier);
+        Assert.NotNull(captured);
         Task first = Task.Run(() => HttpUserAgentParserTelemetry.EnableMeters(meter), cancellationToken);
         Assert.True(creating.Wait(TimeSpan.FromSeconds(10), cancellationToken));
-        Task second = Task.Run(() => HttpUserAgentParserTelemetry.EnableMeters(meter), cancellationToken);
+        Task second = Task.Run(() => ExecutionContext.Run(captured, _ => HttpUserAgentParserTelemetry.EnableMeters(meter), null), cancellationToken);
 
         // The second registration must not return while the instruments of the first one are incomplete.
         Assert.NotSame(second, await Task.WhenAny(second, Task.Delay(200, cancellationToken)));
