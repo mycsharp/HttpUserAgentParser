@@ -122,6 +122,17 @@ public sealed class HttpUserAgentStaticsRobotsReplacementTests : IDisposable
     }
 
     [Fact]
+    public void First_Rule_Can_Match_After_Decoding_And_Still_Outrank_Literal_Matches()
+    {
+        HttpUserAgentStatics.SetRobots([("Log Spider", "First"), ("C++Bot", "Literal"), ("Chrome", "Last")]);
+        foreach ((string header, string expected) in new[] { ("C++Bot log+spider Chrome/1", "First"), ("Chrome/1 C++Bot", "Literal") })
+        {
+            Assert.Equal(expected, HttpUserAgentParser.Parse(header).Name);
+            Assert.Equal(expected, HttpUserAgentParser.GetRobot(header));
+        }
+    }
+
+    [Fact]
     public void SetRobots_Accepts_A_Single_Robot_And_No_Robots()
     {
         HttpUserAgentStatics.SetRobots([("ExampleBot", "Example")]);

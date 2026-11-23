@@ -11,6 +11,8 @@ namespace MyCSharp.HttpUserAgentParser;
 /// </remarks>
 internal sealed class HttpUserAgentRobotSet
 {
+    private readonly (string? Key, string? Value) _first;
+    private readonly int _decodedStart;
     private readonly int[] _literalPlusRules;
 
     /// <summary>
@@ -21,7 +23,10 @@ internal sealed class HttpUserAgentRobotSet
         ReadOnlyEntries = [.. robots];
         Keys = Array.ConvertAll(robots, static robot => robot.Key);
 
-        _literalPlusRules = [.. Enumerable.Range(0, robots.Length).Where(i => robots[i].Key.Contains('+'))];
+        _first = robots.FirstOrDefault();
+        // Decoding can create a new match for the first key only if that key contains a space.
+        _decodedStart = _first.Key?.Contains(' ') == true ? 0 : 1;
+        _literalPlusRules = [.. Enumerable.Range(0, robots.Length).Skip(1).Where(i => robots[i].Key.Contains('+'))];
 
         // The first robot is checked on its own (Googlebot in the default list, by far the most common robot): own group.
         Matcher = new PriorityTokenMatcher<HttpUserAgentRules.RobotDetector>(Keys, 1);
@@ -30,11 +35,17 @@ internal sealed class HttpUserAgentRobotSet
     }
 
     /// <summary>
+    /// The first rule has priority over every decoded or literal match, including when its name is customized.
+    /// </summary>
+    public string? MatchFirst(ReadOnlySpan<char> original)
+        => _first.Key is { } key && original.Contains(key, StringComparison.OrdinalIgnoreCase) ? _first.Value : null;
+
+    /// <summary>
     /// Matches both IIS-encoded names and literal plus signs in custom keys, in configured priority order.
     /// </summary>
-    public string? Match(string original, ReadOnlySpan<char> decoded)
+    public string? MatchAfterFirst(string original, ReadOnlySpan<char> decoded)
     {
-        int index = Find(decoded);
+        int index = Keys.Length > _decodedStart && AnchorMatcher.ContainsAny(decoded) ? Matcher.Find(decoded, _decodedStart) : -1;
         foreach (int literal in _literalPlusRules)
         {
             if (index >= 0 && literal >= index)
@@ -49,16 +60,6 @@ internal sealed class HttpUserAgentRobotSet
         }
 
         return index >= 0 ? ReadOnlyEntries[index].Value : null;
-    }
-
-    private int Find(ReadOnlySpan<char> input)
-    {
-        if (Keys.Length > 0 && input.Contains(Keys[0], StringComparison.OrdinalIgnoreCase))
-        {
-            return 0;
-        }
-
-        return Keys.Length > 1 && AnchorMatcher.ContainsAny(input) ? Matcher.Find(input, 1) : -1;
     }
 
     /// <summary>

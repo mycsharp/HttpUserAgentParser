@@ -459,20 +459,20 @@ BenchmarkDotNet 0.16.0-preview.2, .NET 11.0.0 x64, Windows 10, AMD Ryzen 9 9950X
 
 | Workload | Mean | Std. dev. | Allocated |
 | --- | ---: | ---: | ---: |
-| Catalog browsers (44) | 310.0 ns | 0.84 ns | 38 B |
-| Catalog crawlers (48) | 171.5 ns | 2.43 ns | 0 B |
-| Full catalog (96) | 247.9 ns | 0.58 ns | 18 B |
-| API snapshot (60) | 311.0 ns | 0.37 ns | 29 B |
+| Catalog browsers (44) | 297.3 ns | 0.64 ns | 38 B |
+| Catalog crawlers (48) | 158.9 ns | 1.63 ns | 0 B |
+| Full catalog (96) | 254.8 ns | 2.61 ns | 18 B |
+| API snapshot (60) | 307.3 ns | 0.89 ns | 29 B |
 
 | Selected individual headers | Mean | Std. dev. | Allocated |
 | --- | ---: | ---: | ---: |
-| Googlebot | 22.13 ns | 0.245 ns | 0 B |
-| Bravebot | 125.67 ns | 0.470 ns | 0 B |
-| OAI-AdsBot | 261.96 ns | 1.682 ns | 0 B |
-| IIS-encoded Screaming Frog | 251.06 ns | 3.469 ns | 0 B |
-| Amazon Silk on Fire tablet | 277.44 ns | 3.096 ns | 40 B |
+| Googlebot | 6.783 ns | 0.0712 ns | 0 B |
+| Bravebot | 136.728 ns | 0.6628 ns | 0 B |
+| OAI-AdsBot | 246.361 ns | 1.4094 ns | 0 B |
+| IIS-encoded Screaming Frog | 238.949 ns | 0.9344 ns | 0 B |
+| Amazon Silk on Fire tablet | 287.497 ns | 2.1981 ns | 40 B |
 
-In a second run against the PR base (`be56445`), the snapshot mean fell from 438.2 to 321.8 ns per header, and the crawler catalog from 389.0 to 174.6 ns. The Googlebot header took 22.49 ns on the reviewed parser and 8.34 ns on the base. Both used 0 B per parse. [All individual results and the direct comparison](docs/benchmarks/2026-11-23.md)
+The optimized parser checks the highest-priority robot rule before decoding the header. In a paired run the reference Googlebot header fell from 22.526 ns to 7.280 ns, with zero bytes allocated. A separate comparison measured 8.401 ns on main and 6.783 ns on the optimized parser. [Benchmarks and comparisons](docs/benchmarks/2026-11-23.md)
 
 ### Earlier measurements on .NET 8–10
 

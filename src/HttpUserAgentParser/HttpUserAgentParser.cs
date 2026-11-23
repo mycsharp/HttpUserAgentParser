@@ -56,11 +56,16 @@ public static class HttpUserAgentParser
     }
 
     private static HttpUserAgentInformation ParseInternal(string userAgent, HttpUserAgentRobotSet robots)
-        => Detect(Cleanup(userAgent), robots, AnalyzeUserAgent);
+    {
+        userAgent = Cleanup(userAgent);
+        return robots.MatchFirst(userAgent) is { } first
+            ? HttpUserAgentInformation.CreateForRobot(userAgent, first)
+            : Detect(userAgent, robots, AnalyzeUserAgent);
+    }
 
     private static HttpUserAgentInformation AnalyzeUserAgent(string userAgent, ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
     {
-        if (robots.Match(userAgent, ua) is { } robotName)
+        if (robots.MatchAfterFirst(userAgent, ua) is { } robotName)
         {
             return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
         }
@@ -344,7 +349,11 @@ public static class HttpUserAgentParser
     /// returns the robot or null
     /// </summary>
     public static string? GetRobot(string userAgent)
-        => Detect(userAgent, HttpUserAgentRules.RobotSet, static (original, decoded, robots) => robots.Match(original, decoded));
+    {
+        HttpUserAgentRobotSet robots = HttpUserAgentRules.RobotSet;
+        return robots.MatchFirst(userAgent)
+            ?? Detect(userAgent, robots, static (original, decoded, rules) => rules.MatchAfterFirst(original, decoded));
+    }
 
     /// <summary>
     /// returns true if robot was found
