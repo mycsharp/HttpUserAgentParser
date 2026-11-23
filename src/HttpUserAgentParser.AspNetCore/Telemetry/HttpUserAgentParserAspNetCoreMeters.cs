@@ -50,7 +50,7 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// <summary>
     /// Creates the metric instruments on a meter named <paramref name="meterName"/> that this class creates and owns.
     /// </summary>
-    public static void EnableOwnedMeter(string meterName) => s_registration.Use(null, meterName);
+    public static void EnableOwnedMeter(string meterName) => s_registration.Use(meter: null, meterName);
 
     /// <summary>
     /// Records a metric indicating that a User-Agent header was present.

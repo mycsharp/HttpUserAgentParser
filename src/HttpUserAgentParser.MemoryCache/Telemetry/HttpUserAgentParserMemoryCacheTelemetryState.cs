@@ -18,7 +18,7 @@ internal static class HttpUserAgentParserMemoryCacheTelemetryState
     /// <summary>
     /// Registers a provider whose entries count towards <see cref="CacheSize"/>.
     /// </summary>
-    public static void Register(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.Add(provider, null);
+    public static void Register(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.Add(provider, value: null);
 
     /// <summary>
     /// Removes a disposed provider, whose entries no longer count.

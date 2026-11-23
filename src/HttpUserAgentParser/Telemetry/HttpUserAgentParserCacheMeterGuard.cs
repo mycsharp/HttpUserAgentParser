@@ -75,7 +75,7 @@ internal static class HttpUserAgentParserCacheMeterGuard
                     nameof(meter));
             }
 
-            reservations.AddOrUpdate(meter, null);
+            reservations.AddOrUpdate(meter, value: null);
         }
     }
 }

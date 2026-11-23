@@ -19,7 +19,7 @@ internal static class HttpUserAgentParserTelemetryState
     /// <summary>
     /// Registers a provider whose entries count towards <see cref="ConcurrentCacheSize"/>.
     /// </summary>
-    public static void Register(HttpUserAgentParserCachedProvider provider) => s_providers.Add(provider, null);
+    public static void Register(HttpUserAgentParserCachedProvider provider) => s_providers.Add(provider, value: null);
 
     /// <summary>
     /// Gets the number of entries of all live concurrent dictionary caches.

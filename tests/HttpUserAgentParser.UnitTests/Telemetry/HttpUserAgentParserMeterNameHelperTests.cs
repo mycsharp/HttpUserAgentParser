@@ -12,7 +12,7 @@ public class HttpUserAgentParserMeterNameHelperTests
     [Fact]
     public void GetMeterName_NullPrefix_ReturnsDefaultPrefixedName()
     {
-        string result = HttpUserAgentParserMeterNameHelper.GetMeterName(null, Suffix);
+        string result = HttpUserAgentParserMeterNameHelper.GetMeterName(meterPrefix: null, Suffix);
 
         Assert.Equal("mycsharp." + Suffix, result);
     }

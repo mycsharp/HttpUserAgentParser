@@ -221,7 +221,7 @@ public sealed class HttpUserAgentParserTelemetryPathTests : IDisposable
         Assert.NotNull(captured);
         Task first = Task.Run(() => HttpUserAgentParserTelemetry.EnableMeters(meter), cancellationToken);
         Assert.True(creating.Wait(TimeSpan.FromSeconds(10), cancellationToken));
-        Task second = Task.Run(() => ExecutionContext.Run(captured, _ => HttpUserAgentParserTelemetry.EnableMeters(meter), null), cancellationToken);
+        Task second = Task.Run(() => ExecutionContext.Run(captured, _ => HttpUserAgentParserTelemetry.EnableMeters(meter), state: null), cancellationToken);
 
         // The second registration must not return while the instruments of the first one are incomplete.
         Assert.NotSame(second, await Task.WhenAny(second, Task.Delay(200, cancellationToken)));

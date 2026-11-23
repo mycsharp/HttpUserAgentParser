@@ -47,7 +47,7 @@ internal static class HttpUserAgentParserMemoryCacheMeters
     /// <summary>
     /// Creates the metric instruments on a meter named <paramref name="meterName"/> that this class creates and owns.
     /// </summary>
-    public static void EnableOwnedMeter(string meterName) => s_registration.Use(null, meterName);
+    public static void EnableOwnedMeter(string meterName) => s_registration.Use(meter: null, meterName);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheHit() => s_registration.Current?.CacheHit.Add(1);

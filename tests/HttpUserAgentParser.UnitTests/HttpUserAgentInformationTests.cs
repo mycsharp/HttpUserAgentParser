@@ -93,8 +93,8 @@ public partial class HttpUserAgentInformationTests
             1 => HttpUserAgentInformation.CreateForUnknown("ua", platform, "Android"),
             2 => HttpUserAgentInformation.CreateForBrowser("ua", platform, "Edge", "1.0", "Android"),
             3 => HttpUserAgentInformation.CreateForBrowser("ua", platform, "Chrome", "2.0", "Android"),
-            4 => HttpUserAgentInformation.CreateForBrowser("ua", platform, "Chrome", "1.0", null),
-            5 => HttpUserAgentInformation.CreateForBrowser("ua", null, "Chrome", "1.0", "Android"),
+            4 => HttpUserAgentInformation.CreateForBrowser("ua", platform, "Chrome", "1.0", deviceName: null),
+            5 => HttpUserAgentInformation.CreateForBrowser("ua", platform: null, "Chrome", "1.0", "Android"),
             _ => HttpUserAgentInformation.CreateForBrowser("ua", new HttpUserAgentPlatformInformation(TextRegex(), "Linux", HttpUserAgentPlatformType.Linux), "Chrome", "1.0", "Android"),
         };
 

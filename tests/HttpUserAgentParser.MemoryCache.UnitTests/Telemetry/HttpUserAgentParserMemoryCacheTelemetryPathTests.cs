@@ -73,7 +73,7 @@ public sealed class HttpUserAgentParserMemoryCacheTelemetryPathTests : IDisposab
         HttpUserAgentParserMemoryCachedProvider.RobotRulesChangeToken expired = new(new object());
         Assert.True(expired.HasChanged);
         Assert.False(expired.ActiveChangeCallbacks);
-        using IDisposable registration = expired.RegisterChangeCallback(static _ => Assert.Fail("Passive token invoked a callback."), null);
+        using IDisposable registration = expired.RegisterChangeCallback(static _ => Assert.Fail("Passive token invoked a callback."), state: null);
     }
 
     [Fact]

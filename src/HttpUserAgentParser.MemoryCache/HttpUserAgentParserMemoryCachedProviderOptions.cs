@@ -27,13 +27,13 @@ public class HttpUserAgentParserMemoryCachedProviderOptions
     /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProviderOptions"/>
     /// </summary>
     public HttpUserAgentParserMemoryCachedProviderOptions(MemoryCacheOptions cacheOptions)
-        : this(cacheOptions, null) { }
+        : this(cacheOptions, cacheEntryOptions: null) { }
 
     /// <summary>
     /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProviderOptions"/>
     /// </summary>
     public HttpUserAgentParserMemoryCachedProviderOptions(MemoryCacheEntryOptions cacheEntryOptions)
-        : this(null, cacheEntryOptions) { }
+        : this(cacheOptions: null, cacheEntryOptions) { }
 
     /// <summary>
     /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProviderOptions"/>

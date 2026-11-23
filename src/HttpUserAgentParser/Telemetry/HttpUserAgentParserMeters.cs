@@ -61,7 +61,7 @@ internal static class HttpUserAgentParserMeters
     /// <summary>
     /// Creates the metric instruments on a meter named <paramref name="meterName"/> that this class creates and owns.
     /// </summary>
-    public static void EnableOwnedMeter(string meterName) => s_registration.Use(null, meterName);
+    public static void EnableOwnedMeter(string meterName) => s_registration.Use(meter: null, meterName);
 
     /// <summary>
     /// Emits a counter increment for a parse request.
