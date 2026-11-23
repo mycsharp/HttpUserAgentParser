@@ -5,7 +5,7 @@ Fast HTTP User-Agent parsing for .NET.
 - Allocation-free detection with vectorized searches (`SearchValues<string>` on .NET 9+); for a user agent without surrounding
   white space only the version string is allocated; no regular expressions in the parser
 - Trimming and Native AOT compatible
-- Detects the most used browsers and current search engine, SEO and AI crawlers
+- Detects browsers including Amazon Silk, and search, SEO and AI crawlers including Bravebot, Screaming Frog SEO Spider, KimiBot, DeepSeekBot, ChatGLM-Spider and OAI-AdsBot
 
 Repository:
 https://github.com/mycsharp/HttpUserAgentParser

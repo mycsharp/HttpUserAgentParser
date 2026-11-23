@@ -135,14 +135,14 @@ If you only need the raw header value, use `httpContext.GetUserAgentString()`.
 
 `HttpUserAgentParser.Parse` checks, in this order:
 
-1. **Robots**: search engine crawlers (e.g. Googlebot, Bingbot, Applebot, DuckDuckBot, YandexBot), SEO crawlers (e.g. AhrefsBot, SemrushBot, Screaming Frog) and AI crawlers and AI user agents (e.g. GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, PerplexityBot, Amazonbot, Bytespider, CCBot)
+1. **Robots**: search engine crawlers (e.g. Googlebot, Bingbot, Applebot, Bravebot, DuckDuckBot, YandexBot), SEO crawlers (e.g. AhrefsBot, SemrushBot, Screaming Frog) and AI crawlers and AI user agents (e.g. GPTBot, ChatGPT-User, OAI-SearchBot, OAI-AdsBot, ClaudeBot, PerplexityBot, KimiBot, DeepSeekBot, ChatGLM-Spider, Amazonbot, Bytespider, CCBot)
 2. **Platform**: Windows, macOS, iOS, Android, ChromeOS, Linux and others
 3. **Mobile device**: devices and manufacturers before operating systems before mobile browsers before generic tokens (e.g. a Samsung phone reports `Samsung`, an Android phone without manufacturer token `Android`)
 4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Amazon Silk, Yandex Browser, UC Browser and others
 
 In every list the first matching entry wins. Browser and version tokens only count at the start of a token: at the beginning of the user agent or after a space, tab, `+`, `;`, `(`, `)` or `,`, so `Knowledge/1.0` is no Edge and `VendorVersion/1.0` no version token. The version is read from the browser's own product token (`Chrome/131.0.0.0`), which ends at the next of these characters; Opera and Internet Explorer also accept `Opera 9.50` and `MSIE 6.0`; their separate version tokens (`Version/`, `rv:`) only count after the browser token. If a token has no version, later occurrences of the token are checked, then the next rule. `+` stands for a space as in URL-encoded logs (IIS); decode other encodings such as `%20` before parsing, e.g. with `WebUtility.UrlDecode`.
 
-Brave and Vivaldi send the same user agent as Chrome and are reported as Chrome, as is Headless Chrome; iPadOS sends the macOS user agent by default.
+A header with a Vivaldi product token identifies Vivaldi. Brave and Vivaldi can also send a Chrome-only header, which parses as Chrome. Headless Chrome also parses as Chrome. iPadOS sends the macOS user agent by default.
 
 ### `HttpUserAgentStatics` and regular expressions
 
@@ -443,53 +443,52 @@ Notes:
 
 ## Benchmark
 
-Run the parser benchmarks with the .NET 11 runtime (use `-f net8.0`, `net9.0` or `net10.0` for the other runtimes).
+The parser benchmark runs without caching. The 68 individual cases include eight reference headers and 60 headers captured from November 15–22, 2026. Each captured header has a regression test for client type, name, version, platform and mobile device. All inputs are stored locally. [Captured headers](tests/HttpUserAgentParser.TestHelpers/UserAgentsMeSnapshot.cs) · [Snapshot source](https://useragents.me/api)
+
+The `Snapshot` workload contains 43 browsers, nine crawlers and eight unclassified clients. The separate catalog contains 44 browsers, 48 crawlers and four unclassified clients. Each mixed benchmark parses 5,280 headers per invocation, repeating its corpus in order. Every header in a workload has equal weight. [Catalog](tests/HttpUserAgentParser.TestHelpers/UserAgentCatalog.cs)
+
+### Parser performance on .NET 11
+
+Run the 68 individual and four mixed benchmarks with the settings used for the November 23, 2026 measurements.
 
 ```shell
-# individual cases, including the useragents.me snapshot
-dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks*"
-# mixed real-world workload (closest to production)
-dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*MixedWorkloadBenchmarks*"
-# every browser (current and previous browser version) and every crawler of the test catalog
-dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*BrowserUserAgentBenchmarks*" "*RobotUserAgentBenchmarks*"
+dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks.Parse" "*MixedWorkloadBenchmarks.Parse" --job short --warmupCount 3 --iterationCount 5 --iterationTime 250
 ```
 
-The individual benchmarks include a fixed sample of desktop, phone, tablet, crawler and HTTP client headers from November 15–22, 2026. The parser tests validate each captured header in `UserAgentsMeSnapshot.cs`. The browser, crawler and mixed workload benchmarks use the separate `UserAgentCatalog.cs` corpus. Both datasets run offline. [Snapshot source](https://useragents.me/api)
+BenchmarkDotNet 0.16.0-preview.2, .NET 11.0.0 x64, Windows 10, AMD Ryzen 9 9950X. Each case ran in a separate process with three warm-ups and five measurement iterations targeting 250 ms each. Times and managed allocations are per parsed header.
 
-### Parser performance
+| Workload | Mean | Std. dev. | Allocated |
+| --- | ---: | ---: | ---: |
+| Catalog browsers (44) | 310.0 ns | 0.84 ns | 38 B |
+| Catalog crawlers (48) | 171.5 ns | 2.43 ns | 0 B |
+| Full catalog (96) | 247.9 ns | 0.58 ns | 18 B |
+| API snapshot (60) | 311.0 ns | 0.37 ns | 29 B |
 
-BenchmarkDotNet 0.16.0-preview.2 (default job: every benchmark case runs in its own process), x64, Windows 10 and an AMD Ryzen 9 9950X, without caching. For a user agent without leading or trailing white space, the only allocation is the version string; otherwise `Parse` also allocates the trimmed string.
+| Selected individual headers | Mean | Std. dev. | Allocated |
+| --- | ---: | ---: | ---: |
+| Googlebot | 22.13 ns | 0.245 ns | 0 B |
+| Bravebot | 125.67 ns | 0.470 ns | 0 B |
+| OAI-AdsBot | 261.96 ns | 1.682 ns | 0 B |
+| IIS-encoded Screaming Frog | 251.06 ns | 3.469 ns | 0 B |
+| Amazon Silk on Fire tablet | 277.44 ns | 3.096 ns | 40 B |
 
-Mixed workload: the catalog user agents parsed in a loop, mean time per user agent.
+In a second run against the PR base (`be56445`), the snapshot mean fell from 438.2 to 321.8 ns per header, and the crawler catalog from 389.0 to 174.6 ns. The Googlebot header took 22.49 ns on the reviewed parser and 8.34 ns on the base. Both used 0 B per parse. [All individual results and the direct comparison](docs/benchmarks/2026-11-23.md)
 
-| Workload | .NET 8.0.34 | .NET 9.0.23 | .NET 10.0.15 | .NET 11.0.0 | Allocated |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 44 browser user agents | 754.0 ns | 331.8 ns | 291.7 ns | 262.5 ns | 38 B |
-| 48 crawler user agents | 355.5 ns | 159.0 ns | 227.4 ns | 151.5 ns | 0 B |
-| All 96 user agents | 609.4 ns | 261.0 ns | 262.3 ns | 216.2 ns | 18 B |
+### Earlier measurements on .NET 8–10
 
-.NET 8 has no `SearchValues<string>`; the parser checks the tokens one by one there.
+The earlier default-job run used the catalog and repeated its entries to fill batches of 1,000. The table reports mean time per parsed header. The .NET 8 implementation scans tokens sequentially. The .NET 9 and later implementations use `SearchValues<string>`.
 
-Single user agents on .NET 11:
+| Workload | .NET 8.0.34 | .NET 9.0.23 | .NET 10.0.15 |
+| --- | ---: | ---: | ---: |
+| 44 browsers | 754.0 ns | 331.8 ns | 291.7 ns |
+| 48 crawlers | 355.5 ns | 159.0 ns | 227.4 ns |
+| All 96 catalog headers | 609.4 ns | 261.0 ns | 262.3 ns |
 
-| User agent | Mean | Allocated |
-| --- | ---: | ---: |
-| Chrome on Windows | 248.6 ns | 40 B |
-| Firefox on Linux | 373.1 ns | 32 B |
-| Chrome on Android | 267.5 ns | 40 B |
-| Safari on iPhone | 289.2 ns | 32 B |
-| Applebot | 195.5 ns | 0 B |
-| Googlebot | 6.98 ns | 0 B |
-| Unknown client | 378.2 ns | 0 B |
+### Earlier .NET 11 startup measurements
 
-Startup in a new .NET 11 process (median of 7 runs):
+An earlier revision used 43 platform and 35 browser regular expressions. The median across seven fresh processes was 9.1 ms and 122 KB for the first parse, and 15.7 ms and 120 KB for first use of all regular expressions. The current set adds Amazon Silk as the 36th browser expression.
 
-| | Time | Allocated |
-| --- | ---: | ---: |
-| First `Parse` call | 9.1 ms | 122 KB |
-| First use of all `HttpUserAgentStatics` regular expressions (43 platforms, 35 browsers) | 15.7 ms | 120 KB |
-
-### Library comparison on .NET 11
+### Earlier library comparison on .NET 11
 
 ```shell
 dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*LibraryComparison*"

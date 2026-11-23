@@ -60,11 +60,12 @@ public class RobotUserAgentBenchmarks
 [MemoryDiagnoser]
 public class MixedWorkloadBenchmarks
 {
-    private const int OperationsPerInvoke = 1000;
+    // A whole number of passes over the 44, 48, 96 and 60 entry workloads.
+    private const int OperationsPerInvoke = 5280;
 
     private string[] _userAgents;
 
-    [Params("Browsers", "Robots", "All")]
+    [Params("Browsers", "Robots", "All", "Snapshot")]
     public string Workload { get; set; }
 
     [GlobalSetup]
@@ -74,6 +75,7 @@ public class MixedWorkloadBenchmarks
         {
             "Browsers" => [.. UserAgentCatalog.Browsers.Select(static ua => ua.UserAgent)],
             "Robots" => [.. UserAgentCatalog.Robots.Select(static ua => ua.UserAgent)],
+            "Snapshot" => [.. UserAgentsMeSnapshot.Cases.Select(static ua => ua.UserAgent)],
             _ => UserAgentCatalog.All,
         };
 
