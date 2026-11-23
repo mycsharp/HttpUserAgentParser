@@ -39,3 +39,21 @@ public class HttpUserAgentParserBenchmarks
     public string ParseBaseline() => Baseline::MyCSharp.HttpUserAgentParser.HttpUserAgentParser.Parse(Data.UserAgent).Name;
 #endif
 }
+
+[MemoryDiagnoser]
+public class RepeatedBrowserTokenBenchmarks
+{
+    [Params("Chrome/a", "Chrome/a ", "Version/a", "Version/a ", "MSIE ", "Opera+a ")]
+    public string Token { get; set; }
+
+    [Params(1_000, 10_000, 100_000)]
+    public int Repetitions { get; set; }
+
+    private string _userAgent;
+
+    [GlobalSetup]
+    public void Setup() => _userAgent = string.Concat(Enumerable.Repeat(Token, Repetitions));
+
+    [Benchmark]
+    public (string Name, string Version)? GetBrowser() => Parser.GetBrowser(_userAgent);
+}

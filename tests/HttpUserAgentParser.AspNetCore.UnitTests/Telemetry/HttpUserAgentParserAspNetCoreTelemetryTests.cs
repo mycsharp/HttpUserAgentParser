@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests.Telemetry;

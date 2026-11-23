@@ -46,7 +46,7 @@ public class HttpUserAgentParserMemoryCachedProviderOptionsTests
     {
         HttpUserAgentParserMemoryCachedProviderOptions options = new();
 
-        Assert.NotNull(options.CacheOptions);
-        Assert.NotNull(options.CacheEntryOptions);
+        Assert.Equal(256, options.CacheOptions.SizeLimit);
+        Assert.Equal(TimeSpan.FromDays(1), options.CacheEntryOptions.SlidingExpiration);
     }
 }

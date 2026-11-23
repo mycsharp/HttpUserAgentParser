@@ -12,6 +12,6 @@ public class HttpUserAgentTypeTests
     [InlineData(HttpUserAgentType.Robot, 2)]
     public void TestValue(HttpUserAgentType type, byte value)
     {
-        Assert.True((byte)type == value);
+        Assert.Equal(value, (byte)type);
     }
 }

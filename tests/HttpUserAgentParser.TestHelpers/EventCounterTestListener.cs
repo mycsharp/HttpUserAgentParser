@@ -2,14 +2,16 @@
 
 using System.Diagnostics.Tracing;
 
-namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;
+namespace MyCSharp.HttpUserAgentParser.TestHelpers;
 
-internal sealed class EventCounterTestListener(string eventSourceName) : EventListener
+/// <summary>Records telemetry from the selected event source during a test.</summary>
+public sealed class EventCounterTestListener(string eventSourceName) : EventListener
 {
     private readonly string _eventSourceName = eventSourceName;
     private volatile bool _sawEventCounters;
     private volatile bool _enabled;
 
+    /// <inheritdoc/>
     protected override void OnEventSourceCreated(EventSource eventSource)
     {
         if (!string.Equals(eventSource.Name, _eventSourceName, StringComparison.Ordinal))
@@ -29,6 +31,7 @@ internal sealed class EventCounterTestListener(string eventSourceName) : EventLi
         _enabled = true;
     }
 
+    /// <inheritdoc/>
     protected override void OnEventWritten(EventWrittenEventArgs eventData)
     {
         if (string.Equals(eventData.EventName, "EventCounters", StringComparison.Ordinal))
@@ -37,25 +40,9 @@ internal sealed class EventCounterTestListener(string eventSourceName) : EventLi
         }
     }
 
-    public bool WaitForCounters(TimeSpan timeout)
-    {
-        DateTimeOffset start = DateTimeOffset.UtcNow;
-        while (!_sawEventCounters && DateTimeOffset.UtcNow - start < timeout)
-        {
-            Thread.Sleep(10);
-        }
+    /// <summary>Waits for the first counter event.</summary>
+    public bool WaitForCounters(TimeSpan timeout) => SpinWait.SpinUntil(() => _sawEventCounters, timeout);
 
-        return _sawEventCounters;
-    }
-
-    public bool WaitUntilEnabled(TimeSpan timeout)
-    {
-        DateTimeOffset start = DateTimeOffset.UtcNow;
-        while (!_enabled && DateTimeOffset.UtcNow - start < timeout)
-        {
-            Thread.Sleep(10);
-        }
-
-        return _enabled;
-    }
+    /// <summary>Waits for the listener to enable the event source.</summary>
+    public bool WaitUntilEnabled(TimeSpan timeout) => SpinWait.SpinUntil(() => _enabled, timeout);
 }

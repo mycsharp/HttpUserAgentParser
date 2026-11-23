@@ -3,6 +3,7 @@
 using System.Diagnostics.Metrics;
 using MyCSharp.HttpUserAgentParser.Providers;
 using MyCSharp.HttpUserAgentParser.Telemetry;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests.Telemetry;

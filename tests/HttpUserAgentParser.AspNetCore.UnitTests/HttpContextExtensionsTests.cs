@@ -27,7 +27,7 @@ public class HttpContextExtensionsTests
     [Fact]
     public void Accessor_Get_Returns_Null_When_Header_Missing()
     {
-        var provider = Substitute.For<IHttpUserAgentParserProvider>();
+        IHttpUserAgentParserProvider provider = Substitute.For<IHttpUserAgentParserProvider>();
         HttpUserAgentParserAccessor accessor = new(provider);
         DefaultHttpContext ctx = new();
 

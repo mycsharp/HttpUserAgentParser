@@ -138,16 +138,12 @@ public sealed class HttpUserAgentStaticsRobotsReplacementTests : IDisposable
     [Fact]
     public void SetRobots_With_The_Defaults_Detects_Like_The_Defaults()
     {
+        string?[] expected = [.. UserAgentCatalog.All.Select(HttpUserAgentParser.GetRobot)];
+        HttpUserAgentStatics.SetRobots([]);
+
         HttpUserAgentStatics.SetRobots(HttpUserAgentStatics.DefaultRobots);
 
-        Assert.NotSame(HttpUserAgentRules.DefaultRobotSet, HttpUserAgentRules.RobotSet);
-        foreach (string userAgent in UserAgentCatalog.All)
-        {
-            HttpUserAgentRules.SetRobotSet(HttpUserAgentRules.DefaultRobotSet);
-            string? expected = HttpUserAgentParser.GetRobot(userAgent);
-            HttpUserAgentStatics.SetRobots(HttpUserAgentStatics.DefaultRobots);
-            Assert.Equal(expected, HttpUserAgentParser.GetRobot(userAgent));
-        }
+        Assert.Equal(expected, UserAgentCatalog.All.Select(HttpUserAgentParser.GetRobot), StringComparer.Ordinal);
     }
 
     [Fact]

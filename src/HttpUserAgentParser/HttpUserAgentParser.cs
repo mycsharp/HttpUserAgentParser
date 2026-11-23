@@ -131,10 +131,29 @@ public static class HttpUserAgentParser
         // (Measured with a mixed real-world workload, this beats vectorized token groups here.)
         foreach ((string token, HttpUserAgentPlatformInformation platform) in HttpUserAgentRules.Platforms)
         {
-            if (ContainsIgnoreCase(ua, token))
+            int index = ua.IndexOf(token, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+            {
+                continue;
+            }
+
+            // Short names can occur inside other words ("Microsoft", "Magnum", "CrOS x86").
+            if (platform.RegexId is not (HttpUserAgentPlatformRegexId.CrOS or HttpUserAgentPlatformRegexId.Gnu or HttpUserAgentPlatformRegexId.OsX))
             {
                 return platform;
             }
+
+            do
+            {
+                int end = index + token.Length;
+                if (IsTokenStart(ua, index) && IsProductNameEnd(ua, end))
+                {
+                    return platform;
+                }
+
+                index = IndexOfTokenStart(ua, token, end);
+            }
+            while (index >= 0);
         }
 
         return null;
@@ -164,20 +183,10 @@ public static class HttpUserAgentParser
     {
         foreach ((string name, string detectToken, string? versionToken) in HttpUserAgentRules.Browsers)
         {
-            // Fast path: most rules do not match at all, and a match usually starts a token.
-            int detectIndex = ua.IndexOf(detectToken, StringComparison.OrdinalIgnoreCase);
+            int detectIndex = IndexOfTokenStart(ua, detectToken, 0);
             if (detectIndex < 0)
             {
                 continue;
-            }
-
-            if (!IsTokenStart(ua, detectIndex))
-            {
-                detectIndex = IndexOfTokenStart(ua, detectToken, detectIndex + 1);
-                if (detectIndex < 0)
-                {
-                    continue;
-                }
             }
 
             if (TryReadBrowserVersion(ua, detectToken, detectIndex, versionToken, out Range version))
@@ -211,7 +220,7 @@ public static class HttpUserAgentParser
         while (detectIndex >= 0)
         {
             int end = detectIndex + detectToken.Length;
-            if (end == ua.Length || ua[end] == '/' || s_productTokenDelimiters.Contains(ua[end]))
+            if (IsProductNameEnd(ua, end))
             {
                 int versionIndex = IndexOfTokenStart(ua, versionToken, end);
                 if (versionIndex >= 0 && TryReadVersion(ua, versionToken, versionIndex, allowSpace: true, out version))
@@ -294,6 +303,9 @@ public static class HttpUserAgentParser
     private static bool IsTokenStart(ReadOnlySpan<char> ua, int index)
         => index == 0 || s_productTokenDelimiters.Contains(ua[index - 1]);
 
+    private static bool IsProductNameEnd(ReadOnlySpan<char> ua, int end)
+        => end == ua.Length || ua[end] == '/' || s_productTokenDelimiters.Contains(ua[end]);
+
     /// <summary>
     /// Returns whether <paramref name="c"/> separates a product name from its version in <c>Token 1.2</c>
     /// (<c>+</c> stands for a space in URL-encoded logs).
@@ -342,7 +354,7 @@ public static class HttpUserAgentParser
     private static string? GetRobot(string userAgent, HttpUserAgentRobotSet robots)
     {
         // The first robot (Googlebot in the default list, by far the most common robot) is checked on its own.
-        if (robots.FirstKey is { } firstKey && ContainsIgnoreCase(userAgent, firstKey))
+        if (robots.FirstKey is { } firstKey && userAgent.AsSpan().Contains(firstKey, StringComparison.OrdinalIgnoreCase))
         {
             return robots.FirstValue;
         }
@@ -393,17 +405,6 @@ public static class HttpUserAgentParser
     {
         device = GetMobileDevice(userAgent);
         return device is not null;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool ContainsIgnoreCase(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle)
-        => TryIndexOf(haystack, needle, out _);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryIndexOf(ReadOnlySpan<char> haystack, ReadOnlySpan<char> needle, out int index)
-    {
-        index = haystack.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
-        return index >= 0;
     }
 
     /// <summary>

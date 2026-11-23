@@ -91,8 +91,7 @@
     <CollectCoverage>true</CollectCoverage>
     <CoverletOutputFormat>lcov,opencover,cobertura</CoverletOutputFormat>
     <CoverletOutput>$(MSBuildThisFileDirectory)TestResults/coverage/$(TargetFramework)/$(MSBuildProjectName).</CoverletOutput>
-    <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
-    <ExcludeByFile>**/*Program.cs;**/*Startup.cs;**/*GlobalUsings.cs</ExcludeByFile>
+    <ExcludeByAttribute>GeneratedCodeAttribute</ExcludeByAttribute>
     <UseSourceLink>true</UseSourceLink>
     <!-- Enforce full line, branch and method coverage for every target framework -->
     <Threshold>100</Threshold>
@@ -101,14 +100,8 @@
   </PropertyGroup>
 
   <ItemGroup Label="Default Test Dependencies" Condition="'$(IsTestProject)' == 'true'">
-    <PackageReference Include="coverlet.msbuild" />
+    <PackageReference Include="coverlet.msbuild" PrivateAssets="all" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
-    <PackageReference Include="NSubstitute" />
-    <PackageReference Include="NSubstitute.Analyzers.CSharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
     <!-- Coverlet's MSBuild integration runs through VSTest. -->
     <PackageReference Include="xunit.v3.mtp-off" />
     <PackageReference Include="xunit.runner.visualstudio">

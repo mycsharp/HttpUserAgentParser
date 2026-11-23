@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   publish-nuget:
@@ -17,11 +16,12 @@ jobs:
       - name: Download release assets
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          gh release download "${{ github.event.release.tag_name }}" \
+          gh release download "$TAG" \
             --pattern "*.nupkg" \
             --dir ./artifacts \
-            --repo "${{ github.repository }}"
+            --repo "$GITHUB_REPOSITORY"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -29,18 +29,14 @@ jobs:
           dotnet-version: '11.0.x'
 
       - name: Verify packages
+        env:
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          echo "Packages to be published:"
-          ls -la ./artifacts/*.nupkg
-
-          # Verify package count
-          PACKAGE_COUNT=$(ls ./artifacts/*.nupkg | wc -l)
-          if [ "$PACKAGE_COUNT" -eq 0 ]; then
-            echo "Error: No packages found!"
-            exit 1
-          fi
-
-          echo "Found $PACKAGE_COUNT package(s) to publish"
+          packages=(./artifacts/*.nupkg)
+          [[ ${#packages[@]} -eq 3 ]]
+          for id in MyCSharp.HttpUserAgentParser{,.AspNetCore,.MemoryCache}; do
+            test -f "./artifacts/$id.${TAG#v}.nupkg"
+          done
 
       - name: Publish to NuGet.org
         env:

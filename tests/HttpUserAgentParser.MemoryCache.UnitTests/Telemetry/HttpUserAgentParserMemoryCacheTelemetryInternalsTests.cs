@@ -3,6 +3,7 @@
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Caching.Memory;
 using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;

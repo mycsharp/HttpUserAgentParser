@@ -10,7 +10,7 @@ namespace MyCSharp.HttpUserAgentParser;
 public readonly struct HttpUserAgentPlatformInformation : IEquatable<HttpUserAgentPlatformInformation>
 {
     private readonly Regex? _regex;
-    private readonly HttpUserAgentPlatformRegexId _regexId;
+    internal HttpUserAgentPlatformRegexId RegexId { get; }
 
     /// <summary>
     /// Creates a new instance of <see cref="HttpUserAgentPlatformInformation"/>
@@ -27,7 +27,7 @@ public readonly struct HttpUserAgentPlatformInformation : IEquatable<HttpUserAge
     /// </summary>
     internal HttpUserAgentPlatformInformation(HttpUserAgentPlatformRegexId regexId, string name, HttpUserAgentPlatformType platformType)
     {
-        _regexId = regexId;
+        RegexId = regexId;
         Name = name;
         PlatformType = platformType;
     }
@@ -39,7 +39,7 @@ public readonly struct HttpUserAgentPlatformInformation : IEquatable<HttpUserAge
     /// The built-in platforms use source-generated regular expressions that are created on first access.
     /// The parser does not use this regex; it is provided for consumers that want to match the platform themselves.
     /// </remarks>
-    public Regex Regex => _regex ?? HttpUserAgentRegexes.GetPlatformRegex(_regexId)!;
+    public Regex Regex => _regex ?? HttpUserAgentRegexes.GetPlatformRegex(RegexId)!;
 
     /// <summary>
     /// Name of the platform
@@ -57,7 +57,7 @@ public readonly struct HttpUserAgentPlatformInformation : IEquatable<HttpUserAge
     public bool Equals(HttpUserAgentPlatformInformation other)
         => PlatformType == other.PlatformType
         && string.Equals(Name, other.Name, StringComparison.Ordinal)
-        && ReferenceEquals(Regex, other.Regex);
+        && (_regex is null && other._regex is null ? RegexId == other.RegexId : ReferenceEquals(Regex, other.Regex));
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is HttpUserAgentPlatformInformation other && Equals(other);

@@ -6,8 +6,7 @@ on:
       - main
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
   build-and-test:
@@ -20,12 +19,18 @@ jobs:
     name: Create Draft Release
     needs: build-and-test
     runs-on: ubuntu-latest
+    concurrency: draft-release-${{ needs.build-and-test.outputs.version }}
+    env:
+      TAG: v${{ needs.build-and-test.outputs.version }}
     permissions:
       contents: write
+      pull-requests: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Download NuGet packages
         uses: actions/download-artifact@v4
@@ -33,72 +38,44 @@ jobs:
           name: nuget-packages
           path: ./artifacts
 
-      - name: Check if tag exists
-        id: check-tag
+      - name: Find release for the package version
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v${{ needs.build-and-test.outputs.version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "⚠️ Tag $TAG already exists"
+          draft=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" | jq -r --arg tag "$TAG" '.[] | select(.tag_name == $tag) | .draft')
+          if [[ "$draft" == true ]]; then
+            state=draft
+          elif [[ "$draft" == false ]] || git show-ref --verify --quiet "refs/tags/$TAG"; then
+            state=published
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "✅ Tag $TAG does not exist yet"
+            state=new
           fi
+          echo "state=$state" >> "$GITHUB_OUTPUT"
 
-      - name: Delete existing draft releases
-        if: steps.check-tag.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Checking for existing draft releases..."
-          gh release list --json isDraft,tagName --jq '.[] | select(.isDraft) | .tagName' | while read -r tag_name; do
-            echo "Deleting existing draft release: $tag_name"
-            gh release delete "$tag_name" --yes --cleanup-tag || echo "Failed to delete release $tag_name"
-          done
-
-      - name: Create Draft Release
-        if: steps.check-tag.outputs.exists == 'false'
-        uses: release-drafter/release-drafter@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate release notes
+        id: notes
+        if: steps.release.outputs.state == 'new'
+        uses: release-drafter/release-drafter@v7
         with:
-          config-name: release-drafter.yml
-          version: v${{ needs.build-and-test.outputs.version }}
-          tag: v${{ needs.build-and-test.outputs.version }}
-          name: Version ${{ needs.build-and-test.outputs.version }}
-          publish: false
-          prerelease: false
+          version: ${{ needs.build-and-test.outputs.version }}
+          tag: ${{ env.TAG }}
+          commitish: ${{ github.sha }}
+          dry-run: true
 
-      - name: Upload packages to draft release
-        if: steps.check-tag.outputs.exists == 'false'
+      - name: Create versioned draft with its packages
+        if: steps.release.outputs.state == 'new'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES: ${{ steps.notes.outputs.body }}
         run: |
-          TAG="v${{ needs.build-and-test.outputs.version }}"
-          # Wait a moment for the release to be created
-          sleep 2
+          printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$TAG" ./artifacts/*.nupkg --draft --target "$GITHUB_SHA" \
+            --title "Version ${TAG#v}" --notes-file "$RUNNER_TEMP/release-notes.md"
 
-          # Upload new artifacts to the draft release
-          echo "📦 Uploading new NuGet packages..."
-          for file in ./artifacts/*.nupkg; do
-            gh release upload "$TAG" "$file" --clobber
-          done
-          echo "✅ Uploaded NuGet packages to draft release"
-
-      - name: Summary
-        if: steps.check-tag.outputs.exists == 'false'
-        run: |
-          echo "✅ Draft release created/updated" >> $GITHUB_STEP_SUMMARY
-          echo "Version: v${{ needs.build-and-test.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next steps:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Go to [Releases](../../releases)" >> $GITHUB_STEP_SUMMARY
-          echo "2. Review the draft release" >> $GITHUB_STEP_SUMMARY
-          echo "3. Edit release notes if needed" >> $GITHUB_STEP_SUMMARY
-          echo "4. Publish release to trigger production deployment" >> $GITHUB_STEP_SUMMARY
-
-      - name: Release already exists
-        if: steps.check-tag.outputs.exists == 'true'
-        run: |
-          echo "ℹ️ Release v${{ needs.build-and-test.outputs.version }} already exists" >> $GITHUB_STEP_SUMMARY
-          echo "No action taken" >> $GITHUB_STEP_SUMMARY
+      - name: Refresh packages on a rerun of the same draft
+        if: steps.release.outputs.state == 'draft'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" ./artifacts/*.nupkg --clobber

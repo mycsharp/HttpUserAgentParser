@@ -7,34 +7,38 @@ tag-template: 'v$RESOLVED_VERSION'
 # Categories for organizing release notes
 categories:
   - title: '🚀 Features'
-    labels:
-      - 'feature'
-      - 'enhancement'
+    when:
+      labels:
+        - 'feature'
+        - 'enhancement'
   - title: '🐛 Bug Fixes'
-    labels:
-      - 'bug'
-      - 'fix'
+    when:
+      labels:
+        - 'bug'
+        - 'fix'
   - title: '🔧 Maintenance'
-    labels:
-      - 'maintenance'
-      - 'chore'
-      - 'refactor'
-      - 'dependencies'
+    when:
+      labels:
+        - 'maintenance'
+        - 'chore'
+        - 'refactor'
+        - 'dependencies'
   - title: '📚 Documentation'
-    labels:
-      - 'documentation'
-      - 'docs'
+    when:
+      labels:
+        - 'documentation'
+        - 'docs'
   - title: '⚡ Performance'
-    labels:
-      - 'performance'
+    when:
+      labels:
+        - 'performance'
   - title: '🔒 Security'
-    labels:
-      - 'security'
-
-# Exclude certain labels from release notes
-exclude-labels:
-  - 'skip-changelog'
-  - 'wip'
+    when:
+      labels:
+        - 'security'
+  - type: pre-exclude
+    when:
+      labels: ['skip-changelog', 'wip']
 
 # Change template (how each PR is listed)
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
@@ -72,39 +76,35 @@ template: |
 
 # Automatically label PRs based on modified files
 autolabeler:
-  - label: 'documentation'
+  - labels: ['documentation']
     files:
       - '*.md'
       - 'docs/**/*'
-  - label: 'bug'
+  - labels: ['bug']
     branch:
       - '/fix\/.+/'
     title:
       - '/fix/i'
-  - label: 'feature'
+  - labels: ['feature']
     branch:
       - '/feature\/.+/'
     title:
       - '/feature/i'
-  - label: 'dependencies'
+  - labels: ['dependencies']
     files:
       - '**/packages.lock.json'
       - '**/*.csproj'
       - 'Directory.Packages.props'
       - 'Directory.Build.props'
-  - label: 'github-actions'
+  - labels: ['github-actions']
     files:
       - '.github/workflows/**/*'
-  - label: 'tests'
+  - labels: ['tests']
     files:
       - 'tests/**/*'
       - '**/*Tests.cs'
       - '**/*Test.cs'
-  - label: 'performance'
+  - labels: ['performance']
     files:
       - 'perf/**/*'
       - '**/*Benchmark*.cs'
-
-# Version resolver (uses version from workflow input)
-version-resolver:
-  default: patch

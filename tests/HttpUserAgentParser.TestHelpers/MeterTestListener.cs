@@ -3,15 +3,20 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 
-namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;
+namespace MyCSharp.HttpUserAgentParser.TestHelpers;
 
-internal sealed class MeterTestListener : IDisposable
+/// <summary>Records telemetry from the selected meter during a test.</summary>
+public sealed class MeterTestListener : IDisposable
 {
     private readonly string _meterName;
     private readonly MeterListener _listener;
 
+    /// <summary>Names of the instruments that emitted a measurement.</summary>
     public ConcurrentBag<string> InstrumentNames { get; } = [];
+    /// <summary>Units of the published instruments.</summary>
+    public ConcurrentDictionary<string, string?> InstrumentUnits { get; } = new(StringComparer.Ordinal);
 
+    /// <summary>Starts listening to the named meter.</summary>
     public MeterTestListener(string meterName)
     {
         _meterName = meterName;
@@ -24,6 +29,7 @@ internal sealed class MeterTestListener : IDisposable
                 return;
             }
 
+            InstrumentUnits[instrument.Name] = instrument.Unit;
             listener.EnableMeasurementEvents(instrument);
         };
 
@@ -32,10 +38,17 @@ internal sealed class MeterTestListener : IDisposable
             InstrumentNames.Add(instrument.Name);
         });
 
+        _listener.SetMeasurementEventCallback<double>((instrument, _, _, _) =>
+        {
+            InstrumentNames.Add(instrument.Name);
+        });
+
         _listener.Start();
     }
 
+    /// <summary>Collects the current observable measurements.</summary>
     public void RecordObservableInstruments() => _listener.RecordObservableInstruments();
 
+    /// <inheritdoc/>
     public void Dispose() => _listener.Dispose();
 }

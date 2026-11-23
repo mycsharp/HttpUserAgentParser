@@ -25,27 +25,28 @@ internal static class HttpUserAgentRules
     /// <summary>
     /// Platform rules, sorted by frequency (most common platforms first, specific versions before generic tokens).
     /// </summary>
-    internal static readonly (string Token, HttpUserAgentPlatformInformation Platform)[] Platforms =
+    internal static (string Token, HttpUserAgentPlatformInformation Platform)[] Platforms { get; } =
     [
+        // Compatibility tokens on Windows Phone can identify both desktop Windows and Android.
+        ("windows phone", new(HttpUserAgentPlatformRegexId.WindowsPhone, "Windows Phone", HttpUserAgentPlatformType.Windows)),
         // Most common: Windows (specific versions before generic)
         ("windows nt 10.0", new(HttpUserAgentPlatformRegexId.WindowsNt100, "Windows 10", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.1", new(HttpUserAgentPlatformRegexId.WindowsNt61, "Windows 7", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.3", new(HttpUserAgentPlatformRegexId.WindowsNt63, "Windows 8.1", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.2", new(HttpUserAgentPlatformRegexId.WindowsNt62, "Windows 8", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.0", new(HttpUserAgentPlatformRegexId.WindowsNt60, "Windows Vista", HttpUserAgentPlatformType.Windows)),
-        // Windows Phone 8.1 and 10 user agents contain "Android" (and "iPhone"), so this comes first
-        ("windows phone", new(HttpUserAgentPlatformRegexId.WindowsPhone, "Windows Phone", HttpUserAgentPlatformType.Windows)),
         // Android (very common on mobile)
         ("android", new(HttpUserAgentPlatformRegexId.Android, "Android", HttpUserAgentPlatformType.Android)),
         // iOS devices (very common)
         ("iphone", new(HttpUserAgentPlatformRegexId.IPhone, "iOS", HttpUserAgentPlatformType.IOS)),
         ("ipad", new(HttpUserAgentPlatformRegexId.IPad, "iOS", HttpUserAgentPlatformType.IOS)),
         ("ipod", new(HttpUserAgentPlatformRegexId.IPod, "iOS", HttpUserAgentPlatformType.IOS)),
-        // ChromeOS ("CrOS x86_64"), before "os x", which "CrOS x86_64" contains; with the space, "Microsoft" does not match
-        ("cros ", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)),
+        ("cros", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)),
         // Mac OS (common)
         ("os x", new(HttpUserAgentPlatformRegexId.OsX, "Mac OS X", HttpUserAgentPlatformType.MacOS)),
-        // Linux (common)
+        // A distribution can also identify itself as GNU/Linux.
+        ("debian", new(HttpUserAgentPlatformRegexId.Debian, "Debian", HttpUserAgentPlatformType.Linux)),
+        ("gnu", new(HttpUserAgentPlatformRegexId.Gnu, "GNU/Linux", HttpUserAgentPlatformType.Linux)),
         ("linux", new(HttpUserAgentPlatformRegexId.Linux, "Linux", HttpUserAgentPlatformType.Linux)),
         // Other Windows versions
         ("windows nt 5.2", new(HttpUserAgentPlatformRegexId.WindowsNt52, "Windows 2003", HttpUserAgentPlatformType.Windows)),
@@ -63,9 +64,7 @@ internal static class HttpUserAgentRules
         // Less common platforms
         ("blackberry", new(HttpUserAgentPlatformRegexId.BlackBerry, "BlackBerry", HttpUserAgentPlatformType.BlackBerry)),
         ("ppc mac", new(HttpUserAgentPlatformRegexId.PpcMac, "Power PC Mac", HttpUserAgentPlatformType.MacOS)),
-        ("debian", new(HttpUserAgentPlatformRegexId.Debian, "Debian", HttpUserAgentPlatformType.Linux)),
         ("freebsd", new(HttpUserAgentPlatformRegexId.FreeBsd, "FreeBSD", HttpUserAgentPlatformType.Unix)),
-        ("gnu", new(HttpUserAgentPlatformRegexId.Gnu, "GNU/Linux", HttpUserAgentPlatformType.Linux)),
         ("openbsd", new(HttpUserAgentPlatformRegexId.OpenBsd, "OpenBSD", HttpUserAgentPlatformType.Unix)),
         ("symbian", new(HttpUserAgentPlatformRegexId.Symbian, "Symbian OS", HttpUserAgentPlatformType.Symbian)),
         ("sunos", new(HttpUserAgentPlatformRegexId.SunOs, "Sun Solaris", HttpUserAgentPlatformType.Unix)),
@@ -86,7 +85,7 @@ internal static class HttpUserAgentRules
     /// Sorted by specificity first, then frequency - more specific tokens must come before generic ones
     /// (e.g., Edge/Opera before Chrome, since Edge/Opera UAs contain "Chrome").
     /// </summary>
-    internal static readonly (string Name, string DetectToken, string? VersionToken)[] Browsers =
+    internal static (string Name, string DetectToken, string? VersionToken)[] Browsers { get; } =
     [
         // Most specific browsers first (contain Chrome/Mozilla in their UA)
         ("Opera", "OPR", null),
@@ -103,10 +102,11 @@ internal static class HttpUserAgentRules
         ("Yandex Browser", "YaBrowser", null),
         ("UC Browser", "UCBrowser", null),
         ("UC Browser", "UCMobile", null),
+        ("Maxthon", "Maxthon", null),
         // Common browsers
         ("Chrome", "Chrome", null),
         ("Chrome", "CriOS", null),
-        ("Safari", "Version/", "Version/"),
+        ("Netscape", "Netscape", null),
         ("Firefox", "Firefox", null),
         ("Firefox", "FxiOS", null),
         // Internet Explorer (legacy but still in use - MSIE before Trident to avoid false matches)
@@ -114,8 +114,6 @@ internal static class HttpUserAgentRules
         ("Internet Explorer", "Trident", "rv:"),
         ("Internet Explorer", "Internet Explorer", null),
         // Less common browsers
-        ("Maxthon", "Maxthon", null),
-        ("Netscape", "Netscape", null),
         ("Konqueror", "Konqueror", null),
         ("OmniWeb", "OmniWeb", null),
         ("Shiira", "Shiira", null),
@@ -132,14 +130,15 @@ internal static class HttpUserAgentRules
         ("IBrowse", "IBrowse", null),
         ("Apple iPod", "ipod touch", null),
         ("Ubuntu Web Browser", "Ubuntu", null),
-        // Headless Chrome (automation): last, it costs other browsers nothing there
+        // The generic Version/ token only identifies Safari when no specific browser matched.
         ("Chrome", "HeadlessChrome", null),
+        ("Safari", "Version/", "Version/"),
     ];
 
     /// <summary>
     /// The default robots in priority order (<see cref="HttpUserAgentStatics.DefaultRobots"/>); never changed.
     /// </summary>
-    internal static readonly (string Key, string Value)[] DefaultRobots =
+    internal static (string Key, string Value)[] DefaultRobots { get; } =
     [
         ( "googlebot", "Googlebot" ),
         ( "meta-externalagent", "meta-externalagent" ),
@@ -245,7 +244,7 @@ internal static class HttpUserAgentRules
     /// so a user agent without any anchor cannot match a default key. The few anchors need far fewer searches
     /// than all keys, which makes the common case (a browser) cheap.
     /// </summary>
-    internal static readonly string[] CuratedRobotAnchors =
+    internal static string[] CuratedRobotAnchors { get; } =
     [
         "bot", "spider", "crawl", "google", "-user", "external", "slurp", "yahoo",
         "jeeves", "infoseek", "lycos", "yandex", "curious", "archiver", "turnitin", "jobboerse",
@@ -256,7 +255,7 @@ internal static class HttpUserAgentRules
     /// <summary>
     /// The default robots with their matchers.
     /// </summary>
-    internal static readonly HttpUserAgentRobotSet DefaultRobotSet = new(DefaultRobots);
+    internal static HttpUserAgentRobotSet DefaultRobotSet { get; } = new(DefaultRobots);
 
     private static HttpUserAgentRobotSet s_robotSet = DefaultRobotSet;
 
@@ -304,7 +303,7 @@ internal static class HttpUserAgentRules
     /// "SymbianOS" before "symbian").
     /// The order is explicit on purpose: the enumeration order of a (frozen) dictionary is unspecified and must not decide the priority.
     /// </remarks>
-    internal static readonly (string Key, string Value)[] Mobiles =
+    internal static (string Key, string Value)[] Mobiles { get; } =
     [
         // Legacy
         ("mobileexplorer", "Mobile Explorer"),
@@ -392,7 +391,7 @@ internal static class HttpUserAgentRules
     /// <summary>
     /// Mobile token matcher.
     /// </summary>
-    internal static readonly PriorityTokenMatcher<MobileDetector> MobileMatcher = new(Array.ConvertAll(Mobiles, static rule => rule.Key));
+    internal static PriorityTokenMatcher<MobileDetector> MobileMatcher { get; } = new(Array.ConvertAll(Mobiles, static rule => rule.Key));
 
     /// <summary>
     /// Creates the public, case-insensitive lookup of <see cref="Mobiles"/>.

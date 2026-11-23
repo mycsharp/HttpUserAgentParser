@@ -143,6 +143,7 @@ public class HttpUserAgentStaticsTests
         {
             Assert.Equal(value, HttpUserAgentStatics.Mobiles[key]);
             Assert.Equal(value, HttpUserAgentStatics.Mobiles[key.ToUpperInvariant()]);
+            Assert.Equal(value, HttpUserAgentParser.GetMobileDevice(key.ToUpperInvariant()));
         }
     }
 
@@ -152,6 +153,10 @@ public class HttpUserAgentStaticsTests
         Assert.Equal(HttpUserAgentRules.DefaultRobots, HttpUserAgentStatics.DefaultRobots);
         Assert.Contains(("googlebot", "Googlebot"), HttpUserAgentStatics.DefaultRobots);
         Assert.Distinct(HttpUserAgentStatics.DefaultRobots.Select(static robot => robot.Key), StringComparer.OrdinalIgnoreCase);
+        foreach ((string key, string name) in HttpUserAgentStatics.DefaultRobots)
+        {
+            Assert.Equal(name, HttpUserAgentParser.GetRobot(key.ToUpperInvariant()));
+        }
     }
 
     [Fact]
@@ -165,10 +170,28 @@ public class HttpUserAgentStaticsTests
     {
         foreach ((string token, HttpUserAgentPlatformInformation platform) in HttpUserAgentRules.Platforms)
         {
-            // The public pattern is the token; the parser token "cros " ends with a space, so "Microsoft" is no ChromeOS.
-            Assert.Equal(Regex.Escape(token.TrimEnd(' ', '+')), platform.Regex.ToString());
-            Assert.Matches(platform.Regex, token.TrimEnd(' ', '+'));
+            Assert.Equal(Regex.Escape(token), platform.Regex.ToString());
+            Assert.Matches(platform.Regex, token);
             Assert.Contains(platform, HttpUserAgentStatics.Platforms);
+            Assert.Equal(platform, HttpUserAgentParser.GetPlatform(token));
+        }
+    }
+
+    [Fact]
+    public void Each_Browser_Rule_Can_Be_Reached_Through_Parse()
+    {
+        foreach ((string name, string product, string? versionToken) in HttpUserAgentRules.Browsers)
+        {
+            string ua = product.TrimEnd('/') + "/2.3";
+            string expectedVersion = "2.3";
+            if (versionToken is not null && !string.Equals(product, versionToken, StringComparison.Ordinal))
+            {
+                ua += " " + versionToken + "4.5";
+                expectedVersion = "4.5";
+            }
+
+            HttpUserAgentInformation result = HttpUserAgentParser.Parse(ua);
+            Assert.Equal((HttpUserAgentType.Browser, name, expectedVersion), (result.Type, result.Name, result.Version));
         }
     }
 

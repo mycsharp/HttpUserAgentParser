@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;

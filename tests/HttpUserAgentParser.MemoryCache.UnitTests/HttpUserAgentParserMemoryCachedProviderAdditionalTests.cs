@@ -13,49 +13,28 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests;
 public class HttpUserAgentParserMemoryCachedProviderAdditionalTests
 {
     [Fact]
-    public void Options_Defaults_Are_Set()
+    public async Task Entries_Of_One_Thread_Are_Hits_On_Another_Thread()
     {
-        HttpUserAgentParserMemoryCachedProviderOptions options = new();
-        Assert.NotNull(options.CacheOptions);
-        Assert.NotNull(options.CacheEntryOptions);
-        Assert.True(options.CacheOptions.SizeLimit is null || options.CacheOptions.SizeLimit >= 0);
-        Assert.NotEqual(default, options.CacheEntryOptions.SlidingExpiration);
-    }
+        using HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
 
-    [Fact]
-    public void Provider_Caches_Entries_And_Resolves_Twice()
-    {
-        HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions(new MemoryCacheOptions { SizeLimit = 10 }));
-        string ua = "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36";
-        HttpUserAgentInformation a = provider.Parse(ua);
-        HttpUserAgentInformation b = provider.Parse(ua);
-
-        Assert.Equal(a.Name, b.Name);
-        Assert.Equal(a.Version, b.Version);
-    }
-
-    [Fact]
-    public void Entries_Of_One_Thread_Are_Hits_On_Another_Thread()
-    {
-        HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
-
-        RunOnNewThread(() =>
+        HttpUserAgentInformation first = await OnDedicatedThread(() =>
         {
-            provider.Parse("Chrome/17");
-            provider.Parse("Firefox/12"); // must not change the key of the cached Chrome entry
+            HttpUserAgentInformation chrome = provider.Parse("Chrome/17");
+            _ = provider.Parse("Firefox/12");
+            return chrome;
         });
 
-        HttpUserAgentInformation chrome = default;
-        RunOnNewThread(() => chrome = provider.Parse("Chrome/17"));
+        HttpUserAgentInformation hit = await OnDedicatedThread(() => provider.Parse("Chrome/17"));
 
         Assert.Equal(2, provider.CacheEntryCount);
-        Assert.Equal(("Chrome", "17"), (chrome.Name, chrome.Version));
+        Assert.Equal(("Chrome", "17"), (hit.Name, hit.Version));
+        Assert.Same(first.Version, hit.Version);
     }
 
     [Fact]
     public void Keys_Are_Case_Sensitive()
     {
-        HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
+        using HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
 
         // The result contains the original user agent, so a differently cased user agent is a different entry.
         Assert.Equal("Chrome/17", provider.Parse("Chrome/17").UserAgent);
@@ -127,10 +106,6 @@ public class HttpUserAgentParserMemoryCachedProviderAdditionalTests
         Assert.Throws<ObjectDisposedException>(() => provider.Parse("Chrome/17"));
     }
 
-    private static void RunOnNewThread(Action action)
-    {
-        Thread thread = new(() => action());
-        thread.Start();
-        thread.Join();
-    }
+    private static Task<T> OnDedicatedThread<T>(Func<T> action)
+        => Task.Factory.StartNew(action, TestContext.Current.CancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 }

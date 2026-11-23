@@ -27,6 +27,8 @@ jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    env:
+      CONFIGURATION: ${{ inputs.configuration }}
     outputs:
       version: ${{ steps.nbgv.outputs.SemVer2 }}
 
@@ -52,29 +54,31 @@ jobs:
         with:
           setAllVars: true
 
-      - name: Version Info
-        run: |
-          echo "Calculated version: ${{ steps.nbgv.outputs.SemVer2 }}"
-
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration ${{ inputs.configuration }} --no-restore /p:Version=${{ steps.nbgv.outputs.SemVer2 }}
+        env:
+          PACKAGE_VERSION: ${{ steps.nbgv.outputs.SemVer2 }}
+        run: dotnet build --configuration "$CONFIGURATION" --no-restore "-p:Version=$PACKAGE_VERSION"
 
       - name: Test
-        run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal --logger "trx;LogFilePrefix=test-results"
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal --logger "trx;LogFilePrefix=test-results"
 
       - name: Upload test results
         if: always() && inputs.upload-test-results
         uses: actions/upload-artifact@v6
         with:
           name: test-results
-          path: '**/TestResults/**/*.trx'
+          path: |
+            **/TestResults/**/*.trx
+            TestResults/coverage/**/*.cobertura.xml
 
       - name: Pack NuGet packages
         if: inputs.create-pack
-        run: dotnet pack --configuration ${{ inputs.configuration }} --no-build --output ./artifacts /p:PackageVersion=${{ steps.nbgv.outputs.SemVer2 }}
+        env:
+          PACKAGE_VERSION: ${{ steps.nbgv.outputs.SemVer2 }}
+        run: dotnet pack --configuration "$CONFIGURATION" --no-build --output ./artifacts "-p:PackageVersion=$PACKAGE_VERSION"
 
       - name: Upload NuGet packages
         if: inputs.create-pack

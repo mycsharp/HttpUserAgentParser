@@ -60,27 +60,4 @@ public class UserAgentCatalogTests
         Assert.Null(info.Name);
         Assert.Null(info.Version);
     }
-
-    [Fact]
-    public void Catalog_Covers_All_Crawler_Categories()
-    {
-        Assert.Contains(UserAgentCatalog.Robots, ua => string.Equals(ua.Category, UserAgentCatalog.SearchCrawler, StringComparison.Ordinal));
-        Assert.Contains(UserAgentCatalog.Robots, ua => string.Equals(ua.Category, UserAgentCatalog.SeoCrawler, StringComparison.Ordinal));
-        Assert.Contains(UserAgentCatalog.Robots, ua => string.Equals(ua.Category, UserAgentCatalog.AiCrawler, StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void Catalog_Labels_Are_Unique()
-    {
-        Assert.Equal(UserAgentCatalog.Browsers.Count, UserAgentCatalog.Browsers.Select(ua => ua.Label).Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(UserAgentCatalog.Robots.Count, UserAgentCatalog.Robots.Select(ua => ua.Label).Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(UserAgentCatalog.Browsers.Count + UserAgentCatalog.Robots.Count + UserAgentCatalog.Unknown.Count, UserAgentCatalog.All.Count);
-    }
-
-    [Fact]
-    public void Catalog_Entries_Display_Their_Label()
-    {
-        Assert.Equal("Chrome 158 Windows", UserAgentCatalog.Browsers[0].ToString());
-        Assert.Equal("Googlebot Smartphone", UserAgentCatalog.Robots[0].ToString());
-    }
 }

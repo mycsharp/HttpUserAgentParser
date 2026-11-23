@@ -2,6 +2,7 @@
 
 using System.Diagnostics.Metrics;
 using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests.Telemetry;

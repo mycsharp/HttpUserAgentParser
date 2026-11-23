@@ -32,8 +32,8 @@ rebuild *ARGS:
 clean:
     dotnet clean --configuration "{{CONFIG}}" --nologo
 
-run *ARGS:
-    dotnet run --project --framework "{{TFM}}" --configuration "{{CONFIG}}" --no-launch-profile {{ARGS}}
+run PROJECT *ARGS:
+    dotnet run --project "{{PROJECT}}" --framework "{{TFM}}" --configuration "{{CONFIG}}" --no-launch-profile {{ARGS}}
 
 # ===== Quality / Tests =====
 format:
@@ -46,7 +46,7 @@ test *ARGS:
     dotnet test --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal {{ARGS}}
 
 test-cov:
-    dotnet test --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal /p:CollectCoverage=true /p:CoverletOutputFormat="cobertura,lcov,opencover" /p:CoverletOutput="./TestResults/coverage/coverage"
+    dotnet test --configuration "{{CONFIG}}" --nologo --verbosity minimal -p:CollectCoverage=true
 
 
 test-filter QUERY:
@@ -56,11 +56,11 @@ test-filter QUERY:
 pack *ARGS:
     dotnet pack --configuration "{{CONFIG}}" --nologo --verbosity minimal -o "./artifacts/packages" {{ARGS}}
 
-publish *ARGS:
-    dotnet publish --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal -o "./artifacts/publish/{{TFM}}" {{ARGS}}
+publish PROJECT *ARGS:
+    dotnet publish "{{PROJECT}}" --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal -o "./artifacts/publish/{{TFM}}" {{ARGS}}
 
-publish-sc RID *ARGS:
-    dotnet publish --configuration "{{CONFIG}}" --framework "{{TFM}}" --runtime "{{RID}}" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false --nologo --verbosity minimal -o "./artifacts/publish/{{TFM}}-{{RID}}" {{ARGS}}
+publish-sc RID PROJECT *ARGS:
+    dotnet publish "{{PROJECT}}" --configuration "{{CONFIG}}" --framework "{{TFM}}" --runtime "{{RID}}" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false --nologo --verbosity minimal -o "./artifacts/publish/{{TFM}}-{{RID}}" {{ARGS}}
 
 # ===== Benchmarks =====
 bench *ARGS:

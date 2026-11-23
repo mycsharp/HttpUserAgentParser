@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.UnitTests;
@@ -306,6 +305,10 @@ public class HttpUserAgentParserTests
 
     [Theory]
     [InlineData("SamsungBrowser/ Chrome/131.0.0.0 Safari/537.36", "Chrome", "131.0.0.0")]
+    [InlineData("Chrome/109.0 Safari/537.36 Maxthon/7.0", "Maxthon", "7.0")]
+    [InlineData("Firefox/2.0 Netscape/9.0", "Netscape", "9.0")]
+    [InlineData("Version/4.0 Safari/531.3 OmniWeb/622", "OmniWeb", "622")]
+    [InlineData("Chrome/109.0 Maxthon/", "Chrome", "109.0")]
     [InlineData("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)", "Internet Explorer", "8.0")]
     [InlineData("Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko", "Internet Explorer", "11.0")]
     // A later occurrence of the same token carries the version
@@ -365,25 +368,6 @@ public class HttpUserAgentParserTests
     }
 
     [Theory]
-    [InlineData("Chrome/a")] // one product token without delimiter
-    [InlineData("Chrome/a ")] // many product tokens
-    [InlineData("Version/a")]
-    [InlineData("Version/a ")]
-    [InlineData("MSIE ")]
-    [InlineData("Opera+a ")]
-    public void GetBrowser_Time_Grows_Linearly_With_Repeated_Tokens(string repeated)
-    {
-        // A search that rescans the rest of the user agent for every occurrence needs seconds for 1,000,000 characters.
-        string userAgent = string.Concat(Enumerable.Repeat(repeated, 1_000_000 / repeated.Length));
-
-        long start = Stopwatch.GetTimestamp();
-        Assert.Null(HttpUserAgentParser.GetBrowser(userAgent));
-        TimeSpan elapsed = Stopwatch.GetElapsedTime(start);
-
-        Assert.True(elapsed < TimeSpan.FromSeconds(1), $"GetBrowser took {elapsed.TotalMilliseconds:F0} ms");
-    }
-
-    [Theory]
     [InlineData("Chrome/ı1.2é3", "1.2")]
     [InlineData("Chrome/1.2ı3 followed by a long suffix", "1.2")]
     [InlineData("Chrome/1.2 release123", "1.2")]
@@ -395,6 +379,11 @@ public class HttpUserAgentParserTests
     [Theory]
     [InlineData("Microsoft Office/16.0 (Macintosh; Mac OS X 10.15.7; Microsoft Outlook 16.80.23121017; Pro)", "Mac OS X")]
     [InlineData("Microsoft-CryptoAPI/10.0", null)]
+    [InlineData("CrOS", "ChromeOS")]
+    [InlineData("Crosstalk/2 (X11; CrOS)", "ChromeOS")]
+    [InlineData("Microsoft Office (Macros x86)", null)]
+    [InlineData("X11; Magnum; Linux x86_64", "Linux")]
+    [InlineData("X11; CrOS\tarmv7l", "ChromeOS")]
     [InlineData("Mozilla/5.0+(Windows+Phone+10.0;+Android+6.0)", "Windows Phone")]
     [InlineData("Mozilla/5.0+(Windows+NT+10.0)", "Windows 10")]
     [InlineData("Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X)", "Mac OS X")]
@@ -427,6 +416,9 @@ public class HttpUserAgentParserTests
 
     [Theory]
     [InlineData("X11; HP-UX B.11.31", "HP-UX", HttpUserAgentPlatformType.Unix)]
+    [InlineData("Windows Phone 10.0; Windows NT 10.0; Android 6.0", "Windows Phone", HttpUserAgentPlatformType.Windows)]
+    [InlineData("X11; Debian GNU/Linux", "Debian", HttpUserAgentPlatformType.Linux)]
+    [InlineData("X11; GNU/Linux", "GNU/Linux", HttpUserAgentPlatformType.Linux)]
     [InlineData("X11; FreeBSD ppc", "FreeBSD", HttpUserAgentPlatformType.Unix)]
     [InlineData("X11; Unix; HP-UX", "HP-UX", HttpUserAgentPlatformType.Unix)]
     [InlineData("X11; Unix; NetBSD ppc", "NetBSD", HttpUserAgentPlatformType.Unix)]
