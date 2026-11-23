@@ -394,10 +394,12 @@ internal static class HttpUserAgentRules
         ("cellphone", "Generic Mobile"),
     ];
 
+    internal static string[] MobileKeys { get; } = Array.ConvertAll(Mobiles, static rule => rule.Key);
+
     /// <summary>
     /// Mobile token matcher.
     /// </summary>
-    internal static PriorityTokenMatcher<MobileDetector> MobileMatcher { get; } = new(Array.ConvertAll(Mobiles, static rule => rule.Key));
+    internal static PriorityTokenMatcher<MobileDetector> MobileMatcher { get; } = new(MobileKeys);
 
     /// <summary>
     /// Creates the public, case-insensitive lookup of <see cref="Mobiles"/>.

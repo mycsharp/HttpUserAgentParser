@@ -43,9 +43,11 @@ internal sealed class HttpUserAgentRobotSet
     /// <summary>
     /// Matches both IIS-encoded names and literal plus signs in custom keys, in configured priority order.
     /// </summary>
-    public string? MatchAfterFirst(string original, ReadOnlySpan<char> decoded)
+    public string? MatchAfterFirst(string original, ReadOnlySpan<char> decoded, ulong mask = ulong.MaxValue)
     {
-        int index = Keys.Length > _decodedStart && AnchorMatcher.ContainsAny(decoded) ? Matcher.Find(decoded, _decodedStart) : -1;
+        int index = mask != ulong.MaxValue
+            ? UserAgentRuleIndex.FindKey(decoded, Keys, mask)
+            : FindAfterFirst(decoded);
         foreach (int literal in _literalPlusRules)
         {
             if (index >= 0 && literal >= index)
@@ -61,6 +63,9 @@ internal sealed class HttpUserAgentRobotSet
 
         return index >= 0 ? ReadOnlyEntries[index].Value : null;
     }
+
+    private int FindAfterFirst(ReadOnlySpan<char> decoded)
+        => Keys.Length > _decodedStart && AnchorMatcher.ContainsAny(decoded) ? Matcher.Find(decoded, _decodedStart) : -1;
 
     /// <summary>
     /// Opaque identity for cache entries. Expired entries can retain this object without retaining the rules.

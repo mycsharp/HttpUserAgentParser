@@ -455,24 +455,17 @@ Run the 68 individual and four mixed benchmarks with the settings used for the N
 dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks.Parse" "*MixedWorkloadBenchmarks.Parse" --job short --warmupCount 3 --iterationCount 5 --iterationTime 250
 ```
 
-BenchmarkDotNet 0.16.0-preview.2, .NET 11.0.0 x64, Windows 10, AMD Ryzen 9 9950X. Each case ran in a separate process with three warm-ups and five measurement iterations targeting 250 ms each. Times and managed allocations are per parsed header.
+BenchmarkDotNet 0.16.0-preview.2, .NET 11.0.0 x64, Windows 10, AMD Ryzen 9 9950X. Each row compares mean time per uncached header with the previous PR revision (`5691833`). Negative percentages mean less time per header.
 
-| Workload | Mean | Std. dev. | Allocated |
-| --- | ---: | ---: | ---: |
-| Catalog browsers (44) | 297.3 ns | 0.64 ns | 38 B |
-| Catalog crawlers (48) | 158.9 ns | 1.63 ns | 0 B |
-| Full catalog (96) | 254.8 ns | 2.61 ns | 18 B |
-| API snapshot (60) | 307.3 ns | 0.89 ns | 29 B |
+| Workload | Previous PR | Shared filter | Time change | Allocated per parse |
+| --- | ---: | ---: | ---: | ---: |
+| Catalog browsers (44) | 289.37 ns | 238.36 ns | −17.6% | 38 B |
+| Catalog crawlers (48) | 164.18 ns | 79.73 ns | −51.4% | 0 B |
+| Full catalog (96) | 256.87 ns | 155.38 ns | −39.5% | 18 B |
+| API snapshot (60) | 308.70 ns | 202.46 ns | −34.4% | 29 B |
+| Googlebot | 6.797 ns | 6.821 ns | +0.4% | 0 B |
 
-| Selected individual headers | Mean | Std. dev. | Allocated |
-| --- | ---: | ---: | ---: |
-| Googlebot | 6.783 ns | 0.0712 ns | 0 B |
-| Bravebot | 136.728 ns | 0.6628 ns | 0 B |
-| OAI-AdsBot | 246.361 ns | 1.4094 ns | 0 B |
-| IIS-encoded Screaming Frog | 238.949 ns | 0.9344 ns | 0 B |
-| Amazon Silk on Fire tablet | 287.497 ns | 2.1981 ns | 40 B |
-
-The optimized parser checks the highest-priority robot rule before decoding the header. In a paired run the reference Googlebot header fell from 22.526 ns to 7.280 ns, with zero bytes allocated. A separate comparison measured 8.401 ns on main and 6.783 ns on the optimized parser. [Benchmarks and comparisons](docs/benchmarks/2026-11-23.md)
+The four detectors share a 64 KiB lookup table for ASCII headers up to 255 characters. Longer headers and Unicode inputs use the full rule set. The benchmark report includes those controls, the comparison with main and results for .NET 8–11. [Detailed measurements](docs/benchmarks/2026-11-23.md)
 
 ### Earlier measurements on .NET 8–10
 

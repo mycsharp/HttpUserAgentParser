@@ -64,3 +64,32 @@ public class RepeatedBrowserTokenBenchmarks
     [Benchmark]
     public (string Name, string Version)? GetBrowser() => Parser.GetBrowser(_userAgent);
 }
+
+[MemoryDiagnoser]
+public class HeaderLengthBenchmarks
+{
+    private const string Prefix = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
+    private string _userAgent;
+
+    [Params(128, 256, 4096)]
+    public int Length { get; set; }
+
+    [Params(false, true)]
+    public bool Unicode { get; set; }
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        // Keep browser tokens and total length identical. Only the trailing comment changes.
+        string suffix = Unicode ? "é)" : "x)";
+        _userAgent = Prefix + " (" + new string('x', Length - Prefix.Length - 4) + suffix;
+    }
+
+    [Benchmark]
+    public string Parse() => Parser.Parse(_userAgent).Name;
+
+#if BENCHMARK_BASELINE
+    [Benchmark(Baseline = true)]
+    public string ParseBaseline() => Baseline::MyCSharp.HttpUserAgentParser.HttpUserAgentParser.Parse(_userAgent).Name;
+#endif
+}

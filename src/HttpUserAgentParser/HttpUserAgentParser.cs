@@ -65,15 +65,17 @@ public static class HttpUserAgentParser
 
     private static HttpUserAgentInformation AnalyzeUserAgent(string userAgent, ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
     {
-        if (robots.MatchAfterFirst(userAgent, ua) is { } robotName)
+        UserAgentRuleIndex.RuleMasks candidates = UserAgentRuleIndex.BuiltIn.Find(ua);
+        ulong robotMask = ReferenceEquals(robots, HttpUserAgentRules.DefaultRobotSet) ? candidates.Robots : ulong.MaxValue;
+        if (robots.MatchAfterFirst(userAgent, ua, robotMask) is { } robotName)
         {
             return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
         }
 
-        HttpUserAgentPlatformInformation? platform = FindPlatform(ua);
-        string? mobileDeviceType = FindMobileDevice(ua);
+        HttpUserAgentPlatformInformation? platform = FindPlatform(ua, candidates.Platforms);
+        string? mobileDeviceType = FindMobileDevice(ua, candidates.Devices);
 
-        if (FindBrowser(ua) is { } browser)
+        if (FindBrowser(ua, candidates.Browsers) is { } browser)
         {
             return HttpUserAgentInformation.CreateForBrowser(userAgent, platform, browser.Name, browser.Version, mobileDeviceType);
         }
@@ -126,14 +128,15 @@ public static class HttpUserAgentParser
     /// returns the platform or null
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
-        => DetectProduct(userAgent, FindPlatform);
+        => DetectProduct(userAgent, static ua => FindPlatform(ua, ulong.MaxValue));
 
-    private static HttpUserAgentPlatformInformation? FindPlatform(ReadOnlySpan<char> ua)
+    private static HttpUserAgentPlatformInformation? FindPlatform(ReadOnlySpan<char> ua, ulong mask)
     {
-        // Rules are sorted by frequency, so a sequential scan usually stops after a few tokens.
-        // (Measured with a mixed real-world workload, this beats vectorized token groups here.)
-        foreach ((string token, HttpUserAgentPlatformInformation platform) in HttpUserAgentRules.Platforms)
+        (string Token, HttpUserAgentPlatformInformation Platform)[] rules = HttpUserAgentRules.Platforms;
+        UserAgentRuleIndex.Candidates candidates = new(mask, rules.Length);
+        for (int i = candidates.Next(); i >= 0; i = candidates.Next())
         {
+            (string token, HttpUserAgentPlatformInformation platform) = rules[i];
             int index = ua.IndexOf(token, StringComparison.OrdinalIgnoreCase);
             while (index >= 0)
             {
@@ -177,12 +180,15 @@ public static class HttpUserAgentParser
     /// or after a space, tab, <c>+</c>, <c>;</c>, <c>(</c>, <c>)</c> or <c>,</c>.
     /// </remarks>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
-        => DetectProduct(userAgent, FindBrowser);
+        => DetectProduct(userAgent, static ua => FindBrowser(ua, UserAgentRuleIndex.BuiltIn.Find(ua).Browsers));
 
-    private static (string Name, string? Version)? FindBrowser(ReadOnlySpan<char> ua)
+    private static (string Name, string? Version)? FindBrowser(ReadOnlySpan<char> ua, ulong mask)
     {
-        foreach ((string name, string detectToken, string? versionToken) in HttpUserAgentRules.Browsers)
+        (string Name, string DetectToken, string? VersionToken)[] rules = HttpUserAgentRules.Browsers;
+        UserAgentRuleIndex.Candidates candidates = new(mask, rules.Length);
+        for (int i = candidates.Next(); i >= 0; i = candidates.Next())
         {
+            (string name, string detectToken, string? versionToken) = rules[i];
             int detectIndex = IndexOfTokenStart(ua, detectToken, 0);
             if (detectIndex < 0)
             {
@@ -368,11 +374,13 @@ public static class HttpUserAgentParser
     /// returns the device or null
     /// </summary>
     public static string? GetMobileDevice(string userAgent)
-        => DetectProduct(userAgent, FindMobileDevice);
+        => DetectProduct(userAgent, static ua => FindMobileDevice(ua, ulong.MaxValue));
 
-    private static string? FindMobileDevice(ReadOnlySpan<char> ua)
+    private static string? FindMobileDevice(ReadOnlySpan<char> ua, ulong mask)
     {
-        int index = HttpUserAgentRules.MobileMatcher.Find(ua, 0);
+        int index = mask != ulong.MaxValue
+            ? UserAgentRuleIndex.FindKey(ua, HttpUserAgentRules.MobileKeys, mask)
+            : HttpUserAgentRules.MobileMatcher.Find(ua, 0);
         return index >= 0 ? HttpUserAgentRules.Mobiles[index].Value : null;
     }
 
