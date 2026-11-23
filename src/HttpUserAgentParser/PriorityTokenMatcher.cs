@@ -2,6 +2,7 @@
 
 #if NET9_0_OR_GREATER
 using System.Buffers;
+using System.Runtime.InteropServices;
 #endif
 
 namespace MyCSharp.HttpUserAgentParser;
@@ -94,8 +95,7 @@ internal sealed class PriorityTokenMatcher<TDetector>
     /// </summary>
     /// <param name="input">The text to search.</param>
     /// <param name="startIndex">The first token index to consider.</param>
-    /// <param name="position">The position of the first occurrence of the returned token in <paramref name="input"/>, otherwise -1.</param>
-    public int Find(ReadOnlySpan<char> input, int startIndex, out int position)
+    public int Find(ReadOnlySpan<char> input, int startIndex)
     {
         string[] tokens = _tokens;
 #if NET9_0_OR_GREATER
@@ -108,8 +108,7 @@ internal sealed class PriorityTokenMatcher<TDetector>
 
             for (int i = Math.Max(group.Start, startIndex); i < group.End; i++)
             {
-                position = input.IndexOf(tokens[i], StringComparison.OrdinalIgnoreCase);
-                if (position >= 0)
+                if (input.Contains(tokens[i], StringComparison.OrdinalIgnoreCase))
                 {
                     return i;
                 }
@@ -118,15 +117,13 @@ internal sealed class PriorityTokenMatcher<TDetector>
 #else
         for (int i = startIndex; i < tokens.Length; i++)
         {
-            position = input.IndexOf(tokens[i], StringComparison.OrdinalIgnoreCase);
-            if (position >= 0)
+            if (input.Contains(tokens[i], StringComparison.OrdinalIgnoreCase))
             {
                 return i;
             }
         }
 #endif
 
-        position = -1;
         return -1;
     }
 }
@@ -151,8 +148,7 @@ internal readonly struct PriorityTokenGroup
     {
         Start = start;
         End = end;
-        FilterValues = [.. values];
-        Values = values.Count > 0 ? SearchValues.Create(FilterValues, StringComparison.OrdinalIgnoreCase) : null;
+        Values = values.Count > 0 ? SearchValues.Create(CollectionsMarshal.AsSpan(values), StringComparison.OrdinalIgnoreCase) : null;
         ShortTokens = [.. shortTokens];
     }
 
@@ -165,11 +161,6 @@ internal readonly struct PriorityTokenGroup
     /// Index after the last token of the group.
     /// </summary>
     public int End { get; }
-
-    /// <summary>
-    /// The tokens used for the vectorized group filter (after removing redundant tokens).
-    /// </summary>
-    public string[] FilterValues { get; }
 
     /// <summary>
     /// The vectorized group filter, <see langword="null"/> if the group only has short tokens.

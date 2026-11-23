@@ -16,6 +16,22 @@ public class UserAgentCatalogTests
 
     public static TheoryData<string> UnknownUserAgents => [.. UserAgentCatalog.Unknown];
 
+    public static TheoryData<string> ObservedLabels => [.. UserAgentsMeSnapshot.Cases.Select(static sample => sample.Label)];
+
+    [Theory]
+    [MemberData(nameof(ObservedLabels))]
+    public void Observed_User_Agent(string label)
+    {
+        ObservedUserAgent expected = UserAgentsMeSnapshot.Cases.Single(sample => string.Equals(sample.Label, label, StringComparison.Ordinal));
+        HttpUserAgentInformation info = HttpUserAgentParser.Parse(expected.UserAgent);
+
+        Assert.Equal(expected.Type, info.Type);
+        Assert.Equal(expected.Name, info.Name);
+        Assert.Equal(expected.Version, info.Version);
+        Assert.Equal(expected.Platform, info.Platform?.Name);
+        Assert.Equal(expected.Device, info.MobileDeviceType);
+    }
+
     [Theory]
     [MemberData(nameof(BrowserLabels))]
     public void Browser(string label)

@@ -19,9 +19,9 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
 {
     // MemoryCache checks passive expiration tokens on every lookup, also when a miss from an
     // older generation finishes after SetRobots. The cache key and callback value stay public types.
-    internal sealed class RobotRulesChangeToken(IReadOnlyList<(string Key, string Value)> entries) : IChangeToken
+    internal sealed class RobotRulesChangeToken(object generation) : IChangeToken
     {
-        public bool HasChanged => !ReferenceEquals(entries, HttpUserAgentRules.RobotSet.ReadOnlyEntries);
+        public bool HasChanged => !ReferenceEquals(generation, HttpUserAgentRules.RobotSet.CacheGeneration);
         public bool ActiveChangeCallbacks => false;
         public IDisposable RegisterChangeCallback(Action<object?> callback, object? state)
             => CancellationToken.None.Register(callback, state);
@@ -103,7 +103,7 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
         using (ICacheEntry entry = _memoryCache.CreateEntry(userAgent))
         {
             entry.SetOptions(entryOptions);
-            entry.ExpirationTokens.Add(s_changeTokens.GetValue(robots, static rules => new RobotRulesChangeToken(rules.ReadOnlyEntries)));
+            entry.ExpirationTokens.Add(s_changeTokens.GetValue(robots, static rules => new RobotRulesChangeToken(rules.CacheGeneration)));
             entry.Size = entryOptions.Size ?? 1;
             entry.Value = information;
         }

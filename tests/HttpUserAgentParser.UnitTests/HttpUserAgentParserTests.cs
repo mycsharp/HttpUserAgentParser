@@ -379,6 +379,8 @@ public class HttpUserAgentParserTests
     [Theory]
     [InlineData("Microsoft Office/16.0 (Macintosh; Mac OS X 10.15.7; Microsoft Outlook 16.80.23121017; Pro)", "Mac OS X")]
     [InlineData("Microsoft-CryptoAPI/10.0", null)]
+    [InlineData("Windows NT 6.10", "Unknown Windows OS")]
+    [InlineData("Windows NT 6.10; Windows NT 6.1.7601", "Windows 7")]
     [InlineData("CrOS", "ChromeOS")]
     [InlineData("Crosstalk/2 (X11; CrOS)", "ChromeOS")]
     [InlineData("Microsoft Office (Macros x86)", null)]
@@ -390,9 +392,20 @@ public class HttpUserAgentParserTests
     [InlineData("Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "ChromeOS")]
     [InlineData("Mozilla/5.0+(X11;+CrOS+x86_64+14541.0.0)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/120.0.0.0+Safari/537.36", "ChromeOS")]
     [InlineData("Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Mobile Safari/537.36 Edge/15.15063", "Windows Phone")]
-    public void GetPlatform_Detects_ChromeOS_And_Windows_Phone_Only_By_Their_Own_Tokens(string userAgent, string? expectedPlatform)
+    public void GetPlatform_Respects_Token_Boundaries_And_Compatibility_Tokens(string userAgent, string? expectedPlatform)
     {
         Assert.Equal(expectedPlatform, HttpUserAgentParser.GetPlatform(userAgent)?.Name);
+    }
+
+    [Fact]
+    public void Iis_Encoded_Crawler_Is_Recognized_Before_The_Browser()
+    {
+        const string ua = "Mozilla/5.0+(compatible;+Screaming+Frog SEO+Spider/22.0)+Chrome/131";
+        HttpUserAgentInformation result = HttpUserAgentParser.Parse(ua);
+
+        Assert.Equal((HttpUserAgentType.Robot, "Screaming Frog SEO Spider", ua), (result.Type, result.Name, result.UserAgent));
+        Assert.True(HttpUserAgentParser.TryGetRobot(ua, out string? name));
+        Assert.Equal(result.Name, name);
     }
 
     [Fact]

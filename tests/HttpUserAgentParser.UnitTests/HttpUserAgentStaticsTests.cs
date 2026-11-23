@@ -68,7 +68,7 @@ public class HttpUserAgentStaticsTests
     /// </summary>
     private static readonly (string Token, string Name)[] s_expectedBrowsers =
     [
-        ("OPR", "Opera"), ("Flock", "Flock"), ("Edge", "Edge"), ("EdgA", "Edge"), ("Edg", "Edge"), ("Vivaldi", "Vivaldi"),
+        ("OPR", "Opera"), ("Silk", "Amazon Silk"), ("Flock", "Flock"), ("Edge", "Edge"), ("EdgA", "Edge"), ("Edg", "Edge"), ("Vivaldi", "Vivaldi"),
         ("Brave Chrome", "Brave"), ("Chrome", "Chrome"), ("CriOS", "Chrome"), ("Opera.*?Version", "Opera"), ("Opera", "Opera"),
         ("MSIE", "Internet Explorer"), ("Internet Explorer", "Internet Explorer"), ("Trident.* rv", "Internet Explorer"),
         ("Shiira", "Shiira"), ("Firefox", "Firefox"), ("FxiOS", "Firefox"), ("Chimera", "Chimera"), ("Phoenix", "Phoenix"),

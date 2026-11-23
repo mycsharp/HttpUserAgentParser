@@ -98,6 +98,7 @@ internal static class HttpUserAgentRules
         ("Vivaldi", "Vivaldi", null),
         ("Flock", "Flock", null),
         // Chromium based browsers with their own token (their UAs contain "Chrome/" as well)
+        ("Amazon Silk", "Silk", null),
         ("Samsung Internet", "SamsungBrowser", null),
         ("Yandex Browser", "YaBrowser", null),
         ("UC Browser", "UCBrowser", null),
@@ -210,6 +211,7 @@ internal static class HttpUserAgentRules
         ( "Google-InspectionTool", "Google-InspectionTool" ),
         ( "GoogleOther", "GoogleOther" ),
         ( "Google-CloudVertexBot", "Google-CloudVertexBot" ),
+        ( "Bravebot/", "Bravebot" ),
         ( "DuckDuckBot", "DuckDuckBot" ),
         ( "SeznamBot", "SeznamBot" ),
         ( "Sogou web spider", "Sogou" ), // "Sogou" alone would match the Sogou browser
@@ -224,6 +226,10 @@ internal static class HttpUserAgentRules
         ( "serpstatbot", "serpstatbot" ),
         // AI crawlers and AI user agents (Claude-SearchBot and Claude-User contain "claudebot@anthropic.com")
         ( "ChatGPT-User", "ChatGPT-User" ),
+        ( "KimiBot/", "KimiBot" ),
+        ( "DeepSeekBot/", "DeepSeekBot" ),
+        ( "ChatGLM-Spider/", "ChatGLM-Spider" ),
+        ( "OAI-AdsBot/", "OAI-AdsBot" ),
         ( "Claude-SearchBot", "Claude-SearchBot" ),
         ( "Claude-User", "Claude-User" ),
         ( "ClaudeBot", "ClaudeBot" ),

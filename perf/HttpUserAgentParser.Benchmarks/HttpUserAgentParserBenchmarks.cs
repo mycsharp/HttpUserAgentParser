@@ -5,6 +5,7 @@ extern alias Baseline;
 #endif
 
 using BenchmarkDotNet.Attributes;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Parser = MyCSharp.HttpUserAgentParser.HttpUserAgentParser;
 
 namespace HttpUserAgentParser.Benchmarks;
@@ -29,6 +30,12 @@ public class HttpUserAgentParserBenchmarks
         yield return new("Googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)");
         yield return new("Applebot", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)");
         yield return new("Unknown", "custom-client/1.0 (+https://example.org/client)");
+        yield return new("IIS encoded crawler", "Mozilla/5.0+(compatible;+Screaming+Frog+SEO+Spider/22.0)+Chrome/131");
+
+        foreach (ObservedUserAgent sample in UserAgentsMeSnapshot.Cases)
+        {
+            yield return new TestData(sample.Label, sample.UserAgent);
+        }
     }
 
     [Benchmark]

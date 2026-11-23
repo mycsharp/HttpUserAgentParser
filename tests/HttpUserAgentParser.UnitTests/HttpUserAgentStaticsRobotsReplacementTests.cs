@@ -111,6 +111,17 @@ public sealed class HttpUserAgentStaticsRobotsReplacementTests : IDisposable
     }
 
     [Fact]
+    public void Literal_And_Iis_Encoded_Robot_Keys_Respect_Their_Configured_Order()
+    {
+        HttpUserAgentStatics.SetRobots([("C++Bot", "Literal"), ("SEO Spider", "Encoded"), ("SEO+Spider", "Literal fallback")]);
+
+        Assert.Equal("Literal", HttpUserAgentParser.GetRobot("seo+spider C++Bot"));
+        Assert.Equal("Encoded", HttpUserAgentParser.GetRobot("seo+spider"));
+        Assert.Equal("Literal", HttpUserAgentParser.GetRobot("c++bot"));
+        Assert.Null(HttpUserAgentParser.GetRobot("C  Bot"));
+    }
+
+    [Fact]
     public void SetRobots_Accepts_A_Single_Robot_And_No_Robots()
     {
         HttpUserAgentStatics.SetRobots([("ExampleBot", "Example")]);

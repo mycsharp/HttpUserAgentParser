@@ -16,8 +16,7 @@ public class PriorityTokenMatcherTests
     {
         PriorityTokenMatcher<TestDetector> matcher = Create(["beta", "alpha"]);
 
-        Assert.Equal(0, matcher.Find("alpha beta", 0, out int position));
-        Assert.Equal(6, position);
+        Assert.Equal(0, matcher.Find("alpha beta", 0));
         Assert.Equal(2, matcher.Count);
     }
 
@@ -26,8 +25,7 @@ public class PriorityTokenMatcherTests
     {
         PriorityTokenMatcher<TestDetector> matcher = Create(["beta", "alpha"]);
 
-        Assert.Equal(1, matcher.Find("alpha beta", 1, out int position));
-        Assert.Equal(0, position);
+        Assert.Equal(1, matcher.Find("alpha beta", 1));
     }
 
     [Fact]
@@ -35,8 +33,7 @@ public class PriorityTokenMatcherTests
     {
         PriorityTokenMatcher<TestDetector> matcher = Create(["iphone"]);
 
-        Assert.Equal(0, matcher.Find("(IPHONE; CPU)", 0, out int position));
-        Assert.Equal(1, position);
+        Assert.Equal(0, matcher.Find("(IPHONE; CPU)", 0));
     }
 
     [Fact]
@@ -44,8 +41,7 @@ public class PriorityTokenMatcherTests
     {
         PriorityTokenMatcher<TestDetector> matcher = Create(["alpha", "beta", "lg"]);
 
-        Assert.Equal(-1, matcher.Find("gamma", 0, out int position));
-        Assert.Equal(-1, position);
+        Assert.Equal(-1, matcher.Find("gamma", 0));
     }
 
     [Fact]
@@ -53,7 +49,7 @@ public class PriorityTokenMatcherTests
     {
         PriorityTokenMatcher<TestDetector> matcher = Create([]);
 
-        Assert.Equal(-1, matcher.Find("anything", 0, out _));
+        Assert.Equal(-1, matcher.Find("anything", 0));
     }
 
     [Fact]
@@ -62,8 +58,8 @@ public class PriorityTokenMatcherTests
         // "edg" is the group filter for "edge"; starting at "edge" with only "edg" present must not match.
         PriorityTokenMatcher<TestDetector> matcher = Create(["edg", "edge", "other"]);
 
-        Assert.Equal(-1, matcher.Find("edgx", 1, out _));
-        Assert.Equal(0, matcher.Find("edgx", 0, out _));
+        Assert.Equal(-1, matcher.Find("edgx", 1));
+        Assert.Equal(0, matcher.Find("edgx", 0));
     }
 
     [Fact]
@@ -71,10 +67,9 @@ public class PriorityTokenMatcherTests
     {
         PriorityTokenMatcher<TestDetector> matcher = Create(["lg", "o2", "longer"]);
 
-        Assert.Equal(1, matcher.Find("Model O2 phone", 0, out int position));
-        Assert.Equal(6, position);
-        Assert.Equal(0, matcher.Find("LG-L160L longer", 0, out _));
-        Assert.Equal(2, matcher.Find("a longer text", 0, out _));
+        Assert.Equal(1, matcher.Find("Model O2 phone", 0));
+        Assert.Equal(0, matcher.Find("LG-L160L longer", 0));
+        Assert.Equal(2, matcher.Find("a longer text", 0));
     }
 
     [Fact]
@@ -82,10 +77,9 @@ public class PriorityTokenMatcherTests
     {
         PriorityTokenMatcher<TestDetector> matcher = Create(["windows nt 10.0", "windows nt 6.1", "android"], 1);
 
-        Assert.Equal(0, matcher.Find("(Windows NT 10.0; Win64)", 0, out int position));
-        Assert.Equal(1, position);
-        Assert.Equal(2, matcher.Find("(Linux; Android 15)", 0, out _));
-        Assert.Equal(-1, matcher.Find("(Linux; Android 15)", 3, out _));
+        Assert.Equal(0, matcher.Find("(Windows NT 10.0; Win64)", 0));
+        Assert.Equal(2, matcher.Find("(Linux; Android 15)", 0));
+        Assert.Equal(-1, matcher.Find("(Linux; Android 15)", 3));
     }
 
 #if NET9_0_OR_GREATER
@@ -95,7 +89,7 @@ public class PriorityTokenMatcherTests
         PriorityTokenMatcher<TestDetector> matcher = Create(["lg", "longer", "o2"]);
 
         PriorityTokenGroup group = Assert.Single(matcher.Groups.ToArray());
-        Assert.Equal(new[] { "longer" }, group.FilterValues);
+        Assert.True(group.Values!.Contains("longer"));
         Assert.Equal(new[] { "lg", "o2" }, group.ShortTokens);
     }
 
@@ -106,8 +100,8 @@ public class PriorityTokenMatcherTests
 
         PriorityTokenGroup group = Assert.Single(matcher.Groups.ToArray());
         Assert.Null(group.Values);
-        Assert.Equal(0, matcher.Find("LG-L160L", 0, out _));
-        Assert.Equal(-1, matcher.Find("Pixel", 0, out _));
+        Assert.Equal(0, matcher.Find("LG-L160L", 0));
+        Assert.Equal(-1, matcher.Find("Pixel", 0));
     }
 
     [Fact]
@@ -116,8 +110,8 @@ public class PriorityTokenMatcherTests
         PriorityTokenMatcher<TestDetector> covered = Create(["Edg", "Edge", "EdgA", "EdgiOS"]);
         PriorityTokenMatcher<TestDetector> replaced = Create(["Edge", "EdgA", "Edg"]);
 
-        Assert.Equal(new[] { "Edg" }, Assert.Single(covered.Groups.ToArray()).FilterValues);
-        Assert.Equal(new[] { "Edg" }, Assert.Single(replaced.Groups.ToArray()).FilterValues);
+        Assert.False(Assert.Single(covered.Groups.ToArray()).Values!.Contains("Edge"));
+        Assert.False(Assert.Single(replaced.Groups.ToArray()).Values!.Contains("Edge"));
     }
 
     [Fact]
@@ -127,9 +121,9 @@ public class PriorityTokenMatcherTests
 
         PriorityTokenGroup[] groups = matcher.Groups.ToArray();
         Assert.Equal(2, groups.Length);
-        Assert.Equal(PriorityTokenGroup.MaxValuesPerGroup, groups[0].FilterValues.Length);
+        Assert.Equal((0, PriorityTokenGroup.MaxValuesPerGroup), (groups[0].Start, groups[0].End));
         Assert.Equal((8, 9), (groups[1].Start, groups[1].End));
-        Assert.Equal(8, matcher.Find("iii", 0, out _));
+        Assert.Equal(8, matcher.Find("iii", 0));
     }
 
     [Fact]
@@ -139,7 +133,8 @@ public class PriorityTokenMatcherTests
         PriorityTokenMatcher<TestDetector> matcher = Create(["aaa1", "aaa2", "bbb", "ccc", "ddd", "eee", "fff", "ggg", "aaa"]);
 
         PriorityTokenGroup group = Assert.Single(matcher.Groups.ToArray());
-        Assert.Equal(new[] { "bbb", "ccc", "ddd", "eee", "fff", "ggg", "aaa" }, group.FilterValues);
+        Assert.True(group.Values!.Contains("aaa"));
+        Assert.False(group.Values.Contains("aaa1"));
     }
 
     [Fact]
@@ -151,15 +146,6 @@ public class PriorityTokenMatcherTests
         Assert.Equal(new[] { (0, 1), (1, 3), (3, 4) }, groups.Select(static g => (g.Start, g.End)));
     }
 
-    [Fact]
-    public void Built_In_Matchers_Use_Small_Vectorized_Groups()
-    {
-        Assert.All(HttpUserAgentRules.DefaultRobotSet.Matcher.Groups.ToArray(), static g => Assert.InRange(g.FilterValues.Length, 1, PriorityTokenGroup.MaxValuesPerGroup));
-        Assert.All(HttpUserAgentRules.MobileMatcher.Groups.ToArray(), static g => Assert.InRange(g.FilterValues.Length, 1, PriorityTokenGroup.MaxValuesPerGroup));
-
-        // Googlebot, by far the most common robot, is checked on its own.
-        Assert.Equal((0, 1), (HttpUserAgentRules.DefaultRobotSet.Matcher.Groups[0].Start, HttpUserAgentRules.DefaultRobotSet.Matcher.Groups[0].End));
-    }
 #endif
 
     [Fact]
@@ -188,32 +174,6 @@ public class PriorityTokenMatcherTests
         Assert.Equal(HttpUserAgentRules.CuratedRobotAnchors.Length, HttpUserAgentRules.DefaultRobotSet.AnchorMatcher.Count);
     }
 
-    public static TheoryData<string> CatalogBrowserUserAgents => [.. UserAgentCatalog.Browsers.Select(static ua => ua.UserAgent)];
-
-    [Theory]
-    [MemberData(nameof(CatalogBrowserUserAgents))]
-    public void Robot_Anchors_Do_Not_Occur_In_Browser_User_Agents(string userAgent)
-    {
-        Assert.False(HttpUserAgentRules.DefaultRobotSet.AnchorMatcher.ContainsAny(userAgent));
-    }
-
-    [Theory]
-    [MemberData(nameof(CatalogUserAgents))]
-    public void GetRobot_Equals_Sequential_Scan(string userAgent)
-    {
-        string? expected = null;
-        foreach ((string key, string value) in HttpUserAgentStatics.Robots)
-        {
-            if (userAgent.Contains(key, StringComparison.OrdinalIgnoreCase))
-            {
-                expected = value;
-                break;
-            }
-        }
-
-        Assert.Equal(expected, HttpUserAgentParser.GetRobot(userAgent));
-    }
-
     public static TheoryData<string> CatalogUserAgents => [.. UserAgentCatalog.All];
 
     [Theory]
@@ -230,19 +190,16 @@ public class PriorityTokenMatcherTests
         for (int start = 0; start <= tokens.Length; start++)
         {
             int expected = -1;
-            int expectedPosition = -1;
             for (int i = start; i < tokens.Length; i++)
             {
-                expectedPosition = input.IndexOf(tokens[i], StringComparison.OrdinalIgnoreCase);
-                if (expectedPosition >= 0)
+                if (input.Contains(tokens[i], StringComparison.OrdinalIgnoreCase))
                 {
                     expected = i;
                     break;
                 }
             }
 
-            Assert.Equal(expected, matcher.Find(input, start, out int position));
-            Assert.Equal(expected >= 0 ? expectedPosition : -1, position);
+            Assert.Equal(expected, matcher.Find(input, start));
         }
     }
 

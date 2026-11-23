@@ -31,12 +31,27 @@ jobs:
       - name: Verify packages
         env:
           TAG: ${{ github.event.release.tag_name }}
+        shell: python
         run: |
-          packages=(./artifacts/*.nupkg)
-          [[ ${#packages[@]} -eq 3 ]]
-          for id in MyCSharp.HttpUserAgentParser{,.AspNetCore,.MemoryCache}; do
-            test -f "./artifacts/$id.${TAG#v}.nupkg"
-          done
+          import os
+          from pathlib import Path
+          from xml.etree import ElementTree
+          from zipfile import ZipFile
+
+          version = os.environ["TAG"].removeprefix("v")
+          ids = ["MyCSharp.HttpUserAgentParser" + suffix for suffix in ("", ".AspNetCore", ".MemoryCache")]
+          packages = {Path("artifacts", f"{id_}.{version}.nupkg"): id_ for id_ in ids}
+          if set(Path("artifacts").glob("*.nupkg")) != packages.keys():
+              raise SystemExit(f"Expected the three release packages for version {version}")
+          for path, package_id in packages.items():
+              with ZipFile(path) as archive:
+                  manifests = [name for name in archive.namelist() if "/" not in name and name.endswith(".nuspec")]
+                  if len(manifests) != 1:
+                      raise SystemExit(f"{path} must contain a single root .nuspec")
+                  manifest = ElementTree.fromstring(archive.read(manifests[0]))
+              identity = (manifest.findtext("{*}metadata/{*}id"), manifest.findtext("{*}metadata/{*}version"))
+              if identity != (package_id, version):
+                  raise SystemExit(f"{path} declares {identity}, expected {(package_id, version)}")
 
       - name: Publish to NuGet.org
         env:

@@ -56,21 +56,15 @@ public static class HttpUserAgentParser
     }
 
     private static HttpUserAgentInformation ParseInternal(string userAgent, HttpUserAgentRobotSet robots)
-    {
-        // prepare
-        userAgent = Cleanup(userAgent);
+        => Detect(Cleanup(userAgent), robots, AnalyzeUserAgent);
 
-        // analyze
-        if (GetRobot(userAgent, robots) is { } robotName)
+    private static HttpUserAgentInformation AnalyzeUserAgent(string userAgent, ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
+    {
+        if (robots.Match(userAgent, ua) is { } robotName)
         {
             return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
         }
 
-        return DetectProducts(userAgent, AnalyzeProducts);
-    }
-
-    private static HttpUserAgentInformation AnalyzeProducts(string userAgent, ReadOnlySpan<char> ua)
-    {
         HttpUserAgentPlatformInformation? platform = FindPlatform(ua);
         string? mobileDeviceType = FindMobileDevice(ua);
 
@@ -82,23 +76,27 @@ public static class HttpUserAgentParser
         return HttpUserAgentInformation.CreateForUnknown(userAgent, platform, mobileDeviceType);
     }
 
-    private delegate T ProductDetector<T>(string original, ReadOnlySpan<char> products);
+    private delegate T Detector<TState, T>(string original, ReadOnlySpan<char> decoded, TState state);
+    private delegate T ProductDetector<T>(ReadOnlySpan<char> products);
+
+    private static T DetectProduct<T>(string userAgent, ProductDetector<T> detector)
+        => Detect(userAgent, detector, static (_, ua, detect) => detect(ua));
 
     // IIS logs use '+' for spaces, including spaces inside product names. Keep the original
-    // string in the result and use the decoded span for all three product detectors.
-    private static T DetectProducts<T>(string userAgent, ProductDetector<T> detect)
+    // string in the result and share the decoded span across all detectors.
+    private static T Detect<TState, T>(string userAgent, TState state, Detector<TState, T> detect)
     {
         ReadOnlySpan<char> ua = userAgent.AsSpan();
         if (!ua.Contains('+'))
         {
-            return detect(userAgent, ua);
+            return detect(userAgent, ua, state);
         }
 
         if (ua.Length <= 512)
         {
             Span<char> decoded = stackalloc char[ua.Length];
             ua.Replace(decoded, '+', ' ');
-            return detect(userAgent, decoded);
+            return detect(userAgent, decoded, state);
         }
 
         char[] buffer = ArrayPool<char>.Shared.Rent(ua.Length);
@@ -106,7 +104,7 @@ public static class HttpUserAgentParser
         {
             Span<char> decoded = buffer.AsSpan(0, ua.Length);
             ua.Replace(decoded, '+', ' ');
-            return detect(userAgent, decoded);
+            return detect(userAgent, decoded, state);
         }
         finally
         {
@@ -123,7 +121,7 @@ public static class HttpUserAgentParser
     /// returns the platform or null
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
-        => DetectProducts(userAgent, static (_, ua) => FindPlatform(ua));
+        => DetectProduct(userAgent, FindPlatform);
 
     private static HttpUserAgentPlatformInformation? FindPlatform(ReadOnlySpan<char> ua)
     {
@@ -132,28 +130,25 @@ public static class HttpUserAgentParser
         foreach ((string token, HttpUserAgentPlatformInformation platform) in HttpUserAgentRules.Platforms)
         {
             int index = ua.IndexOf(token, StringComparison.OrdinalIgnoreCase);
-            if (index < 0)
-            {
-                continue;
-            }
-
-            // Short names can occur inside other words ("Microsoft", "Magnum", "CrOS x86").
-            if (platform.RegexId is not (HttpUserAgentPlatformRegexId.CrOS or HttpUserAgentPlatformRegexId.Gnu or HttpUserAgentPlatformRegexId.OsX))
-            {
-                return platform;
-            }
-
-            do
+            while (index >= 0)
             {
                 int end = index + token.Length;
-                if (IsTokenStart(ua, index) && IsProductNameEnd(ua, end))
+                bool matches = platform.RegexId switch
+                {
+                    // Short names can occur inside other words such as "Microsoft" or "Magnum".
+                    HttpUserAgentPlatformRegexId.CrOS or HttpUserAgentPlatformRegexId.Gnu or HttpUserAgentPlatformRegexId.OsX
+                        => IsTokenStart(ua, index) && IsProductNameEnd(ua, end),
+                    // NT 6.1.7601 is Windows 7, while NT 6.10 is a different version.
+                    _ when char.IsAsciiDigit(token[^1]) => end == ua.Length || !char.IsAsciiDigit(ua[end]),
+                    _ => true,
+                };
+                if (matches)
                 {
                     return platform;
                 }
 
                 index = IndexOfTokenStart(ua, token, end);
             }
-            while (index >= 0);
         }
 
         return null;
@@ -177,7 +172,7 @@ public static class HttpUserAgentParser
     /// or after a space, tab, <c>+</c>, <c>;</c>, <c>(</c>, <c>)</c> or <c>,</c>.
     /// </remarks>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
-        => DetectProducts(userAgent, static (_, ua) => FindBrowser(ua));
+        => DetectProduct(userAgent, FindBrowser);
 
     private static (string Name, string? Version)? FindBrowser(ReadOnlySpan<char> ua)
     {
@@ -349,33 +344,7 @@ public static class HttpUserAgentParser
     /// returns the robot or null
     /// </summary>
     public static string? GetRobot(string userAgent)
-        => GetRobot(userAgent, HttpUserAgentRules.RobotSet);
-
-    private static string? GetRobot(string userAgent, HttpUserAgentRobotSet robots)
-    {
-        // The first robot (Googlebot in the default list, by far the most common robot) is checked on its own.
-        if (robots.FirstKey is { } firstKey && userAgent.AsSpan().Contains(firstKey, StringComparison.OrdinalIgnoreCase))
-        {
-            return robots.FirstValue;
-        }
-
-        return FindRobot(userAgent, robots);
-    }
-
-    /// <summary>
-    /// Finds the first robot after the first one; separate from <see cref="GetRobot(string)"/>, so its check of the first robot stays small.
-    /// </summary>
-    private static string? FindRobot(ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
-    {
-        // The few anchors rule out most user agents (browsers) before the full key search.
-        if (!robots.AnchorMatcher.ContainsAny(ua))
-        {
-            return null;
-        }
-
-        int index = robots.Matcher.Find(ua, 1, out _);
-        return index >= 0 ? robots.Entries[index].Value : null;
-    }
+        => Detect(userAgent, HttpUserAgentRules.RobotSet, static (original, decoded, robots) => robots.Match(original, decoded));
 
     /// <summary>
     /// returns true if robot was found
@@ -390,11 +359,11 @@ public static class HttpUserAgentParser
     /// returns the device or null
     /// </summary>
     public static string? GetMobileDevice(string userAgent)
-        => DetectProducts(userAgent, static (_, ua) => FindMobileDevice(ua));
+        => DetectProduct(userAgent, FindMobileDevice);
 
     private static string? FindMobileDevice(ReadOnlySpan<char> ua)
     {
-        int index = HttpUserAgentRules.MobileMatcher.Find(ua, 0, out _);
+        int index = HttpUserAgentRules.MobileMatcher.Find(ua, 0);
         return index >= 0 ? HttpUserAgentRules.Mobiles[index].Value : null;
     }
 

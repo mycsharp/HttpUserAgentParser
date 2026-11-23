@@ -46,6 +46,26 @@ public sealed class MeterTestListener : IDisposable
         _listener.Start();
     }
 
+    /// <summary>Counts active meters with the specified name and their instruments.</summary>
+    public static (int Meters, int Instruments) CountLiveMeters(string meterName)
+    {
+        HashSet<Meter> meters = [];
+        int instruments = 0;
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, _) =>
+            {
+                if (string.Equals(instrument.Meter.Name, meterName, StringComparison.Ordinal))
+                {
+                    meters.Add(instrument.Meter);
+                    instruments++;
+                }
+            },
+        };
+        listener.Start();
+        return (meters.Count, instruments);
+    }
+
     /// <summary>Collects the current observable measurements.</summary>
     public void RecordObservableInstruments() => _listener.RecordObservableInstruments();
 

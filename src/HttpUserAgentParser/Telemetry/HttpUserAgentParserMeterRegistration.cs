@@ -50,6 +50,10 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
     /// </summary>
     public Meter Meter { get; } = meter;
 
+    // An owned meter lives for one registration. Its instruments stay discoverable from
+    // listener-held references after replacement, even though they no longer emit measurements.
+    public bool IsOwned { get; set; }
+
     /// <summary>
     /// Creates the instruments that do not exist yet.
     /// </summary>
@@ -170,6 +174,10 @@ internal sealed class HttpUserAgentParserMeterRegistration<TInstruments>(
         {
             reserve(target);
             TInstruments instruments = (TInstruments)_instrumentsByMeter.GetValue(target, _createInstruments);
+            // Use() already returned for the current meter and serialized publication on this target.
+            // Any other previously owned target has been retired, including a failed first publication.
+            ObjectDisposedException.ThrowIf(instruments.IsOwned, target);
+            instruments.IsOwned = own;
             instruments.CreateMissingInstruments();
 
             lock (_lock)

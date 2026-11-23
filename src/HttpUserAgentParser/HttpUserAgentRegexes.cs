@@ -175,6 +175,7 @@ internal static partial class HttpUserAgentRegexes
     // The numbered group is public behavior: consumers read the version from Groups[1], so ExplicitCapture must not be used.
 #pragma warning disable MA0023 // Use RegexOptions.ExplicitCapture or named groups
     [GeneratedRegex(@"OPR.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserOpr();
+    [GeneratedRegex(@"Silk.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserSilk();
     [GeneratedRegex(@"Flock.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserFlock();
     [GeneratedRegex(@"Edge.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserEdge();
     [GeneratedRegex(@"EdgA.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserEdgA();

@@ -1,6 +1,7 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
 using System.Diagnostics.Metrics;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
@@ -25,15 +26,10 @@ public sealed class HttpUserAgentParserMemoryCacheTelemetryPathTests : IDisposab
     public void Cached_Result_Expires_When_Robot_Rules_Change()
     {
         using HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
-        HttpUserAgentParserMemoryCachedProvider.RobotRulesChangeToken change = new(HttpUserAgentStatics.Robots);
-        Assert.False(change.ActiveChangeCallbacks);
-        Assert.False(change.HasChanged);
-        using IDisposable registration = change.RegisterChangeCallback(static _ => Assert.Fail("A passive token must not invoke callbacks."), null);
         try
         {
             Assert.Equal("Chrome", provider.Parse(UserAgent).Name);
             HttpUserAgentStatics.SetRobots([("Chrome", "Custom")]);
-            Assert.True(change.HasChanged);
             Assert.Equal("Custom", provider.Parse(UserAgent).Name);
             HttpUserAgentStatics.SetRobots([]);
             Assert.Equal("Chrome", provider.Parse(UserAgent).Name);
@@ -45,7 +41,43 @@ public sealed class HttpUserAgentParserMemoryCacheTelemetryPathTests : IDisposab
     }
 
     [Fact]
-    public void Rule_Change_During_A_Miss_Cannot_Leave_A_Stale_Cache_Hit()
+    public void Cached_Entry_Releases_The_Old_Rule_List_Before_Its_Next_Lookup()
+    {
+        using HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
+        try
+        {
+            WeakReference oldRules = CacheWithTemporaryRules(provider);
+            HttpUserAgentStatics.SetRobots([]);
+            GC.Collect();
+
+            Assert.False(oldRules.IsAlive);
+            Assert.Equal("Chrome", provider.Parse(UserAgent).Name);
+        }
+        finally
+        {
+            HttpUserAgentStatics.SetRobots(HttpUserAgentStatics.DefaultRobots);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference CacheWithTemporaryRules(HttpUserAgentParserMemoryCachedProvider provider)
+    {
+        HttpUserAgentStatics.SetRobots([("Chrome", "Temporary")]);
+        Assert.Equal("Temporary", provider.Parse(UserAgent).Name);
+        return new WeakReference(HttpUserAgentStatics.Robots);
+    }
+
+    [Fact]
+    public void Expired_Rule_Token_Is_Passive()
+    {
+        HttpUserAgentParserMemoryCachedProvider.RobotRulesChangeToken expired = new(new object());
+        Assert.True(expired.HasChanged);
+        Assert.False(expired.ActiveChangeCallbacks);
+        using IDisposable registration = expired.RegisterChangeCallback(static _ => Assert.Fail("Passive token invoked a callback."), null);
+    }
+
+    [Fact]
+    public void Miss_Listener_Can_Read_The_Published_Entry_And_Replace_The_Rules()
     {
         using HttpUserAgentParserMemoryCachedProvider provider = new(new HttpUserAgentParserMemoryCachedProviderOptions());
         using Meter meter = new("robots.memorycache");

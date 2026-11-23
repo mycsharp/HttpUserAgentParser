@@ -11,40 +11,60 @@ namespace MyCSharp.HttpUserAgentParser;
 /// </remarks>
 internal sealed class HttpUserAgentRobotSet
 {
+    private readonly int[] _literalPlusRules;
+
     /// <summary>
     /// Creates the set for <paramref name="robots"/> in priority order; the array must not be changed afterwards.
     /// </summary>
     public HttpUserAgentRobotSet((string Key, string Value)[] robots)
     {
-        Entries = robots;
         ReadOnlyEntries = [.. robots];
         Keys = Array.ConvertAll(robots, static robot => robot.Key);
 
-        // Without robots there is no first robot.
-        (FirstKey, FirstValue) = robots.Length > 0 ? robots[0] : (null, null);
+        _literalPlusRules = [.. Enumerable.Range(0, robots.Length).Where(i => robots[i].Key.Contains('+'))];
 
         // The first robot is checked on its own (Googlebot in the default list, by far the most common robot): own group.
-        Matcher = Keys.Length > 1
-            ? new PriorityTokenMatcher<HttpUserAgentRules.RobotDetector>(Keys, 1)
-            : new PriorityTokenMatcher<HttpUserAgentRules.RobotDetector>(Keys);
+        Matcher = new PriorityTokenMatcher<HttpUserAgentRules.RobotDetector>(Keys, 1);
         AnchorMatcher = new PriorityTokenMatcher<HttpUserAgentRules.RobotAnchorDetector>(
             HttpUserAgentRules.CreateRobotAnchors(Keys, HttpUserAgentRules.CuratedRobotAnchors));
     }
 
     /// <summary>
-    /// Gets the key of the first robot, or <see langword="null"/> without robots.
+    /// Matches both IIS-encoded names and literal plus signs in custom keys, in configured priority order.
     /// </summary>
-    public string? FirstKey { get; }
+    public string? Match(string original, ReadOnlySpan<char> decoded)
+    {
+        int index = Find(decoded);
+        foreach (int literal in _literalPlusRules)
+        {
+            if (index >= 0 && literal >= index)
+            {
+                break;
+            }
+
+            if (original.AsSpan().Contains(Keys[literal], StringComparison.OrdinalIgnoreCase))
+            {
+                return ReadOnlyEntries[literal].Value;
+            }
+        }
+
+        return index >= 0 ? ReadOnlyEntries[index].Value : null;
+    }
+
+    private int Find(ReadOnlySpan<char> input)
+    {
+        if (Keys.Length > 0 && input.Contains(Keys[0], StringComparison.OrdinalIgnoreCase))
+        {
+            return 0;
+        }
+
+        return Keys.Length > 1 && AnchorMatcher.ContainsAny(input) ? Matcher.Find(input, 1) : -1;
+    }
 
     /// <summary>
-    /// Gets the name of the first robot.
+    /// Opaque identity for cache entries. Expired entries can retain this object without retaining the rules.
     /// </summary>
-    public string? FirstValue { get; }
-
-    /// <summary>
-    /// Gets the robots in priority order.
-    /// </summary>
-    public (string Key, string Value)[] Entries { get; }
+    public object CacheGeneration { get; } = new();
 
     /// <summary>
     /// Gets the robots as read-only list for <see cref="HttpUserAgentStatics.Robots"/>.
@@ -52,7 +72,7 @@ internal sealed class HttpUserAgentRobotSet
     public IReadOnlyList<(string Key, string Value)> ReadOnlyEntries { get; }
 
     /// <summary>
-    /// Gets the keys of <see cref="Entries"/>.
+    /// Gets the keys in priority order.
     /// </summary>
     public string[] Keys { get; }
 

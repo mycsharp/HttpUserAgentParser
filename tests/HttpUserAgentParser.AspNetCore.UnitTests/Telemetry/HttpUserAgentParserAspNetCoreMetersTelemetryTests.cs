@@ -18,79 +18,34 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
 
     public void Dispose() => HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
 
-    [Fact]
-    public void Meters_Emit_WhenEnabled()
+    [Theory]
+    [InlineData(null, "mycsharp.http_user_agent_parser.aspnetcore")]
+    [InlineData("acme.", "acme.http_user_agent_parser.aspnetcore")]
+    [InlineData("", "http_user_agent_parser.aspnetcore")]
+    public void Configured_Meter_Emits_Expected_Measurements(string? prefix, string meterName)
     {
-        HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
+        using MeterTestListener listener = new(meterName);
+        HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
+        if (prefix is null)
+        {
+            options.WithAspNetCoreMeterTelemetry();
+        }
+        else
+        {
+            options.WithAspNetCoreMeterTelemetryPrefix(prefix);
+        }
 
-        using MeterTestListener listener = new("mycsharp.http_user_agent_parser.aspnetcore");
+        DefaultHttpContext context = new();
+        Assert.Null(context.GetUserAgentString());
+        context.Request.Headers.UserAgent = "Chrome/17";
+        Assert.Equal("Chrome/17", context.GetUserAgentString());
 
-        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
-            .WithAspNetCoreMeterTelemetry();
-
-        DefaultHttpContext ctx = new();
-
-        // present
-        ctx.Request.Headers.UserAgent = "UA";
-        Assert.NotNull(ctx.GetUserAgentString());
-
-        // missing
-        ctx.Request.Headers.Remove("User-Agent");
-        Assert.Null(ctx.GetUserAgentString());
-
-        Assert.Contains("user_agent.present", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("user_agent.missing", listener.InstrumentNames, StringComparer.Ordinal);
-    }
-
-    [Fact]
-    public void Meters_Emit_WhenEnabled_WithCustomPrefix()
-    {
-        HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
-
-        const string prefix = "acme.";
-        using MeterTestListener listener = new("acme.http_user_agent_parser.aspnetcore");
-
-        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
-            .WithAspNetCoreMeterTelemetryPrefix(prefix);
-
-        DefaultHttpContext ctx = new();
-
-        // present
-        ctx.Request.Headers.UserAgent = "UA";
-        Assert.NotNull(ctx.GetUserAgentString());
-
-        // missing
-        ctx.Request.Headers.Remove("User-Agent");
-        Assert.Null(ctx.GetUserAgentString());
-
-        Assert.Contains("user_agent.present", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("user_agent.missing", listener.InstrumentNames, StringComparer.Ordinal);
-    }
-
-    [Fact]
-    public void Meters_Emit_WhenEnabled_WithEmptyPrefix()
-    {
-        HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
-
-        using MeterTestListener listener = new("http_user_agent_parser.aspnetcore");
-
-        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
-            .WithAspNetCoreMeterTelemetryPrefix(string.Empty);
-
-        DefaultHttpContext ctx = new();
-
-        // present
-        ctx.Request.Headers.UserAgent = "UA";
-        Assert.NotNull(ctx.GetUserAgentString());
-
-        Assert.Contains("user_agent.present", listener.InstrumentNames, StringComparer.Ordinal);
+        Assert.Equal(new[] { "user_agent.missing", "user_agent.present" }, listener.InstrumentNames.Order(StringComparer.Ordinal), StringComparer.Ordinal);
     }
 
     [Fact]
     public void WithAspNetCoreMeterTelemetryPrefix_Throws_WhenInvalid()
     {
-        HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
-
         HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
 
         Assert.Throws<ArgumentException>(() => options.WithAspNetCoreMeterTelemetryPrefix("acme"));
@@ -108,7 +63,7 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
             options.WithAspNetCoreMeterTelemetryPrefix("repeated.");
         }
 
-        Assert.Equal((1, 2), CountLiveMeters("repeated.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), MeterTestListener.CountLiveMeters("repeated.http_user_agent_parser.aspnetcore"));
     }
 
     [Fact]
@@ -119,18 +74,18 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
 
         options.WithAspNetCoreMeterTelemetryPrefix("first.");
         options.WithAspNetCoreMeterTelemetryPrefix("first."); // the meter in use: kept
-        Assert.Equal((1, 2), CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), MeterTestListener.CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
 
         options.WithAspNetCoreMeterTelemetryPrefix("second.");
-        Assert.Equal((0, 0), CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
-        Assert.Equal((1, 2), CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("first.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), MeterTestListener.CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
 
         options.WithAspNetCoreMeterTelemetry(callerMeter);
-        Assert.Equal((0, 0), CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("second.http_user_agent_parser.aspnetcore"));
 
         options.WithAspNetCoreMeterTelemetry(); // the default meter replaces the meter of the caller
-        Assert.Equal((1, 2), CountLiveMeters("caller.http_user_agent_parser.aspnetcore"));
-        Assert.Equal((1, 2), CountLiveMeters("mycsharp.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), MeterTestListener.CountLiveMeters("caller.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), MeterTestListener.CountLiveMeters("mycsharp.http_user_agent_parser.aspnetcore"));
     }
 
     [Fact]
@@ -145,10 +100,10 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
 
         for (int i = 0; i < 31; i++)
         {
-            Assert.Equal((0, 0), CountLiveMeters($"changing{i}.http_user_agent_parser.aspnetcore"));
+            Assert.Equal((0, 0), MeterTestListener.CountLiveMeters($"changing{i}.http_user_agent_parser.aspnetcore"));
         }
 
-        Assert.Equal((1, 2), CountLiveMeters("changing31.http_user_agent_parser.aspnetcore"));
+        Assert.Equal((1, 2), MeterTestListener.CountLiveMeters("changing31.http_user_agent_parser.aspnetcore"));
     }
 
     [Fact]
@@ -171,7 +126,7 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
         HttpUserAgentParserAspNetCoreMeters.Enable(first);
         Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserAspNetCoreMeters.Enable(second));
         Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserAspNetCoreMeters.EnableOwnedMeter("throwing.own"));
-        Assert.Equal((0, 0), CountLiveMeters("throwing.own")); // the new own meter is disposed again
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("throwing.own")); // the new own meter is disposed again
 
         using MeterTestListener recorder = new("throwing.first");
         HttpUserAgentParserAspNetCoreMeters.UserAgentPresent();
@@ -220,27 +175,5 @@ public sealed class HttpUserAgentParserAspNetCoreMetersTelemetryTests : IDisposa
 
         await switcher;
         Assert.Equal(measurements, Interlocked.Read(ref recorded));
-    }
-
-    /// <summary>
-    /// Counts the meters with instruments that a new listener sees, i.e. the meters that are not disposed.
-    /// </summary>
-    private static (int Meters, int Instruments) CountLiveMeters(string meterName)
-    {
-        HashSet<Meter> meters = [];
-        int instruments = 0;
-        using MeterListener listener = new()
-        {
-            InstrumentPublished = (instrument, _) =>
-            {
-                if (string.Equals(instrument.Meter.Name, meterName, StringComparison.Ordinal))
-                {
-                    meters.Add(instrument.Meter);
-                    instruments++;
-                }
-            },
-        };
-        listener.Start();
-        return (meters.Count, instruments);
     }
 }

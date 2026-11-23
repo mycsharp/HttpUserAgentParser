@@ -20,9 +20,7 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
     [Fact]
     public void Meters_DoNotEmit_WhenDisabled()
     {
-        HttpUserAgentParserTelemetry.ResetForTests();
-
-        using MeterTestListener listener = new(MyCSharp.HttpUserAgentParser.Telemetry.HttpUserAgentParserMeters.MeterName);
+        using MeterTestListener listener = new(HttpUserAgentParserMeters.MeterName);
 
         const string ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36";
         _ = HttpUserAgentInformation.Parse(ua);
@@ -30,88 +28,37 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
         Assert.Empty(listener.InstrumentNames);
     }
 
-    [Fact]
-    public void Meters_Emit_WhenEnabled()
+    [Theory]
+    [InlineData(null, "mycsharp.http_user_agent_parser")]
+    [InlineData("acme.", "acme.http_user_agent_parser")]
+    [InlineData("", "http_user_agent_parser")]
+    public void Configured_Meter_Emits_Expected_Measurements(string? prefix, string meterName)
     {
-        HttpUserAgentParserTelemetry.ResetForTests();
-
-        using MeterTestListener listener = new("mycsharp.http_user_agent_parser");
-
-        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
-            .WithMeterTelemetry();
-
-        const string ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36";
-
-        _ = HttpUserAgentInformation.Parse(ua);
+        using MeterTestListener listener = new(meterName);
+        HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
+        if (prefix is null)
+        {
+            options.WithMeterTelemetry();
+        }
+        else
+        {
+            options.WithMeterTelemetryPrefix(prefix);
+        }
 
         HttpUserAgentParserCachedProvider provider = new();
-        _ = provider.Parse(ua); // miss
-        _ = provider.Parse(ua); // hit
-
+        _ = HttpUserAgentInformation.Parse("Firefox/12");
+        _ = provider.Parse("Chrome/17");
+        _ = provider.Parse("Chrome/17");
         listener.RecordObservableInstruments();
 
-        Assert.Contains("parse.requests", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("parse.duration", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("cache.hit", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("cache.miss", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("cache.size", listener.InstrumentNames, StringComparer.Ordinal);
-
+        string[] expected = ["cache.hit", "cache.miss", "cache.size", "parse.duration", "parse.duration", "parse.requests", "parse.requests"];
+        Assert.Equal(expected, listener.InstrumentNames.Order(StringComparer.Ordinal), StringComparer.Ordinal);
         Assert.Equal("s", listener.InstrumentUnits["parse.duration"]);
-    }
-
-    [Fact]
-    public void Meters_Emit_WhenEnabled_WithCustomPrefix()
-    {
-        HttpUserAgentParserTelemetry.ResetForTests();
-
-        const string prefix = "acme.";
-        using MeterTestListener listener = new("acme.http_user_agent_parser");
-
-        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
-            .WithMeterTelemetryPrefix(prefix);
-
-        const string ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36";
-
-        _ = HttpUserAgentInformation.Parse(ua);
-
-        HttpUserAgentParserCachedProvider provider = new();
-        _ = provider.Parse(ua); // miss
-        _ = provider.Parse(ua); // hit
-
-        listener.RecordObservableInstruments();
-
-        Assert.Contains("parse.requests", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("parse.duration", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("cache.hit", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("cache.miss", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("cache.size", listener.InstrumentNames, StringComparer.Ordinal);
-    }
-
-    [Fact]
-    public void Meters_Emit_WhenEnabled_WithEmptyPrefix()
-    {
-        HttpUserAgentParserTelemetry.ResetForTests();
-
-        using MeterTestListener listener = new("http_user_agent_parser");
-
-        new HttpUserAgentParserDependencyInjectionOptions(new ServiceCollection())
-            .WithMeterTelemetryPrefix(string.Empty);
-
-        const string ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36";
-
-        _ = HttpUserAgentInformation.Parse(ua);
-
-        listener.RecordObservableInstruments();
-
-        Assert.Contains("parse.requests", listener.InstrumentNames, StringComparer.Ordinal);
-        Assert.Contains("parse.duration", listener.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]
     public void WithMeterTelemetryPrefix_Throws_WhenInvalid()
     {
-        HttpUserAgentParserTelemetry.ResetForTests();
-
         HttpUserAgentParserDependencyInjectionOptions options = new(new ServiceCollection());
 
         Assert.Throws<ArgumentException>(() => options.WithMeterTelemetryPrefix("acme"));
@@ -132,7 +79,7 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
             options.WithMeterTelemetryPrefix("repeated.");
         }
 
-        Assert.Equal((1, 5), CountLiveMeters("repeated.http_user_agent_parser"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("repeated.http_user_agent_parser"));
     }
 
     [Fact]
@@ -143,18 +90,18 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
 
         options.WithMeterTelemetryPrefix("first.");
         options.WithMeterTelemetryPrefix("first."); // the meter in use: kept
-        Assert.Equal((1, 5), CountLiveMeters("first.http_user_agent_parser"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("first.http_user_agent_parser"));
 
         options.WithMeterTelemetryPrefix("second.");
-        Assert.Equal((0, 0), CountLiveMeters("first.http_user_agent_parser"));
-        Assert.Equal((1, 5), CountLiveMeters("second.http_user_agent_parser"));
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("first.http_user_agent_parser"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("second.http_user_agent_parser"));
 
         options.WithMeterTelemetry(callerMeter);
-        Assert.Equal((0, 0), CountLiveMeters("second.http_user_agent_parser"));
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("second.http_user_agent_parser"));
 
         options.WithMeterTelemetry(); // the default meter replaces the meter of the caller
-        Assert.Equal((1, 5), CountLiveMeters("caller.http_user_agent_parser"));
-        Assert.Equal((1, 5), CountLiveMeters("mycsharp.http_user_agent_parser"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("caller.http_user_agent_parser"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("mycsharp.http_user_agent_parser"));
     }
 
     [Fact]
@@ -169,10 +116,10 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
 
         for (int i = 0; i < 31; i++)
         {
-            Assert.Equal((0, 0), CountLiveMeters($"changing{i}.http_user_agent_parser"));
+            Assert.Equal((0, 0), MeterTestListener.CountLiveMeters($"changing{i}.http_user_agent_parser"));
         }
 
-        Assert.Equal((1, 5), CountLiveMeters("changing31.http_user_agent_parser"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("changing31.http_user_agent_parser"));
     }
 
     [Fact]
@@ -195,7 +142,7 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
         HttpUserAgentParserMeters.Enable(first);
         Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserMeters.Enable(second));
         Assert.Throws<InvalidOperationException>(() => HttpUserAgentParserMeters.EnableOwnedMeter("throwing.own"));
-        Assert.Equal((0, 0), CountLiveMeters("throwing.own")); // the new own meter is disposed again
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("throwing.own")); // the new own meter is disposed again
 
         using MeterTestListener recorder = new("throwing.first");
         HttpUserAgentParserMeters.ParseRequest();
@@ -244,28 +191,6 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
 
         await switcher;
         Assert.Equal(measurements, Interlocked.Read(ref recorded));
-    }
-
-    /// <summary>
-    /// Counts the meters with instruments that a new listener sees, i.e. the meters that are not disposed.
-    /// </summary>
-    private static (int Meters, int Instruments) CountLiveMeters(string meterName)
-    {
-        HashSet<Meter> meters = [];
-        int instruments = 0;
-        using MeterListener listener = new()
-        {
-            InstrumentPublished = (instrument, _) =>
-            {
-                if (string.Equals(instrument.Meter.Name, meterName, StringComparison.Ordinal))
-                {
-                    meters.Add(instrument.Meter);
-                    instruments++;
-                }
-            },
-        };
-        listener.Start();
-        return (meters.Count, instruments);
     }
 
     [Fact]
@@ -325,7 +250,7 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
         }
 
         HttpUserAgentParserMeters.Enable(meter);
-        Assert.Equal((1, 6), CountLiveMeters(meter.Name)); // five parser instruments and the unrelated counter
+        Assert.Equal((1, 6), MeterTestListener.CountLiveMeters(meter.Name)); // five parser instruments and the unrelated counter
     }
 
     [Fact]
@@ -345,7 +270,7 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
         };
         listener.Start();
         HttpUserAgentParserMeters.EnableOwnedMeter(name);
-        Assert.Equal((1, 5), CountLiveMeters(name));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters(name));
     }
 
     [Fact]
@@ -366,15 +291,15 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
         listener.Start();
 
         HttpUserAgentParserMeters.EnableOwnedMeter("nested.a"); // registers nested.b while its instruments are created
-        Assert.Equal((1, 5), CountLiveMeters("nested.a"));
-        Assert.Equal((0, 0), CountLiveMeters("nested.b"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("nested.a"));
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("nested.b"));
 
         HttpUserAgentParserMeters.Enable(callerMeter);
-        Assert.Equal((0, 0), CountLiveMeters("nested.a"));
+        Assert.Equal((0, 0), MeterTestListener.CountLiveMeters("nested.a"));
     }
 
     [Fact]
-    public void Passing_The_Own_Meter_In_Use_Keeps_It()
+    public void Package_Owned_Meter_Can_Be_Reused_Until_Replaced()
     {
         HttpUserAgentParserMeters.EnableOwnedMeter("own.inuse");
         Meter? ownMeter = null;
@@ -394,10 +319,17 @@ public sealed class HttpUserAgentParserMetersTelemetryTests : IDisposable
 
         HttpUserAgentParserMeters.Enable(ownMeter!);
 
-        Assert.Equal((1, 5), CountLiveMeters("own.inuse"));
+        Assert.Equal((1, 5), MeterTestListener.CountLiveMeters("own.inuse"));
         using MeterTestListener recorder = new("own.inuse");
         HttpUserAgentParserMeters.ParseRequest();
         Assert.Equal(new[] { "parse.requests" }, recorder.InstrumentNames, StringComparer.Ordinal);
+
+        using Meter replacement = new("replacement.inuse");
+        using MeterTestListener active = new(replacement.Name);
+        HttpUserAgentParserMeters.Enable(replacement);
+        Assert.Throws<ObjectDisposedException>(() => HttpUserAgentParserMeters.Enable(ownMeter!));
+        HttpUserAgentParserMeters.ParseRequest();
+        Assert.Equal(new[] { "parse.requests" }, active.InstrumentNames, StringComparer.Ordinal);
     }
 
     [Fact]

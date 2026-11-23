@@ -138,7 +138,7 @@ If you only need the raw header value, use `httpContext.GetUserAgentString()`.
 1. **Robots**: search engine crawlers (e.g. Googlebot, Bingbot, Applebot, DuckDuckBot, YandexBot), SEO crawlers (e.g. AhrefsBot, SemrushBot, Screaming Frog) and AI crawlers and AI user agents (e.g. GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, PerplexityBot, Amazonbot, Bytespider, CCBot)
 2. **Platform**: Windows, macOS, iOS, Android, ChromeOS, Linux and others
 3. **Mobile device**: devices and manufacturers before operating systems before mobile browsers before generic tokens (e.g. a Samsung phone reports `Samsung`, an Android phone without manufacturer token `Android`)
-4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Yandex Browser, UC Browser and others
+4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Amazon Silk, Yandex Browser, UC Browser and others
 
 In every list the first matching entry wins. Browser and version tokens only count at the start of a token: at the beginning of the user agent or after a space, tab, `+`, `;`, `(`, `)` or `,`, so `Knowledge/1.0` is no Edge and `VendorVersion/1.0` no version token. The version is read from the browser's own product token (`Chrome/131.0.0.0`), which ends at the next of these characters; Opera and Internet Explorer also accept `Opera 9.50` and `MSIE 6.0`; their separate version tokens (`Version/`, `rv:`) only count after the browser token. If a token has no version, later occurrences of the token are checked, then the next rule. `+` stands for a space as in URL-encoded logs (IIS); decode other encodings such as `%20` before parsing, e.g. with `WebUtility.UrlDecode`.
 
@@ -152,7 +152,7 @@ The patterns use `RegexOptions.IgnoreCase` with culture-invariant case mapping, 
 
 ### Custom robots
 
-`HttpUserAgentStatics.Robots` lists the robots in priority order. The first key found in the user agent wins, ignoring case. `SetRobots` replaces the list for the entire process, including existing instances of both built-in cache providers. A parse already in progress can finish with its previous rules. To extend the defaults at startup, pass the default entries followed by your own.
+`HttpUserAgentStatics.Robots` lists the robots in priority order. The first key found in the user agent wins, ignoring case. Spaces in a key also match IIS-encoded plus signs, while a key containing a literal plus sign is matched against the original header. `SetRobots` replaces the list for the entire process, including existing instances of both built-in cache providers. A parse already in progress can finish with its previous rules. To extend the defaults at startup, pass the default entries followed by your own.
 
 ```csharp
 HttpUserAgentStatics.SetRobots([.. HttpUserAgentStatics.DefaultRobots, ("MyCrawler", "My Crawler")]);
@@ -292,7 +292,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments. The meter the package creates itself (without argument or with a prefix) is reused for the same name and disposed when another meter replaces it; a measurement that runs exactly during that switch may be lost. Meters you pass in are never disposed. The core and the MemoryCache package need separate meters, because both create the instruments `cache.hit`, `cache.miss` and `cache.size`, and a meter keeps its instruments until it is disposed: a meter that one of them has used is rejected by the other with an `ArgumentException`, also after a switch. The ASP.NET Core package may share a meter with either.
+Each package records to one meter at a time. Without an argument, the package creates its meter once. Pass your own `Meter` to `WithMeterTelemetry(meter)`, `WithMemoryCacheMeterTelemetry(meter)` or `WithAspNetCoreMeterTelemetry(meter)` to record to it instead. A later registration with another meter (including `WithMeterTelemetryPrefix`) replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments. The meter the package creates itself (without argument or with a prefix) is reused for the same name and disposed when another meter replaces it; a measurement that runs exactly during that switch may be lost. Registering that disposed meter again with the same package throws an `ObjectDisposedException`. Meters supplied by callers remain the caller’s responsibility to dispose. The core and the MemoryCache package need separate meters, because both create the instruments `cache.hit`, `cache.miss` and `cache.size`, and a meter keeps its instruments until it is disposed: a meter that one of them has used is rejected by the other with an `ArgumentException`, also after a switch. The ASP.NET Core package may share a meter with either.
 
 ### Meter names and instruments
 
@@ -446,7 +446,7 @@ Notes:
 Run the parser benchmarks with the .NET 11 runtime (use `-f net8.0`, `net9.0` or `net10.0` for the other runtimes).
 
 ```shell
-# 7 typical user agents
+# individual cases, including the useragents.me snapshot
 dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks*"
 # mixed real-world workload (closest to production)
 dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*MixedWorkloadBenchmarks*"
@@ -454,7 +454,7 @@ dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -
 dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*BrowserUserAgentBenchmarks*" "*RobotUserAgentBenchmarks*"
 ```
 
-The user agents come from `tests/HttpUserAgentParser.TestHelpers/UserAgentCatalog.cs`, which the unit tests use as well.
+The individual benchmarks include a fixed sample of desktop, phone, tablet, crawler and HTTP client headers from November 15–22, 2026. The parser tests validate each captured header in `UserAgentsMeSnapshot.cs`. The browser, crawler and mixed workload benchmarks use the separate `UserAgentCatalog.cs` corpus. Both datasets run offline. [Snapshot source](https://useragents.me/api)
 
 ### Parser performance
 

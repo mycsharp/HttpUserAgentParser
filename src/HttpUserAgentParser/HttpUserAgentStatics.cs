@@ -33,6 +33,7 @@ public static class HttpUserAgentStatics
     public static readonly FrozenDictionary<Regex, string> Browsers = new Dictionary<Regex, string>()
     {
         { HttpUserAgentRegexes.BrowserOpr(), "Opera" },
+        { HttpUserAgentRegexes.BrowserSilk(), "Amazon Silk" },
         { HttpUserAgentRegexes.BrowserFlock(), "Flock" },
         { HttpUserAgentRegexes.BrowserEdge(), "Edge" },
         { HttpUserAgentRegexes.BrowserEdgA(), "Edge" },
@@ -94,6 +95,7 @@ public static class HttpUserAgentStatics
     /// <remarks>
     /// The list applies to all following parses in the process; it is replaced atomically, so a parse running at the same
     /// time uses either the previous or the new list. Both built-in cache providers honor the change on the next call.
+    /// Spaces in a key also match IIS-encoded plus signs. A plus sign in the key matches the original header literally.
     /// To extend the defaults, pass e.g.
     /// <c>[.. HttpUserAgentStatics.DefaultRobots, ("MyCrawler", "My Crawler")]</c>; <see cref="DefaultRobots"/> restores them.
     /// Building the matchers takes a moment, so set the list once at startup rather than per request.
