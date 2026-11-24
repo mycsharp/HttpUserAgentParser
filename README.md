@@ -1,17 +1,40 @@
+<div align="center">
+
+<img src="res/httpuseragentparser-logo.png" alt="HttpUserAgentParser logo: the myCSharp.de raccoon in a browser window, inspecting a user agent with a magnifying glass" width="180" />
+
 # MyCSharp.HttpUserAgentParser
 
-Parsing HTTP User Agents with .NET
+**Parsing HTTP User Agents with .NET**
 
-The NuGet packages target .NET 8, 9, 10, and 11. Building the solution requires the .NET 11 SDK.
+Detects browsers, platforms, mobile devices and crawlers with low allocations.
+
+[![Build](https://img.shields.io/github/actions/workflow/status/mycsharp/HttpUserAgentParser/main-build.yml?branch=main&logo=githubactions&logoColor=white&label=build)](https://github.com/mycsharp/HttpUserAgentParser/actions/workflows/main-build.yml)
+[![Coverage: 100% line, branch and method coverage, enforced in CI](https://img.shields.io/badge/coverage-100%25-brightgreen)](Directory.Build.props)
+[![NuGet](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser?logo=nuget&label=nuget&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser)
+[![NuGet downloads](https://img.shields.io/nuget/dt/MyCSharp.HttpUserAgentParser?logo=nuget&label=downloads&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser)
+[![License: MIT](https://img.shields.io/github/license/mycsharp/HttpUserAgentParser?color=blue)](LICENSE)
+
+[![.NET 8 | 9 | 10 | 11](https://img.shields.io/badge/.NET-8%20%7C%209%20%7C%2010%20%7C%2011-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Native AOT compatible](https://img.shields.io/badge/Native%20AOT-compatible-512BD4?logo=dotnet&logoColor=white)](#native-aot-and-trimming)
+[![Trimming compatible](https://img.shields.io/badge/trimming-compatible-512BD4?logo=dotnet&logoColor=white)](#native-aot-and-trimming)
+[![Strong-named assemblies](https://img.shields.io/badge/strong--named-yes-blue)](https://learn.microsoft.com/dotnet/standard/assembly/strong-named)
+[![SourceLink enabled](https://img.shields.io/badge/SourceLink-enabled-blue)](https://learn.microsoft.com/dotnet/standard/library-guidance/sourcelink)
+
+[![GitHub stars](https://img.shields.io/github/stars/mycsharp/HttpUserAgentParser?logo=github)](https://github.com/mycsharp/HttpUserAgentParser/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/mycsharp/HttpUserAgentParser/main?logo=github)](https://github.com/mycsharp/HttpUserAgentParser/commits/main)
+[![Open issues](https://img.shields.io/github/issues/mycsharp/HttpUserAgentParser?logo=github)](https://github.com/mycsharp/HttpUserAgentParser/issues)
+
+</div>
 
 ## NuGet
 
-| NuGet |
-|-|
-| [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser) |
-| [![MyCSharp.HttpUserAgentParser](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.MemoryCache.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.MemoryCache)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache)| `dotnet add package MyCSharp.HttpUserAgentParser.MemoryCache` |
-| [![MyCSharp.HttpUserAgentParser.AspNetCore](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.AspNetCore.svg?logo=nuget&label=MyCSharp.HttpUserAgentParser.AspNetCore)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore) | `dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore` |
+| Package | Version | Downloads | Install |
+| --- | --- | --- | --- |
+| **[MyCSharp.HttpUserAgentParser](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser)**<br><sub>Core parser</sub> | [![NuGet](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser?logo=nuget&label=nuget&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser) | [![Downloads](https://img.shields.io/nuget/dt/MyCSharp.HttpUserAgentParser?label=downloads&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser) | `dotnet add package MyCSharp.HttpUserAgentParser` |
+| **[MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache)**<br><sub>Caching with `IMemoryCache`</sub> | [![NuGet](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.MemoryCache?logo=nuget&label=nuget&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache) | [![Downloads](https://img.shields.io/nuget/dt/MyCSharp.HttpUserAgentParser.MemoryCache?label=downloads&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache) | `dotnet add package MyCSharp.HttpUserAgentParser.MemoryCache` |
+| **[MyCSharp.HttpUserAgentParser.AspNetCore](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore)**<br><sub>ASP.NET Core integration</sub> | [![NuGet](https://img.shields.io/nuget/v/MyCSharp.HttpUserAgentParser.AspNetCore?logo=nuget&label=nuget&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore) | [![Downloads](https://img.shields.io/nuget/dt/MyCSharp.HttpUserAgentParser.AspNetCore?label=downloads&color=004880)](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.AspNetCore) | `dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore` |
 
+The NuGet packages target .NET 8, 9, 10, and 11. Building the solution requires the .NET 11 SDK.
 
 ## Usage
 
