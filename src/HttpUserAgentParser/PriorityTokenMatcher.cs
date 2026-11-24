@@ -17,14 +17,9 @@ namespace MyCSharp.HttpUserAgentParser;
 /// implementations of that detector instead of mixing the profiles of all detectors.
 /// </typeparam>
 /// <remarks>
-/// <para>
 /// On .NET 9 and later, consecutive tokens are grouped into small <see cref="System.Buffers.SearchValues{T}"/> sets.
 /// A single vectorized pass rejects a whole group, so only groups that may contain a match are checked
 /// token by token. Groups never reorder tokens, which preserves the priority semantics of a sequential scan.
-/// </para>
-/// <para>
-/// See <c>PriorityTokenGroup</c> for the group layout.
-/// </para>
 /// </remarks>
 internal sealed class PriorityTokenMatcher<TDetector>
     where TDetector : struct
@@ -35,11 +30,7 @@ internal sealed class PriorityTokenMatcher<TDetector>
     private readonly PriorityTokenGroup[] _groups;
 #endif
 
-    /// <summary>
-    /// Creates a matcher for <paramref name="tokens"/> in priority order.
-    /// </summary>
-    /// <param name="tokens">Tokens, highest priority first.</param>
-    /// <param name="groupStarts">Token indices that must start a new group, e.g. to give a very frequent token its own group.</param>
+    // Explicit group boundaries let frequent tokens be checked on their own.
     public PriorityTokenMatcher(string[] tokens, params ReadOnlySpan<int> groupStarts)
     {
         _tokens = tokens;
@@ -50,25 +41,15 @@ internal sealed class PriorityTokenMatcher<TDetector>
 #endif
     }
 
-    /// <summary>
-    /// Number of tokens.
-    /// </summary>
     public int Count => _tokens.Length;
 
 #if NET9_0_OR_GREATER
-    /// <summary>
-    /// The token groups.
-    /// </summary>
     internal ReadOnlySpan<PriorityTokenGroup> Groups => _groups;
 #endif
 
-    /// <summary>
-    /// Returns <see langword="true"/> if any token occurs in <paramref name="input"/>.
-    /// </summary>
     public bool ContainsAny(ReadOnlySpan<char> input)
     {
 #if NET9_0_OR_GREATER
-        // The group filters alone answer the question.
         foreach (ref readonly PriorityTokenGroup group in _groups.AsSpan())
         {
             if (group.MayMatch(input))
@@ -93,8 +74,6 @@ internal sealed class PriorityTokenMatcher<TDetector>
     /// Returns the index of the first token at or after <paramref name="startIndex"/> that occurs in <paramref name="input"/>,
     /// or -1 if none occurs.
     /// </summary>
-    /// <param name="input">The text to search.</param>
-    /// <param name="startIndex">The first token index to consider.</param>
     public int Find(ReadOnlySpan<char> input, int startIndex)
     {
         string[] tokens = _tokens;
@@ -152,9 +131,6 @@ internal readonly struct PriorityTokenGroup
         ShortTokens = [.. shortTokens];
     }
 
-    /// <summary>
-    /// Index of the first token of the group.
-    /// </summary>
     public int Start { get; }
 
     /// <summary>
@@ -172,9 +148,6 @@ internal readonly struct PriorityTokenGroup
     /// </summary>
     public string[] ShortTokens { get; }
 
-    /// <summary>
-    /// Returns <see langword="false"/> if no token of the group occurs in <paramref name="input"/>.
-    /// </summary>
     public bool MayMatch(ReadOnlySpan<char> input)
     {
         if (Values is not null && input.ContainsAny(Values))
@@ -193,9 +166,6 @@ internal readonly struct PriorityTokenGroup
         return false;
     }
 
-    /// <summary>
-    /// Splits <paramref name="tokens"/> into groups.
-    /// </summary>
     public static PriorityTokenGroup[] Create(string[] tokens, ReadOnlySpan<int> groupStarts)
     {
         List<PriorityTokenGroup> groups = [];

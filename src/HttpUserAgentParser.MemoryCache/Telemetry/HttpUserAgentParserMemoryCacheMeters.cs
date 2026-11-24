@@ -57,9 +57,6 @@ internal static class HttpUserAgentParserMemoryCacheMeters
 
     public static void ResetForTests() => s_registration.ResetForTests();
 
-    /// <summary>
-    /// The instruments of one meter.
-    /// </summary>
     private sealed class Instruments(Meter meter) : HttpUserAgentParserMeterInstruments(meter)
     {
         private Counter<long>? _cacheHit;
@@ -75,7 +72,7 @@ internal static class HttpUserAgentParserMemoryCacheMeters
             CreateInstrument(ref _cacheHit, Meter.CreateCounter<long>, "cache.hit", "{call}", "Cache hit");
             CreateInstrument(ref _cacheMiss, Meter.CreateCounter<long>, "cache.miss", "{call}", "Cache miss");
 
-            // Observable instruments are not shared by the meter: created at most once, also if a listener threw.
+            // A listener can throw after publication. Creating the gauge again would register a second callback.
             if (Interlocked.Exchange(ref _cacheSizeCreated, 1) == 0)
             {
                 _ = Meter.CreateObservableGauge(name: "cache.size", observeValues: ObserveCacheSize, unit: "{entry}", description: "Cache size");

@@ -9,9 +9,6 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore;
 /// User Agent parser accessor for an explicitly passed <see cref="HttpContext"/> and for the current request,
 /// which is resolved via <see cref="IHttpContextAccessor"/>.
 /// </summary>
-/// <remarks>
-/// Creates a new instance of <see cref="HttpUserAgentParserContextAccessor"/>
-/// </remarks>
 public class HttpUserAgentParserContextAccessor(IHttpUserAgentParserProvider httpUserAgentParser, IHttpContextAccessor httpContextAccessor)
     : HttpUserAgentParserAccessor(httpUserAgentParser), IHttpUserAgentParserContextAccessor
 {

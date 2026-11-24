@@ -41,9 +41,6 @@ internal static class HttpUserAgentParserCacheMeterGuard
     /// <exception cref="ArgumentException">The core package has used <paramref name="meter"/>.</exception>
     public static void ReserveForMemoryCache(Meter meter) => Reserve(meter, s_memoryCacheMeters, s_coreMeters, CorePackage);
 
-    /// <summary>
-    /// Forgets the reservations of the core package (unit tests).
-    /// </summary>
     public static void ResetCoreForTests()
     {
         lock (s_lock)
@@ -52,9 +49,6 @@ internal static class HttpUserAgentParserCacheMeterGuard
         }
     }
 
-    /// <summary>
-    /// Forgets the reservations of the MemoryCache package (unit tests).
-    /// </summary>
     public static void ResetMemoryCacheForTests()
     {
         lock (s_lock)

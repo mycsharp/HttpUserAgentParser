@@ -7,37 +7,20 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
 /// <summary>
 /// Opt-in switch for core telemetry.
-/// Telemetry is disabled by default to ensure zero overhead unless explicitly enabled.
 /// </summary>
 internal static class HttpUserAgentParserTelemetry
 {
-    // Bit flags to track which telemetry systems are enabled.
-    // This allows us to support both EventCounters and Meters simultaneously with a single check.
     private const int EventCountersFlag = 1;
     private const int MetersFlag = 2;
 
-    // Volatile integer used as a bitmask.
-    // Volatile.Read is used to ensure we get the latest value without the overhead of a full lock,
-    // making the "is telemetry enabled?" check extremely cheap on the hot path.
     private static int s_enabledFlags;
 
-    /// <summary>
-    /// Fast check if ANY telemetry is enabled.
-    /// Used to guard the entire telemetry block to minimize overhead when not in use.
-    /// </summary>
     public static bool IsEnabled => Volatile.Read(ref s_enabledFlags) != 0;
 
-    /// <summary>
-    /// Checks if EventCounters are specifically enabled.
-    /// </summary>
     public static bool AreCountersEnabled
         => (Volatile.Read(ref s_enabledFlags) & EventCountersFlag) != 0
            && HttpUserAgentParserEventSource.Log.IsEnabled();
 
-    /// <summary>
-    /// Checks if parse duration should be measured.
-    /// This is true if either EventCounters are enabled OR if the specific Meter instrument for duration is enabled.
-    /// </summary>
     public static bool ShouldMeasureParseDuration
         => AreCountersEnabled || HttpUserAgentParserMeters.IsParseDurationEnabled;
 
@@ -46,8 +29,7 @@ internal static class HttpUserAgentParserTelemetry
     /// </summary>
     public static void Enable()
     {
-        // Force EventSource construction at enable-time so listeners can subscribe deterministically.
-        // This avoids CI-only timing races where first telemetry events happen before listener attachment.
+        // Give listeners a chance to subscribe before recording the first event.
         _ = HttpUserAgentParserEventSource.Log;
         Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
     }
@@ -66,9 +48,6 @@ internal static class HttpUserAgentParserTelemetry
 
     internal static void MarkMetersEnabled() => Interlocked.Or(ref s_enabledFlags, MetersFlag);
 
-    /// <summary>
-    /// Records a parse request event.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ParseRequest()
     {
@@ -84,10 +63,6 @@ internal static class HttpUserAgentParserTelemetry
         }
     }
 
-    /// <summary>
-    /// Records the duration of a parse request.
-    /// </summary>
-    /// <param name="duration">The elapsed duration.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ParseDuration(TimeSpan duration)
     {
@@ -103,9 +78,6 @@ internal static class HttpUserAgentParserTelemetry
         }
     }
 
-    /// <summary>
-    /// Records a cache hit in the concurrent dictionary.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ConcurrentCacheHit()
     {
@@ -121,9 +93,6 @@ internal static class HttpUserAgentParserTelemetry
         }
     }
 
-    /// <summary>
-    /// Records a cache miss in the concurrent dictionary.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ConcurrentCacheMiss()
     {
@@ -139,9 +108,6 @@ internal static class HttpUserAgentParserTelemetry
         }
     }
 
-    /// <summary>
-    /// Resets telemetry state for unit testing.
-    /// </summary>
     public static void ResetForTests()
     {
         Volatile.Write(ref s_enabledFlags, 0);

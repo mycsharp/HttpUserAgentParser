@@ -5,10 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
-/// <summary>
-/// The instruments of one package on one meter.
-/// </summary>
-/// <param name="meter">The meter the instruments belong to.</param>
 internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
 {
     // Shared across packages. Listener callbacks may synchronously register another package
@@ -17,7 +13,7 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
     {
         private static readonly AsyncLocal<Publication?> s_current = new();
         private readonly Publication? _parent = s_current.Value;
-        private volatile bool _finished;
+        private bool _finished;
 
         public Publication() => s_current.Value = this;
 
@@ -27,7 +23,7 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
             {
                 for (Publication? scope = s_current.Value; scope is not null; scope = scope._parent)
                 {
-                    if (!scope._finished)
+                    if (!Volatile.Read(ref scope._finished))
                     {
                         return true;
                     }
@@ -40,14 +36,11 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
         public void Dispose()
         {
             // ExecutionContext may have been captured by a listener for work that runs later.
-            _finished = true;
+            Volatile.Write(ref _finished, true);
             s_current.Value = _parent;
         }
     }
 
-    /// <summary>
-    /// Gets the meter the instruments belong to.
-    /// </summary>
     public Meter Meter { get; } = meter;
 
     // An owned meter lives for one registration. Its instruments stay discoverable from
@@ -55,13 +48,9 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
     public bool IsOwned { get; set; }
 
     /// <summary>
-    /// Creates the instruments that do not exist yet.
+    /// A <see cref="MeterListener.InstrumentPublished"/> callback may register another meter or throw after publication.
+    /// Call outside the registration lock and reuse any instruments published by an earlier attempt.
     /// </summary>
-    /// <remarks>
-    /// .NET runs the <see cref="MeterListener.InstrumentPublished"/> callbacks while an instrument is created, so listener code
-    /// runs here and may throw or register meters itself; no lock is held. An instrument that was published before a listener
-    /// threw exists on the meter even when its factory did not return it.
-    /// </remarks>
     public abstract void CreateMissingInstruments();
 
     protected void CreateInstrument<T>(ref T? field, Func<string, string, string, T> create, string name, string unit, string description)
@@ -108,7 +97,6 @@ internal abstract class HttpUserAgentParserMeterInstruments(Meter meter)
 /// listeners may register meters of any package without deadlocks. The lock only protects the switch of the state.
 /// </para>
 /// </remarks>
-/// <typeparam name="TInstruments">The instruments of the package.</typeparam>
 /// <param name="createInstruments">Creates the (still empty) instruments of a meter; must not create instruments itself.</param>
 /// <param name="reserve">Reserves a meter for the package before its instruments are created; throws if the meter must not be used.</param>
 /// <param name="resetReservations">Forgets the reservations of the package (unit tests).</param>
@@ -117,12 +105,11 @@ internal sealed class HttpUserAgentParserMeterRegistration<TInstruments>(
     Func<Meter, TInstruments> createInstruments, Action<Meter> reserve, Action resetReservations, Action markEnabled)
     where TInstruments : HttpUserAgentParserMeterInstruments
 {
-    // Monitor.Wait releases this lock while an independent registration finishes.
     private readonly object _lock = new();
     private readonly HashSet<Meter> _publishingMeters = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<string> _publishingNames = new(StringComparer.Ordinal);
 
-    // Keyed by the non-generic base type: the table's value type needs a trimming annotation a generic argument cannot provide.
+    // The non-generic value type satisfies the table's trimming annotation.
     private readonly ConditionalWeakTable<Meter, HttpUserAgentParserMeterInstruments> _instrumentsByMeter = new();
     private readonly ConditionalWeakTable<Meter, HttpUserAgentParserMeterInstruments>.CreateValueCallback _createInstruments = createInstruments.Invoke;
 
@@ -211,9 +198,6 @@ internal sealed class HttpUserAgentParserMeterRegistration<TInstruments>(
         replacedOwnedMeter?.Dispose();
     }
 
-    /// <summary>
-    /// Resets the registration (unit tests).
-    /// </summary>
     public void ResetForTests()
     {
         Meter? ownedMeter;

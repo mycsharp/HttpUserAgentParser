@@ -10,20 +10,11 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 /// </summary>
 internal static class HttpUserAgentParserMemoryCacheTelemetry
 {
-    // Bit flags to track which telemetry systems are enabled.
-    // This allows us to support both EventCounters and Meters simultaneously with a single check.
     private const int EventCountersFlag = 1;
     private const int MetersFlag = 2;
 
-    // Volatile integer used as a bitmask.
-    // Volatile.Read is used to ensure we get the latest value without the overhead of a full lock,
-    // making the "is telemetry enabled?" check extremely cheap on the hot path.
     private static int s_enabledFlags;
 
-    /// <summary>
-    /// Fast check if ANY telemetry is enabled.
-    /// Used to guard the entire telemetry block to minimize overhead when not in use.
-    /// </summary>
     public static bool IsEnabled => Volatile.Read(ref s_enabledFlags) != 0;
 
     /// <summary>
@@ -31,8 +22,7 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
     /// </summary>
     public static void Enable()
     {
-        // Force EventSource construction at enable-time so listeners can subscribe deterministically.
-        // This avoids CI-only timing races where first telemetry events happen before listener attachment.
+        // Give listeners a chance to subscribe before recording the first event.
         _ = HttpUserAgentParserMemoryCacheEventSource.Log;
         Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
     }
@@ -51,9 +41,6 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
 
     internal static void MarkMetersEnabled() => Interlocked.Or(ref s_enabledFlags, MetersFlag);
 
-    /// <summary>
-    /// Records a cache hit.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheHit()
     {
@@ -69,9 +56,6 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
         }
     }
 
-    /// <summary>
-    /// Records a cache miss.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheMiss()
     {
@@ -87,9 +71,6 @@ internal static class HttpUserAgentParserMemoryCacheTelemetry
         }
     }
 
-    /// <summary>
-    /// Resets telemetry state for unit tests.
-    /// </summary>
     public static void ResetForTests()
     {
         Volatile.Write(ref s_enabledFlags, 0);

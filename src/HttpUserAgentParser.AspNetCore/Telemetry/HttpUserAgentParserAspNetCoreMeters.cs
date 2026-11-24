@@ -14,14 +14,8 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 /// </remarks>
 internal static class HttpUserAgentParserAspNetCoreMeters
 {
-    /// <summary>
-    /// Name of the meter used to publish AspNetCore User-Agent metrics.
-    /// </summary>
     private const string MeterNameSuffix = "http_user_agent_parser.aspnetcore";
 
-    /// <summary>
-    /// Name of the meter used to publish AspNetCore User-Agent metrics.
-    /// </summary>
     public const string MeterName = "mycsharp." + MeterNameSuffix;
 
     /// <summary>
@@ -52,26 +46,14 @@ internal static class HttpUserAgentParserAspNetCoreMeters
     /// </summary>
     public static void EnableOwnedMeter(string meterName) => s_registration.Use(meter: null, meterName);
 
-    /// <summary>
-    /// Records a metric indicating that a User-Agent header was present.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UserAgentPresent() => s_registration.Current?.UserAgentPresent.Add(1);
 
-    /// <summary>
-    /// Records a metric indicating that a User-Agent header was missing.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UserAgentMissing() => s_registration.Current?.UserAgentMissing.Add(1);
 
-    /// <summary>
-    /// Resets static state to support isolated unit tests.
-    /// </summary>
     public static void ResetForTests() => s_registration.ResetForTests();
 
-    /// <summary>
-    /// The instruments of one meter.
-    /// </summary>
     private sealed class Instruments(Meter meter) : HttpUserAgentParserMeterInstruments(meter)
     {
         private Counter<long>? _userAgentPresent;

@@ -15,21 +15,13 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
     /// </summary>
     public const string EventSourceName = "MyCSharp.HttpUserAgentParser.MemoryCache";
 
-    /// <summary>
-    /// Singleton instance of the EventSource.
-    /// </summary>
     internal static HttpUserAgentParserMemoryCacheEventSource Log { get; } = new();
 
     private readonly IncrementingEventCounter _cacheHit;
     private readonly IncrementingEventCounter _cacheMiss;
     private readonly PollingCounter _cacheSize;
 
-    /// <summary>
-    /// Initializes all EventCounters and polling counters used by this EventSource.
-    /// </summary>
-    /// <remarks>
-    /// Use <see cref="Log"/>; the constructor is only accessible for tests.
-    /// </remarks>
+    // Tests construct and dispose their own event source.
     internal HttpUserAgentParserMemoryCacheEventSource()
     {
         _cacheHit = new IncrementingEventCounter("cache-hit", this)
@@ -51,9 +43,6 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
         };
     }
 
-    /// <summary>
-    /// Records a cache hit.
-    /// </summary>
     [NonEvent]
     internal void CacheHit()
     {
@@ -63,9 +52,6 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
         }
     }
 
-    /// <summary>
-    /// Records a cache miss.
-    /// </summary>
     [NonEvent]
     internal void CacheMiss()
     {
@@ -75,16 +61,7 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
         }
     }
 
-    /// <summary>
-    /// Releases all EventCounter and PollingCounter resources used by this EventSource.
-    /// </summary>
-    /// <param name="disposing">
-    /// <see langword="true"/> when called from <see cref="EventSource.Dispose()"/>;
-    /// <see langword="false"/> when called from a finalizer.
-    /// </param>
-    /// <remarks>
-    /// Follows the pattern of the EventCounters documentation: the counters are released in both cases.
-    /// </remarks>
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         _cacheHit.Dispose();

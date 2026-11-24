@@ -7,11 +7,6 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// <summary>
 /// EventSource for EventCounters emitted by MyCSharp.HttpUserAgentParser.
 /// </summary>
-/// <remarks>
-/// The implementation is designed to keep overhead negligible unless a listener
-/// is enabled. All counters are updated using lightweight, non-blocking operations
-/// suitable for hot paths.
-/// </remarks>
 [EventSource(Name = EventSourceName)]
 public sealed class HttpUserAgentParserEventSource : EventSource
 {
@@ -20,9 +15,6 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     /// </summary>
     public const string EventSourceName = "MyCSharp.HttpUserAgentParser";
 
-    /// <summary>
-    /// Singleton instance of the EventSource.
-    /// </summary>
     internal static HttpUserAgentParserEventSource Log { get; } = new();
 
     private readonly IncrementingEventCounter _parseRequests;
@@ -32,15 +24,9 @@ public sealed class HttpUserAgentParserEventSource : EventSource
     private readonly IncrementingEventCounter _cacheMiss;
     private readonly PollingCounter _cacheSize;
 
-    /// <summary>
-    /// Initializes all EventCounters and polling counters used by this EventSource.
-    /// </summary>
-    /// <remarks>
-    /// Use <see cref="Log"/>; the constructor is only accessible for tests.
-    /// </remarks>
+    // Tests construct and dispose their own event source.
     internal HttpUserAgentParserEventSource()
     {
-        // Parser
         _parseRequests = new IncrementingEventCounter("parse-requests", this)
         {
             DisplayName = "User-Agent parse requests",
@@ -53,7 +39,6 @@ public sealed class HttpUserAgentParserEventSource : EventSource
             DisplayUnits = "s",
         };
 
-        // Providers (cache)
         _cacheHit = new IncrementingEventCounter("cache-hit", this)
         {
             DisplayName = "Cache hit",
@@ -76,9 +61,6 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         };
     }
 
-    /// <summary>
-    /// Records a User-Agent parse request.
-    /// </summary>
     [NonEvent]
     internal void ParseRequest()
     {
@@ -88,10 +70,6 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         }
     }
 
-    /// <summary>
-    /// Records the duration of a User-Agent parse operation.
-    /// </summary>
-    /// <param name="seconds">Elapsed parse time in seconds.</param>
     [NonEvent]
     internal void ParseDuration(double seconds)
     {
@@ -101,9 +79,6 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         }
     }
 
-    /// <summary>
-    /// Records a cache hit.
-    /// </summary>
     [NonEvent]
     internal void CacheHit()
     {
@@ -113,9 +88,6 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         }
     }
 
-    /// <summary>
-    /// Records a cache miss.
-    /// </summary>
     [NonEvent]
     internal void CacheMiss()
     {
@@ -125,16 +97,7 @@ public sealed class HttpUserAgentParserEventSource : EventSource
         }
     }
 
-    /// <summary>
-    /// Releases all EventCounter and PollingCounter resources used by this EventSource.
-    /// </summary>
-    /// <param name="disposing">
-    /// <see langword="true"/> when called from <see cref="EventSource.Dispose()"/>;
-    /// <see langword="false"/> when called from a finalizer.
-    /// </param>
-    /// <remarks>
-    /// Follows the pattern of the EventCounters documentation: the counters are released in both cases.
-    /// </remarks>
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         _parseRequests.Dispose();

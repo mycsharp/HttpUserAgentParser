@@ -13,13 +13,11 @@ namespace MyCSharp.HttpUserAgentParser;
 /// </remarks>
 internal static class HttpUserAgentRules
 {
-    /// <summary>Marker type of the robot <see cref="PriorityTokenMatcher{TDetector}"/>.</summary>
+    // Separate value types give the JIT a distinct matcher profile for each rule set.
     internal readonly struct RobotDetector;
 
-    /// <summary>Marker type of the robot anchor <see cref="PriorityTokenMatcher{TDetector}"/>.</summary>
     internal readonly struct RobotAnchorDetector;
 
-    /// <summary>Marker type of the mobile device <see cref="PriorityTokenMatcher{TDetector}"/>.</summary>
     internal readonly struct MobileDetector;
 
     /// <summary>
@@ -29,20 +27,16 @@ internal static class HttpUserAgentRules
     [
         // Compatibility tokens on Windows Phone can identify both desktop Windows and Android.
         ("windows phone", new(HttpUserAgentPlatformRegexId.WindowsPhone, "Windows Phone", HttpUserAgentPlatformType.Windows)),
-        // Most common: Windows (specific versions before generic)
         ("windows nt 10.0", new(HttpUserAgentPlatformRegexId.WindowsNt100, "Windows 10", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.1", new(HttpUserAgentPlatformRegexId.WindowsNt61, "Windows 7", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.3", new(HttpUserAgentPlatformRegexId.WindowsNt63, "Windows 8.1", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.2", new(HttpUserAgentPlatformRegexId.WindowsNt62, "Windows 8", HttpUserAgentPlatformType.Windows)),
         ("windows nt 6.0", new(HttpUserAgentPlatformRegexId.WindowsNt60, "Windows Vista", HttpUserAgentPlatformType.Windows)),
-        // Android (very common on mobile)
         ("android", new(HttpUserAgentPlatformRegexId.Android, "Android", HttpUserAgentPlatformType.Android)),
-        // iOS devices (very common)
         ("iphone", new(HttpUserAgentPlatformRegexId.IPhone, "iOS", HttpUserAgentPlatformType.IOS)),
         ("ipad", new(HttpUserAgentPlatformRegexId.IPad, "iOS", HttpUserAgentPlatformType.IOS)),
         ("ipod", new(HttpUserAgentPlatformRegexId.IPod, "iOS", HttpUserAgentPlatformType.IOS)),
         ("cros", new(HttpUserAgentPlatformRegexId.CrOS, "ChromeOS", HttpUserAgentPlatformType.ChromeOS)),
-        // Mac OS (common)
         ("os x", new(HttpUserAgentPlatformRegexId.OsX, "Mac OS X", HttpUserAgentPlatformType.MacOS)),
         // A distribution can also identify itself as GNU/Linux.
         ("debian", new(HttpUserAgentPlatformRegexId.Debian, "Debian", HttpUserAgentPlatformType.Linux)),
@@ -258,21 +252,12 @@ internal static class HttpUserAgentRules
         "measurement", "barkrowler", "brightedge", "cotoyogi", "geedo", "ahrefs", "cohere", "yeti/",
     ];
 
-    /// <summary>
-    /// The default robots with their matchers.
-    /// </summary>
     internal static HttpUserAgentRobotSet DefaultRobotSet { get; } = new(DefaultRobots);
 
     private static HttpUserAgentRobotSet s_robotSet = DefaultRobotSet;
 
-    /// <summary>
-    /// Gets the robots the parser detects.
-    /// </summary>
     internal static HttpUserAgentRobotSet RobotSet => Volatile.Read(ref s_robotSet);
 
-    /// <summary>
-    /// Replaces the robots the parser detects.
-    /// </summary>
     internal static void SetRobotSet(HttpUserAgentRobotSet robotSet) => Volatile.Write(ref s_robotSet, robotSet);
 
     /// <summary>
@@ -297,17 +282,8 @@ internal static class HttpUserAgentRules
     /// Mobile device rules in priority order: the most specific match wins.
     /// </summary>
     /// <remarks>
-    /// <list type="number">
-    /// <item><description>Legacy devices and browsers</description></item>
-    /// <item><description>Devices and manufacturers (e.g. "Samsung" before the "Android" operating system)</description></item>
-    /// <item><description>Operating systems</description></item>
-    /// <item><description>Mobile browsers</description></item>
-    /// <item><description>Carriers and other</description></item>
-    /// <item><description>Generic fallbacks ("mobile", ...)</description></item>
-    /// </list>
-    /// A token that contains another token comes first ("palmsource" before "palm", "nintendo dsi" before "nintendo ds",
-    /// "SymbianOS" before "symbian").
-    /// The order is explicit on purpose: the enumeration order of a (frozen) dictionary is unspecified and must not decide the priority.
+    /// Keep specific tokens ahead of their substrings, such as "nintendo dsi" before "nintendo ds".
+    /// Frozen dictionary enumeration does not preserve this priority.
     /// </remarks>
     internal static (string Key, string Value)[] Mobiles { get; } =
     [
@@ -396,9 +372,6 @@ internal static class HttpUserAgentRules
 
     internal static string[] MobileKeys { get; } = Array.ConvertAll(Mobiles, static rule => rule.Key);
 
-    /// <summary>
-    /// Mobile token matcher.
-    /// </summary>
     internal static PriorityTokenMatcher<MobileDetector> MobileMatcher { get; } = new(MobileKeys);
 
     /// <summary>

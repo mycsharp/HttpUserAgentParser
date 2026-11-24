@@ -15,9 +15,6 @@ internal sealed class HttpUserAgentRobotSet
     private readonly int _decodedStart;
     private readonly int[] _literalPlusRules;
 
-    /// <summary>
-    /// Creates the set for <paramref name="robots"/> in priority order; the array must not be changed afterwards.
-    /// </summary>
     public HttpUserAgentRobotSet((string Key, string Value)[] robots)
     {
         ReadOnlyEntries = [.. robots];
@@ -72,19 +69,10 @@ internal sealed class HttpUserAgentRobotSet
     /// </summary>
     public object CacheGeneration { get; } = new();
 
-    /// <summary>
-    /// Gets the robots as read-only list for <see cref="HttpUserAgentStatics.Robots"/>.
-    /// </summary>
     public IReadOnlyList<(string Key, string Value)> ReadOnlyEntries { get; }
 
-    /// <summary>
-    /// Gets the keys in priority order.
-    /// </summary>
     public string[] Keys { get; }
 
-    /// <summary>
-    /// Gets the matcher over <see cref="Keys"/>.
-    /// </summary>
     public PriorityTokenMatcher<HttpUserAgentRules.RobotDetector> Matcher { get; }
 
     /// <summary>

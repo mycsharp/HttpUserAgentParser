@@ -6,19 +6,13 @@ using MyCSharp.HttpUserAgentParser.Providers;
 namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
 /// <summary>
-/// Knows the live <see cref="HttpUserAgentParserCachedProvider"/> instances to report their cache size.
+/// Tracks providers from construction so the reported cache size includes entries added before telemetry was enabled.
+/// Weak references let providers be collected between observations.
 /// </summary>
-/// <remarks>
-/// Every provider registers itself when it is created, independent of whether telemetry is enabled, so the
-/// reported size includes entries cached before telemetry was enabled. Providers are referenced weakly.
-/// </remarks>
 internal static class HttpUserAgentParserTelemetryState
 {
     private static readonly ConditionalWeakTable<HttpUserAgentParserCachedProvider, object?> s_providers = new();
 
-    /// <summary>
-    /// Registers a provider whose entries count towards <see cref="ConcurrentCacheSize"/>.
-    /// </summary>
     public static void Register(HttpUserAgentParserCachedProvider provider) => s_providers.Add(provider, value: null);
 
     /// <summary>

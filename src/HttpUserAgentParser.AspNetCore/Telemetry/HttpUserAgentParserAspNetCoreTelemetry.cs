@@ -8,39 +8,14 @@ namespace MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 /// <summary>
 /// Opt-in switch for AspNetCore package telemetry.
 /// </summary>
-/// <remarks>
-/// Controls whether telemetry is emitted via event counters and/or meters.
-/// The state is evaluated using lock-free, thread-safe reads and is intended
-/// to be checked on hot paths.
-/// </remarks>
 internal static class HttpUserAgentParserAspNetCoreTelemetry
 {
-    /// <summary>
-    /// Flag indicating that event counter–based telemetry is enabled.
-    /// </summary>
     private const int EventCountersFlag = 1;
 
-    /// <summary>
-    /// Flag indicating that meter-based telemetry is enabled.
-    /// </summary>
     private const int MetersFlag = 2;
 
-    /// <summary>
-    /// Bit field storing the currently enabled telemetry backends.
-    /// </summary>
-    /// <remarks>
-    /// Accessed using volatile reads to ensure cross-thread visibility
-    /// without requiring synchronization.
-    /// </remarks>
     private static int s_enabledFlags;
 
-    /// <summary>
-    /// Gets a value indicating whether any telemetry backend is enabled.
-    /// </summary>
-    /// <remarks>
-    /// Returns <see langword="true"/> if at least one telemetry backend
-    /// has been enabled.
-    /// </remarks>
     public static bool IsEnabled
         => Volatile.Read(ref s_enabledFlags) != 0;
 
@@ -49,8 +24,7 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
     /// </summary>
     public static void Enable()
     {
-        // Force EventSource construction at enable-time so listeners can subscribe deterministically.
-        // This avoids CI-only timing races where first telemetry events happen before listener attachment.
+        // Give listeners a chance to subscribe before recording the first event.
         _ = HttpUserAgentParserAspNetCoreEventSource.Log;
         Interlocked.Or(ref s_enabledFlags, EventCountersFlag);
     }
@@ -69,13 +43,6 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
 
     internal static void MarkMetersEnabled() => Interlocked.Or(ref s_enabledFlags, MetersFlag);
 
-    /// <summary>
-    /// Records telemetry indicating that a User-Agent header was present.
-    /// </summary>
-    /// <remarks>
-    /// Emits telemetry only for the enabled backends (event counters and/or meters).
-    /// The method is optimized for hot paths and performs a single volatile flag read.
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UserAgentPresent()
     {
@@ -91,13 +58,6 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
         }
     }
 
-    /// <summary>
-    /// Records telemetry indicating that a User-Agent header was missing.
-    /// </summary>
-    /// <remarks>
-    /// Emits telemetry only for the enabled backends (event counters and/or meters).
-    /// The method is optimized for hot paths and performs a single volatile flag read.
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UserAgentMissing()
     {
@@ -113,9 +73,6 @@ internal static class HttpUserAgentParserAspNetCoreTelemetry
         }
     }
 
-    /// <summary>
-    /// Resets telemetry state for unit tests.
-    /// </summary>
     public static void ResetForTests()
     {
         Volatile.Write(ref s_enabledFlags, 0);

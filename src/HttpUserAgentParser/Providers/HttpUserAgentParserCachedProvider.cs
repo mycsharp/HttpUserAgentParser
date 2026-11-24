@@ -10,12 +10,6 @@ namespace MyCSharp.HttpUserAgentParser.Providers;
 /// </summary>
 public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
 {
-    /// <summary>
-    /// internal cache
-    /// </summary>
-    /// <remarks>
-    /// The key is the exact user agent (ordinal): the result contains the user agent, so a differently cased one is another entry.
-    /// </remarks>
     private sealed class Cache(HttpUserAgentRobotSet robots)
     {
         public HttpUserAgentRobotSet Robots { get; } = robots;
@@ -45,12 +39,9 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     /// </summary>
     public HttpUserAgentParserCachedProvider() => HttpUserAgentParserTelemetryState.Register(this);
 
-    /// <summary>
-    /// Parses the user agent or uses the internal cached information
-    /// </summary>
+    /// <inheritdoc/>
     /// <remarks>
-    /// Telemetry checks use a volatile flag to ensure zero overhead when disabled. The cache size is counted only
-    /// when a cache size instrument is observed.
+    /// Cache keys use ordinal comparison because each result retains the original header.
     /// </remarks>
     public HttpUserAgentInformation Parse(string userAgent)
     {

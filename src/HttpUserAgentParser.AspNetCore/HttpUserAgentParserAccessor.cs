@@ -19,16 +19,11 @@ public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAg
 {
     private readonly IHttpUserAgentParserProvider _httpUserAgentParser = httpUserAgentParser;
 
-    /// <summary>
-    /// Returns the User-Agent header of <paramref name="httpContext"/>
-    /// </summary>
+    /// <inheritdoc/>
     public string? GetHttpContextUserAgent(HttpContext httpContext)
         => httpContext.GetUserAgentString();
 
-    /// <summary>
-    /// Returns the parsed <see cref="HttpUserAgentInformation"/> of <paramref name="httpContext"/>,
-    /// or <see langword="null"/> if the request has no User-Agent header or only white space
-    /// </summary>
+    /// <inheritdoc/>
     public HttpUserAgentInformation? Get(HttpContext httpContext)
     {
         string? httpUserAgent = GetHttpContextUserAgent(httpContext);

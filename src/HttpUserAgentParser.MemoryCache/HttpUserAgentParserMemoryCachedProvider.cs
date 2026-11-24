@@ -8,7 +8,6 @@ using MyCSharp.HttpUserAgentParser.Providers;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache;
 
-/// <inheritdoc cref="IHttpUserAgentParserProvider"/>
 /// <summary>
 /// <see cref="IHttpUserAgentParserProvider"/> that caches the results in an <see cref="IMemoryCache"/>.
 /// </summary>
@@ -38,7 +37,7 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
     private readonly HttpUserAgentParserMemoryCachedProviderOptions _options;
 
     /// <summary>
-    /// Creates a new instance of <see cref="HttpUserAgentParserMemoryCachedProvider"/>.
+    /// Creates a provider with its own <see cref="IMemoryCache"/>.
     /// </summary>
     /// <param name="options">The options used to set expiration and size limit</param>
     public HttpUserAgentParserMemoryCachedProvider(HttpUserAgentParserMemoryCachedProviderOptions options)
@@ -50,16 +49,11 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
         HttpUserAgentParserMemoryCacheTelemetryState.Register(this);
     }
 
-    /// <summary>
-    /// Number of cached user agents.
-    /// </summary>
     internal int CacheEntryCount => _memoryCache.Count;
 
     /// <inheritdoc/>
     /// <remarks>
-    /// The user agent string itself is the cache key (ordinal comparison), so a cache hit does not allocate.
-    /// Telemetry checks use a volatile flag to ensure zero overhead when disabled; the cache size is counted only
-    /// when a cache size instrument is observed.
+    /// The cache uses the exact header as its key. Concurrent misses for the same header can cause multiple parses.
     /// </remarks>
     public HttpUserAgentInformation Parse(string userAgent)
     {
@@ -86,14 +80,6 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    /// Parses the user agent and adds the result to the cache (miss path).
-    /// </summary>
-    /// <remarks>
-    /// Every entry gets all <see cref="HttpUserAgentParserMemoryCachedProviderOptions.CacheEntryOptions"/>
-    /// (expiration, priority, expiration tokens, eviction callbacks) and the size 1, unless the options specify a size.
-    /// Like other cache implementations, concurrent misses of the same user agent may parse it more than once; the last result is kept.
-    /// </remarks>
     private HttpUserAgentInformation ParseAndCache(string userAgent)
     {
         HttpUserAgentRobotSet robots = HttpUserAgentRules.RobotSet;

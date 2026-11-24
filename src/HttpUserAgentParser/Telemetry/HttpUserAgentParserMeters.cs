@@ -7,7 +7,6 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 
 /// <summary>
 /// System.Diagnostics.Metrics instruments emitted by MyCSharp.HttpUserAgentParser.
-/// This is opt-in and designed to keep overhead negligible unless a listener is enabled.
 /// </summary>
 /// <remarks>
 /// See <see cref="HttpUserAgentParserMeterRegistration{TInstruments}"/> for the registration rules; a replaced meter no longer
@@ -15,14 +14,8 @@ namespace MyCSharp.HttpUserAgentParser.Telemetry;
 /// </remarks>
 internal static class HttpUserAgentParserMeters
 {
-    /// <summary>
-    /// The meter name used for all instruments.
-    /// </summary>
     private const string MeterNameSuffix = "http_user_agent_parser";
 
-    /// <summary>
-    /// The meter name used for all instruments.
-    /// </summary>
     public const string MeterName = "mycsharp." + MeterNameSuffix;
 
     /// <summary>
@@ -43,9 +36,6 @@ internal static class HttpUserAgentParserMeters
         HttpUserAgentParserCacheMeterGuard.ResetCoreForTests,
         HttpUserAgentParserTelemetry.MarkMetersEnabled);
 
-    /// <summary>
-    /// Gets whether meters have been initialized.
-    /// </summary>
     public static bool IsEnabled => s_registration.Current is not null;
 
     /// <summary>
@@ -63,38 +53,20 @@ internal static class HttpUserAgentParserMeters
     /// </summary>
     public static void EnableOwnedMeter(string meterName) => s_registration.Use(meter: null, meterName);
 
-    /// <summary>
-    /// Emits a counter increment for a parse request.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ParseRequest() => s_registration.Current?.ParseRequests.Add(1);
 
-    /// <summary>
-    /// Records the parse duration in seconds.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ParseDuration(double seconds) => s_registration.Current?.ParseDuration.Record(seconds);
 
-    /// <summary>
-    /// Emits a counter increment for a cache hit.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheHit() => s_registration.Current?.CacheHit.Add(1);
 
-    /// <summary>
-    /// Emits a counter increment for a cache miss.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CacheMiss() => s_registration.Current?.CacheMiss.Add(1);
 
-    /// <summary>
-    /// Resets static state to support isolated unit tests.
-    /// </summary>
     public static void ResetForTests() => s_registration.ResetForTests();
 
-    /// <summary>
-    /// The instruments of one meter.
-    /// </summary>
     private sealed class Instruments(Meter meter) : HttpUserAgentParserMeterInstruments(meter)
     {
         private Counter<long>? _parseRequests;
@@ -118,7 +90,7 @@ internal static class HttpUserAgentParserMeters
             CreateInstrument(ref _cacheHit, Meter.CreateCounter<long>, "cache.hit", "{call}", "Cache hit");
             CreateInstrument(ref _cacheMiss, Meter.CreateCounter<long>, "cache.miss", "{call}", "Cache miss");
 
-            // Observable instruments are not shared by the meter: created at most once, also if a listener threw.
+            // A listener can throw after publication. Creating the gauge again would register a second callback.
             if (Interlocked.Exchange(ref _cacheSizeCreated, 1) == 0)
             {
                 _ = Meter.CreateObservableGauge(name: "cache.size", observeValues: ObserveCacheSize, unit: "{entry}", description: "Cache size");

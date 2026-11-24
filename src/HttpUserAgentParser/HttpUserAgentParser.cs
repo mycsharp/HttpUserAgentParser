@@ -27,8 +27,7 @@ public static class HttpUserAgentParser
     /// Parses given <param name="userAgent">user agent</param>
     /// </summary>
     /// <remarks>
-    /// If telemetry is enabled, this method will emit metrics for parse requests and duration.
-    /// The telemetry check is designed to be zero-overhead when disabled (using a volatile boolean check).
+    /// When telemetry is enabled, the parser records requests and measures duration for active listeners.
     /// </remarks>
     public static HttpUserAgentInformation Parse(string userAgent)
         => Parse(userAgent, HttpUserAgentRules.RobotSet);
@@ -137,6 +136,7 @@ public static class HttpUserAgentParser
         for (int i = candidates.Next(); i >= 0; i = candidates.Next())
         {
             (string token, HttpUserAgentPlatformInformation platform) = rules[i];
+            Debug.Assert(token.Length > 0);
             int index = ua.IndexOf(token, StringComparison.OrdinalIgnoreCase);
             while (index >= 0)
             {
@@ -204,9 +204,6 @@ public static class HttpUserAgentParser
         return null;
     }
 
-    /// <summary>
-    /// Reads the version of a browser rule whose detect token starts a token at <paramref name="detectIndex"/> first.
-    /// </summary>
     private static bool TryReadBrowserVersion(ReadOnlySpan<char> ua, string detectToken, int detectIndex, string? versionToken, out Range version)
     {
         if (versionToken is null)
@@ -215,8 +212,7 @@ public static class HttpUserAgentParser
             return TryReadVersion(ua, detectToken, detectIndex, allowSpace: false, out version);
         }
 
-        // A separate version token after the detect token ("Opera/9.80 ... Version/12.16", "Trident/7.0; rv:11.0"); with the same
-        // token as the detect token (Safari "Version/", "MSIE 6.0") the detect token has been found already.
+        // Safari's "Version/" and IE's "MSIE" identify both the browser and its version.
         if (string.Equals(detectToken, versionToken, StringComparison.Ordinal))
         {
             return TryReadVersion(ua, detectToken, detectIndex, allowSpace: true, out version);
@@ -261,6 +257,7 @@ public static class HttpUserAgentParser
     /// </remarks>
     private static bool TryReadVersion(ReadOnlySpan<char> ua, string token, int index, bool allowSpace, out Range version)
     {
+        Debug.Assert(token.Length > 0);
         bool separatorIncluded = token[^1] is '/' or ':';
         do
         {
@@ -302,9 +299,6 @@ public static class HttpUserAgentParser
         return false;
     }
 
-    /// <summary>
-    /// Returns whether a token at <paramref name="index"/> starts a token of its own (at the beginning or after a delimiter).
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsTokenStart(ReadOnlySpan<char> ua, int index)
         => index == 0 || s_productTokenDelimiters.Contains(ua[index - 1]);
@@ -312,10 +306,6 @@ public static class HttpUserAgentParser
     private static bool IsProductNameEnd(ReadOnlySpan<char> ua, int end)
         => end == ua.Length || ua[end] == '/' || s_productTokenDelimiters.Contains(ua[end]);
 
-    /// <summary>
-    /// Returns whether <paramref name="c"/> separates a product name from its version in <c>Token 1.2</c>
-    /// (<c>+</c> stands for a space in URL-encoded logs).
-    /// </summary>
     private static bool IsSpace(char c) => c is ' ' or '\t';
 
     /// <summary>
