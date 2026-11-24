@@ -98,6 +98,9 @@ public static class HttpUserAgentParser
             return detect(userAgent, ua, state);
         }
 
+        // 512 chars are 1 KiB of stack. The parser runs at whatever stack depth the caller has already
+        // reached (recursion, threads with small stacks), so the buffer must stay small. Real user agents
+        // are far shorter; longer headers rent from the ArrayPool below.
         if (ua.Length <= 512)
         {
             Span<char> decoded = stackalloc char[ua.Length];
