@@ -30,7 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{5738CE0D-5E6E-47
 		Justfile = Justfile
 		LICENSE = LICENSE
 		NuGet.config = NuGet.config
-		README.md = README.md
+		readme.md = readme.md
 		version.json = version.json
 	EndProjectSection
 EndProject
