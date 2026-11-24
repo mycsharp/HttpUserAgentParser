@@ -100,24 +100,28 @@ public static class HttpUserAgentParser
 
         // 512 chars are 1 KiB of stack. The parser runs at whatever stack depth the caller has already
         // reached (recursion, threads with small stacks), so the buffer must stay small. Real user agents
-        // are far shorter; longer headers rent from the ArrayPool below.
-        if (ua.Length <= 512)
+        // are far shorter; longer headers rent from the ArrayPool.
+        // For robustness the stack buffer has a constant size and is sliced to the input: its stack usage
+        // cannot grow with the input, even if the length check is changed later.
+        const int MaxStackLength = 512;
+        if (ua.Length <= MaxStackLength)
         {
-            Span<char> decoded = stackalloc char[ua.Length];
+            Span<char> decoded = stackalloc char[MaxStackLength];
+            decoded = decoded[..ua.Length];
             ua.Replace(decoded, '+', ' ');
             return detect(userAgent, decoded, state);
         }
 
-        char[] buffer = ArrayPool<char>.Shared.Rent(ua.Length);
+        char[] rented = ArrayPool<char>.Shared.Rent(ua.Length);
         try
         {
-            Span<char> decoded = buffer.AsSpan(0, ua.Length);
+            Span<char> decoded = rented.AsSpan(0, ua.Length);
             ua.Replace(decoded, '+', ' ');
             return detect(userAgent, decoded, state);
         }
         finally
         {
-            ArrayPool<char>.Shared.Return(buffer);
+            ArrayPool<char>.Shared.Return(rented);
         }
     }
 

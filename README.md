@@ -468,18 +468,18 @@ Notes:
 
 ### Parser performance on .NET 11
 
-Mean time per uncached header on Windows 10 x64, AMD Ryzen 9 9950X, .NET 11.0.0. Each mixed workload processes 5,280 headers per invocation, with equal weight per distinct header. The API snapshot contains 60 captured user agents. [Test inputs and measurements](docs/benchmarks/2026-11-23.md)
+Mean time per uncached header on Windows 10 x64, AMD Ryzen 9 9950X, .NET 11.0.0. Each mixed workload processes 5,280 headers per invocation, with equal weight per distinct header. The API snapshot contains 60 captured user agents. [Test inputs and measurements](docs/benchmarks/2026-11-24.md)
 
 | Workload | v3.1.9 | Current parser | Time change | Allocated per current parse |
 | --- | ---: | ---: | ---: | ---: |
-| Catalog browsers (44) | 326.69 ns | 233.39 ns | −28.6% | 38 B |
-| Catalog crawlers (48) | 378.77 ns | 78.47 ns | −79.3% | 0 B |
-| Full catalog (96) | 389.59 ns | 155.96 ns | −60.0% | 18 B |
-| API snapshot (60) | 359.15 ns | 205.52 ns | −42.8% | 29 B |
-| Googlebot | 8.178 ns | 6.819 ns | −16.6% | 0 B |
-| OAI-AdsBot | 904.130 ns | 141.179 ns | −84.4% | 0 B |
+| Catalog browsers (44) | 318.05 ns | 234.69 ns | −26.2% | 38 B |
+| Catalog crawlers (48) | 378.70 ns | 82.12 ns | −78.3% | 0 B |
+| Full catalog (96) | 373.01 ns | 157.98 ns | −57.6% | 18 B |
+| API snapshot (60) | 398.19 ns | 202.41 ns | −49.2% | 29 B |
+| Googlebot | 8.537 ns | 6.915 ns | −19.0% | 0 B |
+| OAI-AdsBot | 842.291 ns | 139.364 ns | −83.5% | 0 B |
 
-Full-catalog means on the other supported runtimes were 193.01 ns (.NET 8), 196.53 ns (.NET 9) and 168.41 ns (.NET 10). The first Chrome parse on .NET 11 took 12.18 ms and allocated 199,984 B on the calling thread (medians across nine fresh processes).
+Full-catalog means on the other supported runtimes were 191.49 ns (.NET 8), 196.83 ns (.NET 9) and 166.70 ns (.NET 10). The first Chrome parse on .NET 11 took 13.43 ms and allocated 193,792 B on the calling thread (medians across nine fresh processes).
 
 ### Library comparison on .NET 11
 
@@ -492,16 +492,16 @@ BenchmarkDotNet ShortRun, three warm-ups and three measured iterations. UAParser
 
 | Library | Measured operation | Chrome on Windows | Allocated | APIs-Google | Allocated |
 | --- | --- | ---: | ---: | ---: | ---: |
-| MyCSharp | Parse | 246.46 ns | 48 B | 104.26 ns | 0 B |
-| UAParser | GetDefault + Parse | 9,411,708.33 ns | 11,653,583 B | 9,340,315.10 ns | 12,010,118 B |
-| DeviceDetector.NET | New detector + Parse | 5,701,457.29 ns | 5,529,305 B | 7,332,071.61 ns | 10,123,039 B |
-| MyCSharp | Result cache hit | 19.42 ns | 0 B | 12.65 ns | 0 B |
-| UAParser | Reused compiled parser | 123,522.75 ns | 37,400 B | 110,026.41 ns | 45,832 B |
+| MyCSharp | Parse | 241.39 ns | 48 B | 106.15 ns | 0 B |
+| UAParser | GetDefault + Parse | 9,769,158.85 ns | 11,653,583 B | 9,323,358.33 ns | 12,010,118 B |
+| DeviceDetector.NET | New detector + Parse | 5,826,561.20 ns | 5,529,304 B | 7,377,367.19 ns | 10,123,039 B |
+| MyCSharp | Result cache hit | 17.84 ns | 0 B | 12.69 ns | 0 B |
+| UAParser | Reused compiled parser | 125,258.05 ns | 37,400 B | 110,313.30 ns | 45,832 B |
 
 ### Run the benchmarks
 
 ```shell
-dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks.Parse" "*MixedWorkloadBenchmarks.Parse" --job short --warmupCount 3 --iterationCount 5 --iterationTime 250
+dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*HttpUserAgentParserBenchmarks.Parse" "*MixedWorkloadBenchmarks.Parse" --job short --warmupCount 3 --iterationCount 5 --iterationTime 250 --launchCount 3
 dotnet run --project perf/HttpUserAgentParser.Benchmarks -c Release -f net11.0 -- --filter "*LibraryComparison*"
 ```
 
