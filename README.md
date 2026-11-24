@@ -485,7 +485,10 @@ Full-catalog means on the other supported runtimes were 193.01 ns (.NET 8), 196.
 
 BenchmarkDotNet ShortRun, three warm-ups and three measured iterations. UAParser 3.1.47 and DeviceDetector.NET 6.5.0 use the calls listed below. The crawler header in this comparison is `APIs-Google`.
 
-![Mean parse times for Chrome on Windows and APIs-Google by library and operation, on a logarithmic axis. Exact times follow in the table.](docs/benchmarks/library-comparison-net11.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/benchmarks/library-comparison-net11-dark.svg">
+  <img src="docs/benchmarks/library-comparison-net11.svg" alt="Mean parse times for Chrome on Windows and APIs-Google by library and operation, as columns on a linear axis. MyCSharp's columns are too short to draw next to UAParser and DeviceDetector.NET. Exact times follow in the table.">
+</picture>
 
 | Library | Measured operation | Chrome on Windows | Allocated | APIs-Google | Allocated |
 | --- | --- | ---: | ---: | ---: | ---: |

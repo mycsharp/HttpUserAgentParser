@@ -1,316 +1,80 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="748.8pt" height="327.6pt" viewBox="0 0 748.8 327.6" xmlns="http://www.w3.org/2000/svg" version="1.1">
- <title>Library benchmarks on .NET 11</title>
- <metadata>
-  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-   <cc:Work>
-    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:title>Library benchmarks on .NET 11</dc:title>
-    <dc:description>Mean time per call for Chrome on Windows and APIs-Google. The horizontal axis is logarithmic and begins at one nanosecond.</dc:description>
-    <dc:format>image/svg+xml</dc:format>
-    <dc:creator>
-     <cc:Agent>
-      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
-     </cc:Agent>
-    </dc:creator>
-   </cc:Work>
-  </rdf:RDF>
- </metadata>
- <defs>
-  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
- </defs>
- <g id="figure_1">
-  <g id="patch_1">
-   <path d="M 0 327.6
-L 748.8 327.6
-L 748.8 0
-L 0 0
-z
-" style="fill: #ffffff"/>
-  </g>
-  <g id="axes_1">
-   <g id="patch_2">
-    <path d="M 216.4032 260.442
-L 723.3408 260.442
-L 723.3408 47.502
-L 216.4032 47.502
-z
-" style="fill: #ffffff"/>
-   </g>
-   <g id="matplotlib.axis_1">
-    <g id="xtick_1">
-     <g id="line2d_1">
-      <path d="M 216.4032 260.442
-L 216.4032 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_2"/>
-     <g id="text_1">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="216.4032" y="274.040437" transform="rotate(-0 216.4032 274.040437)">1 ns</text>
-     </g>
-    </g>
-    <g id="xtick_2">
-     <g id="line2d_3">
-      <path d="M 277.996146 260.442
-L 277.996146 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_4"/>
-     <g id="text_2">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="277.996146" y="274.040437" transform="rotate(-0 277.996146 274.040437)">10 ns</text>
-     </g>
-    </g>
-    <g id="xtick_3">
-     <g id="line2d_5">
-      <path d="M 339.589093 260.442
-L 339.589093 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_6"/>
-     <g id="text_3">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="339.589093" y="274.040437" transform="rotate(-0 339.589093 274.040437)">100 ns</text>
-     </g>
-    </g>
-    <g id="xtick_4">
-     <g id="line2d_7">
-      <path d="M 401.182039 260.442
-L 401.182039 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_8"/>
-     <g id="text_4">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="401.182039" y="274.040437" transform="rotate(-0 401.182039 274.040437)">1 µs</text>
-     </g>
-    </g>
-    <g id="xtick_5">
-     <g id="line2d_9">
-      <path d="M 462.774986 260.442
-L 462.774986 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_10"/>
-     <g id="text_5">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="462.774986" y="274.040437" transform="rotate(-0 462.774986 274.040437)">10 µs</text>
-     </g>
-    </g>
-    <g id="xtick_6">
-     <g id="line2d_11">
-      <path d="M 524.367932 260.442
-L 524.367932 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_12"/>
-     <g id="text_6">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="524.367932" y="274.040437" transform="rotate(-0 524.367932 274.040437)">100 µs</text>
-     </g>
-    </g>
-    <g id="xtick_7">
-     <g id="line2d_13">
-      <path d="M 585.960879 260.442
-L 585.960879 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_14"/>
-     <g id="text_7">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="585.960879" y="274.040437" transform="rotate(-0 585.960879 274.040437)">1 ms</text>
-     </g>
-    </g>
-    <g id="xtick_8">
-     <g id="line2d_15">
-      <path d="M 647.553825 260.442
-L 647.553825 47.502
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #dce2e8; stroke-width: 0.8; stroke-linecap: square"/>
-     </g>
-     <g id="line2d_16"/>
-     <g id="text_8">
-      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="647.553825" y="274.040437" transform="rotate(-0 647.553825 274.040437)">10 ms</text>
-     </g>
-    </g>
-    <g id="text_9">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243445" x="469.872" y="293.718563" transform="rotate(-0 469.872 293.718563)">Mean time per call (logarithmic scale)</text>
-    </g>
-   </g>
-   <g id="matplotlib.axis_2">
-    <g id="ytick_1">
-     <g id="line2d_17"/>
-     <g id="text_10">
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(164.680387 67.36845)">MyCSharp</text>
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(185.940075 77.446481)">Parse</text>
-     </g>
-    </g>
-    <g id="ytick_2">
-     <g id="line2d_18"/>
-     <g id="text_11">
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(169.496794 105.19083)">UAParser</text>
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(123.754294 115.268861)">GetDefault + Parse</text>
-     </g>
-    </g>
-    <g id="ytick_3">
-     <g id="line2d_19"/>
-     <g id="text_12">
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(120.4482 143.01321)">DeviceDetector.NET</text>
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(112.185075 153.091241)">New detector + Parse</text>
-     </g>
-    </g>
-    <g id="ytick_4">
-     <g id="line2d_20"/>
-     <g id="text_13">
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(164.680387 199.74678)">MyCSharp</text>
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(138.488981 209.824811)">Result cache hit</text>
-     </g>
-    </g>
-    <g id="ytick_5">
-     <g id="line2d_21"/>
-     <g id="text_14">
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(169.496794 237.56916)">UAParser</text>
-      <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #243445" transform="translate(101.610075 247.647191)">Reused compiled parser</text>
-     </g>
-    </g>
-   </g>
-   <g id="patch_3">
-    <path d="M 216.4032 66.621213
-L 363.717911 66.621213
-L 363.717911 56.673927
-L 216.4032 56.673927
-z
-" clip-path="url(#p8b06570d22)" style="fill: #145da0"/>
-   </g>
-   <g id="patch_4">
-    <path d="M 216.4032 104.443593
-L 645.931988 104.443593
-L 645.931988 94.496307
-L 216.4032 94.496307
-z
-" clip-path="url(#p8b06570d22)" style="fill: #145da0"/>
-   </g>
-   <g id="patch_5">
-    <path d="M 216.4032 142.265973
-L 632.524277 142.265973
-L 632.524277 132.318687
-L 216.4032 132.318687
-z
-" clip-path="url(#p8b06570d22)" style="fill: #145da0"/>
-   </g>
-   <g id="patch_6">
-    <path d="M 216.4032 198.999544
-L 295.750266 198.999544
-L 295.750266 189.052258
-L 216.4032 189.052258
-z
-" clip-path="url(#p8b06570d22)" style="fill: #145da0"/>
-   </g>
-   <g id="patch_7">
-    <path d="M 216.4032 236.821924
-L 530.018898 236.821924
-L 530.018898 226.874638
-L 216.4032 226.874638
-z
-" clip-path="url(#p8b06570d22)" style="fill: #145da0"/>
-   </g>
-   <g id="patch_8">
-    <path d="M 216.4032 79.934691
-L 340.705017 79.934691
-L 340.705017 69.987405
-L 216.4032 69.987405
-z
-" clip-path="url(#p8b06570d22)" style="fill: #b05011"/>
-   </g>
-   <g id="patch_9">
-    <path d="M 216.4032 117.757071
-L 645.728305 117.757071
-L 645.728305 107.809785
-L 216.4032 107.809785
-z
-" clip-path="url(#p8b06570d22)" style="fill: #b05011"/>
-   </g>
-   <g id="patch_10">
-    <path d="M 216.4032 155.579451
-L 639.252741 155.579451
-L 639.252741 145.632165
-L 216.4032 145.632165
-z
-" clip-path="url(#p8b06570d22)" style="fill: #b05011"/>
-   </g>
-   <g id="patch_11">
-    <path d="M 216.4032 212.313021
-L 284.284203 212.313021
-L 284.284203 202.365735
-L 216.4032 202.365735
-z
-" clip-path="url(#p8b06570d22)" style="fill: #b05011"/>
-   </g>
-   <g id="patch_12">
-    <path d="M 216.4032 250.135401
-L 526.923851 250.135401
-L 526.923851 240.188115
-L 216.4032 240.188115
-z
-" clip-path="url(#p8b06570d22)" style="fill: #b05011"/>
-   </g>
-   <g id="line2d_22">
-    <path d="M 216.4032 172.315854
-L 723.3408 172.315854
-" clip-path="url(#p8b06570d22)" style="fill: none; stroke: #bdc9d1; stroke-width: 0.9; stroke-linecap: square"/>
-   </g>
-   <g id="text_15">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="368.717911" y="64.048226" transform="rotate(-0 368.717911 64.048226)">246 ns</text>
-   </g>
-   <g id="text_16">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="650.931988" y="101.870607" transform="rotate(-0 650.931988 101.870607)">9.41 ms</text>
-   </g>
-   <g id="text_17">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="637.524277" y="139.692987" transform="rotate(-0 637.524277 139.692987)">5.7 ms</text>
-   </g>
-   <g id="text_18">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="300.750266" y="196.426557" transform="rotate(-0 300.750266 196.426557)">19.4 ns</text>
-   </g>
-   <g id="text_19">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="535.018898" y="234.248937" transform="rotate(-0 535.018898 234.248937)">124 µs</text>
-   </g>
-   <g id="text_20">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="345.705017" y="77.361704" transform="rotate(-0 345.705017 77.361704)">104 ns</text>
-   </g>
-   <g id="text_21">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="650.728305" y="115.184084" transform="rotate(-0 650.728305 115.184084)">9.34 ms</text>
-   </g>
-   <g id="text_22">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="644.252741" y="153.006464" transform="rotate(-0 644.252741 153.006464)">7.33 ms</text>
-   </g>
-   <g id="text_23">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="289.284203" y="209.740035" transform="rotate(-0 289.284203 209.740035)">12.7 ns</text>
-   </g>
-   <g id="text_24">
-    <text style="font-size: 8.7px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="531.923851" y="247.562415" transform="rotate(-0 531.923851 247.562415)">110 µs</text>
-   </g>
-   <g id="legend_1">
-    <g id="patch_13">
-     <path d="M 220.4032 36.098813
-L 232.9032 36.098813
-L 232.9032 29.098813
-L 220.4032 29.098813
-z
-" style="fill: #145da0"/>
-    </g>
-    <g id="text_25">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="240.9032" y="36.098813" transform="rotate(-0 240.9032 36.098813)">Chrome on Windows</text>
-    </g>
-    <g id="patch_14">
-     <path d="M 363.567262 36.098813
-L 376.067262 36.098813
-L 376.067262 29.098813
-L 363.567262 29.098813
-z
-" style="fill: #b05011"/>
-    </g>
-    <g id="text_26">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243445" x="384.067262" y="36.098813" transform="rotate(-0 384.067262 36.098813)">APIs-Google</text>
-    </g>
-   </g>
-  </g>
- </g>
- <defs>
-  <clipPath id="p8b06570d22">
-   <rect x="216.4032" y="47.502" width="506.9376" height="212.94"/>
-  </clipPath>
- </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-labelledby="t d" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title id="t">Library comparison on .NET 11</title>
+<desc id="d">Linear column charts of mean time per call. Single parse with setup: MyCSharp 246 ns and 104 ns, UAParser 9.41 ms and 9.34 ms, DeviceDetector.NET 5.70 ms and 7.33 ms, for Chrome on Windows and APIs-Google. Repeated parse with reused state: MyCSharp result cache hit 19.4 ns and 12.7 ns, UAParser reused compiled parser 124 µs and 110 µs.</desc>
+<rect width="960" height="500" fill="#ffffff"/>
+<text x="24.0" y="36.0" font-size="19" font-weight="600" fill="#0b0b0b" text-anchor="start">Mean time per call on .NET 11</text>
+<text x="24.0" y="60.0" font-size="13" font-weight="400" fill="#52514e" text-anchor="start">Linear scale, lower is better. Each panel has its own axis.</text>
+<rect x="24" y="76" width="12" height="12" rx="3" fill="#2a78d6"/>
+<text x="42.0" y="87.0" font-size="13" font-weight="400" fill="#0b0b0b" text-anchor="start">Chrome on Windows</text>
+<rect x="188.0" y="76" width="12" height="12" rx="3" fill="#eb6834"/>
+<text x="206.0" y="87.0" font-size="13" font-weight="400" fill="#0b0b0b" text-anchor="start">APIs-Google</text>
+<text x="68.0" y="112.0" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="start">Single parse, including each library's setup</text>
+<text x="60.0" y="404.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">0</text>
+<line x1="68" y1="345.6" x2="516" y2="345.6" stroke="#e1e0d9" stroke-width="1"/>
+<text x="60.0" y="349.6" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">2 ms</text>
+<line x1="68" y1="291.2" x2="516" y2="291.2" stroke="#e1e0d9" stroke-width="1"/>
+<text x="60.0" y="295.2" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">4 ms</text>
+<line x1="68" y1="236.8" x2="516" y2="236.8" stroke="#e1e0d9" stroke-width="1"/>
+<text x="60.0" y="240.8" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">6 ms</text>
+<line x1="68" y1="182.4" x2="516" y2="182.4" stroke="#e1e0d9" stroke-width="1"/>
+<text x="60.0" y="186.4" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">8 ms</text>
+<line x1="68" y1="128.0" x2="516" y2="128.0" stroke="#e1e0d9" stroke-width="1"/>
+<text x="60.0" y="132.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">10 ms</text>
+<path d="M104.67,400.00 V400.00 Q104.67,399.99 104.67,399.99 H128.66 Q128.67,399.99 128.67,400.00 V400.00 Z" fill="#2a78d6"/>
+<text x="116.7" y="394.0" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">246 ns</text>
+<path d="M156.67,400.00 V400.00 Q156.67,400.00 156.67,400.00 H180.66 Q180.67,400.00 180.67,400.00 V400.00 Z" fill="#eb6834"/>
+<text x="168.7" y="394.0" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">104 ns</text>
+<text x="142.7" y="422.0" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">MyCSharp</text>
+<text x="142.7" y="440.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="middle">Parse</text>
+<rect x="68.7" y="265.0" width="148.0" height="80" fill="#ffffff"/>
+<text x="142.7" y="282.0" font-size="13" font-weight="400" fill="#52514e" text-anchor="middle">Bars too short to draw</text>
+<text x="142.7" y="300.0" font-size="13" font-weight="400" fill="#52514e" text-anchor="middle">at this scale:</text>
+<text x="142.7" y="318.0" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">23,000× to 90,000×</text>
+<text x="142.7" y="336.0" font-size="13" font-weight="400" fill="#52514e" text-anchor="middle">faster</text>
+<line x1="142.7" y1="348.0" x2="142.7" y2="374.0" stroke="#52514e" stroke-width="1"/>
+<path d="M254.00,400.00 V148.00 Q254.00,144.00 258.00,144.00 H274.00 Q278.00,144.00 278.00,148.00 V400.00 Z" fill="#2a78d6"/>
+<text x="266.0" y="138.0" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.41 ms</text>
+<path d="M306.00,400.00 V149.94 Q306.00,145.94 310.00,145.94 H326.00 Q330.00,145.94 330.00,149.94 V400.00 Z" fill="#eb6834"/>
+<text x="318.0" y="139.9" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.34 ms</text>
+<text x="292.0" y="422.0" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">UAParser</text>
+<text x="292.0" y="440.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="middle">GetDefault + Parse</text>
+<path d="M403.33,400.00 V248.92 Q403.33,244.92 407.33,244.92 H423.33 Q427.33,244.92 427.33,248.92 V400.00 Z" fill="#2a78d6"/>
+<text x="415.3" y="238.9" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">5.70 ms</text>
+<path d="M455.33,400.00 V204.57 Q455.33,200.57 459.33,200.57 H475.33 Q479.33,200.57 479.33,204.57 V400.00 Z" fill="#eb6834"/>
+<text x="467.3" y="194.6" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">7.33 ms</text>
+<text x="441.3" y="422.0" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">DeviceDetector.NET</text>
+<text x="441.3" y="440.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="middle">New detector + Parse</text>
+<line x1="68" y1="400" x2="516" y2="400" stroke="#c3c2b7" stroke-width="1"/>
+<text x="628.0" y="112.0" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="start">Repeated parse with reused state</text>
+<text x="620.0" y="404.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">0</text>
+<line x1="628" y1="345.6" x2="940" y2="345.6" stroke="#e1e0d9" stroke-width="1"/>
+<text x="620.0" y="349.6" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">25 µs</text>
+<line x1="628" y1="291.2" x2="940" y2="291.2" stroke="#e1e0d9" stroke-width="1"/>
+<text x="620.0" y="295.2" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">50 µs</text>
+<line x1="628" y1="236.8" x2="940" y2="236.8" stroke="#e1e0d9" stroke-width="1"/>
+<text x="620.0" y="240.8" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">75 µs</text>
+<line x1="628" y1="182.4" x2="940" y2="182.4" stroke="#e1e0d9" stroke-width="1"/>
+<text x="620.0" y="186.4" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">100 µs</text>
+<line x1="628" y1="128.0" x2="940" y2="128.0" stroke="#e1e0d9" stroke-width="1"/>
+<text x="620.0" y="132.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="end" style="font-variant-numeric: tabular-nums">125 µs</text>
+<path d="M668.00,400.00 V400.00 Q668.00,399.96 668.04,399.96 H691.96 Q692.00,399.96 692.00,400.00 V400.00 Z" fill="#2a78d6"/>
+<text x="680.0" y="394.0" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">19.4 ns</text>
+<path d="M720.00,400.00 V400.00 Q720.00,399.97 720.03,399.97 H743.97 Q744.00,399.97 744.00,400.00 V400.00 Z" fill="#eb6834"/>
+<text x="732.0" y="394.0" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">12.7 ns</text>
+<text x="706.0" y="422.0" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">MyCSharp</text>
+<text x="706.0" y="440.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="middle">Result cache hit</text>
+<rect x="632.0" y="265.0" width="148.0" height="80" fill="#ffffff"/>
+<text x="706.0" y="282.0" font-size="13" font-weight="400" fill="#52514e" text-anchor="middle">Bars too short to draw</text>
+<text x="706.0" y="300.0" font-size="13" font-weight="400" fill="#52514e" text-anchor="middle">at this scale:</text>
+<text x="706.0" y="318.0" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">6,400× to 8,700×</text>
+<text x="706.0" y="336.0" font-size="13" font-weight="400" fill="#52514e" text-anchor="middle">faster</text>
+<line x1="706.0" y1="348.0" x2="706.0" y2="374.0" stroke="#52514e" stroke-width="1"/>
+<path d="M824.00,400.00 V135.21 Q824.00,131.21 828.00,131.21 H844.00 Q848.00,131.21 848.00,135.21 V400.00 Z" fill="#2a78d6"/>
+<text x="836.0" y="125.2" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">124 µs</text>
+<path d="M876.00,400.00 V164.58 Q876.00,160.58 880.00,160.58 H896.00 Q900.00,160.58 900.00,164.58 V400.00 Z" fill="#eb6834"/>
+<text x="888.0" y="154.6" font-size="12" font-weight="400" fill="#0b0b0b" text-anchor="middle" style="font-variant-numeric: tabular-nums">110 µs</text>
+<text x="862.0" y="422.0" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">UAParser</text>
+<text x="862.0" y="440.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="middle">Reused compiled parser</text>
+<line x1="628" y1="400" x2="940" y2="400" stroke="#c3c2b7" stroke-width="1"/>
+<text x="24.0" y="484.0" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">BenchmarkDotNet ShortRun, UAParser 3.1.47, DeviceDetector.NET 6.5.0. Exact times and allocations are in the table below.</text>
 </svg>
