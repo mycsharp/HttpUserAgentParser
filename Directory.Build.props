@@ -59,12 +59,12 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
     <!-- Central package icon for NuGet packages (file is included into the package via ItemGroup below) -->
-    <PackageIcon>httpuseragentparser-logo.png</PackageIcon>
+    <PackageIcon>httpuseragentparser-icon.png</PackageIcon>
   </PropertyGroup>
 
-<!-- Ensure the repository root res/httpuseragentparser-logo.png is packed into NuGet packages -->
+  <!-- Pack the 128x128 icon from res/ into the NuGet packages; the readme uses the 512x512 logo -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)res\httpuseragentparser-logo.png" Pack="true" PackagePath="" />
+    <None Include="$(MSBuildThisFileDirectory)res\httpuseragentparser-icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(IsBenchmarkProject)' == 'true'">
