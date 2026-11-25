@@ -113,16 +113,11 @@ public static class HttpUserAgentParser
         }
 
         char[] rented = ArrayPool<char>.Shared.Rent(ua.Length);
-        try
-        {
-            Span<char> decoded = rented.AsSpan(0, ua.Length);
-            ua.Replace(decoded, '+', ' ');
-            return detect(userAgent, decoded, state);
-        }
-        finally
-        {
-            ArrayPool<char>.Shared.Return(rented);
-        }
+        Span<char> rentedSpan = rented.AsSpan(0, ua.Length);
+        ua.Replace(rentedSpan, '+', ' ');
+        T result = detect(userAgent, rentedSpan, state);
+        ArrayPool<char>.Shared.Return(rented);
+        return result;
     }
 
     /// <summary>
