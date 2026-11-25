@@ -57,7 +57,8 @@
     <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mycsharp/HttpUserAgentParser</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
+    <!-- NuGet splits tags at spaces, so each tag is a single word -->
+    <PackageTags>user-agent;useragent;user-agent-parser;parser;browser-detection;platform-detection;mobile-detection;bot-detection;crawler-detection;aspnetcore;http</PackageTags>
     <!-- Central package icon for NuGet packages (file is included into the package via ItemGroup below) -->
     <PackageIcon>httpuseragentparser-icon.png</PackageIcon>
   </PropertyGroup>
