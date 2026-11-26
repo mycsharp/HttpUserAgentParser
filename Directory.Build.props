@@ -52,6 +52,9 @@
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <MinClientVersion>2.12</MinClientVersion>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <EnablePackageValidation>true</EnablePackageValidation>
 
     <Description>HTTP User Agent Parser for .NET</Description>
     <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
