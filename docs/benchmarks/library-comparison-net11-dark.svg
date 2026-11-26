@@ -10,16 +10,18 @@
 <text x="206.0" y="87.0" font-size="13" font-weight="400" fill="#f0efec" text-anchor="start">APIs-Google</text>
 <text x="68.0" y="112.0" font-size="14" font-weight="600" fill="#f0efec" text-anchor="start">Single parse, including each library's setup</text>
 <text x="60.0" y="404.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">0</text>
-<line x1="68" y1="345.6" x2="516" y2="345.6" stroke="#2c2c2a" stroke-width="1"/>
-<text x="60.0" y="349.6" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">2 ms</text>
-<line x1="68" y1="291.2" x2="516" y2="291.2" stroke="#2c2c2a" stroke-width="1"/>
-<text x="60.0" y="295.2" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">4 ms</text>
-<line x1="68" y1="236.8" x2="516" y2="236.8" stroke="#2c2c2a" stroke-width="1"/>
-<text x="60.0" y="240.8" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">6 ms</text>
-<line x1="68" y1="182.4" x2="516" y2="182.4" stroke="#2c2c2a" stroke-width="1"/>
-<text x="60.0" y="186.4" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">8 ms</text>
+<line x1="68" y1="354.7" x2="516" y2="354.7" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="358.7" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">2 ms</text>
+<line x1="68" y1="309.3" x2="516" y2="309.3" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="313.3" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">4 ms</text>
+<line x1="68" y1="264.0" x2="516" y2="264.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="268.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">6 ms</text>
+<line x1="68" y1="218.7" x2="516" y2="218.7" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="222.7" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">8 ms</text>
+<line x1="68" y1="173.3" x2="516" y2="173.3" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="177.3" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">10 ms</text>
 <line x1="68" y1="128.0" x2="516" y2="128.0" stroke="#2c2c2a" stroke-width="1"/>
-<text x="60.0" y="132.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">10 ms</text>
+<text x="60.0" y="132.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">12 ms</text>
 <path d="M104.67,400.00 V400.00 Q104.67,399.99 104.67,399.99 H128.66 Q128.67,399.99 128.67,400.00 V400.00 Z" fill="#3987e5"/>
 <text x="116.7" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">258 ns</text>
 <path d="M156.67,400.00 V400.00 Q156.67,400.00 156.67,400.00 H180.66 Q180.67,400.00 180.67,400.00 V400.00 Z" fill="#d95926"/>
@@ -32,16 +34,16 @@
 <text x="142.7" y="318.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">24,000× to 92,000×</text>
 <text x="142.7" y="336.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">faster</text>
 <line x1="142.7" y1="348.0" x2="142.7" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
-<path d="M254.00,400.00 V132.00 Q254.00,128.00 258.00,128.00 H274.00 Q278.00,128.00 278.00,132.00 V400.00 Z" fill="#3987e5"/>
-<text x="266.0" y="122.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">10.0 ms</text>
-<path d="M306.00,400.00 V150.50 Q306.00,146.50 310.00,146.50 H326.00 Q330.00,146.50 330.00,150.50 V400.00 Z" fill="#d95926"/>
-<text x="318.0" y="140.5" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.32 ms</text>
+<path d="M254.00,400.00 V177.23 Q254.00,173.23 258.00,173.23 H274.00 Q278.00,173.23 278.00,177.23 V400.00 Z" fill="#3987e5"/>
+<text x="266.0" y="167.2" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">10.0 ms</text>
+<path d="M306.00,400.00 V192.75 Q306.00,188.75 310.00,188.75 H326.00 Q330.00,188.75 330.00,192.75 V400.00 Z" fill="#d95926"/>
+<text x="318.0" y="182.8" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.32 ms</text>
 <text x="292.0" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">UAParser</text>
 <text x="292.0" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">GetDefault + Parse</text>
-<path d="M403.33,400.00 V235.36 Q403.33,231.36 407.33,231.36 H423.33 Q427.33,231.36 427.33,235.36 V400.00 Z" fill="#3987e5"/>
-<text x="415.3" y="225.4" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">6.20 ms</text>
-<path d="M455.33,400.00 V192.93 Q455.33,188.93 459.33,188.93 H475.33 Q479.33,188.93 479.33,192.93 V400.00 Z" fill="#d95926"/>
-<text x="467.3" y="182.9" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">7.76 ms</text>
+<path d="M403.33,400.00 V263.47 Q403.33,259.47 407.33,259.47 H423.33 Q427.33,259.47 427.33,263.47 V400.00 Z" fill="#3987e5"/>
+<text x="415.3" y="253.5" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">6.20 ms</text>
+<path d="M455.33,400.00 V228.11 Q455.33,224.11 459.33,224.11 H475.33 Q479.33,224.11 479.33,228.11 V400.00 Z" fill="#d95926"/>
+<text x="467.3" y="218.1" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">7.76 ms</text>
 <text x="441.3" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">DeviceDetector.NET</text>
 <text x="441.3" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">New detector + Parse</text>
 <line x1="68" y1="400" x2="516" y2="400" stroke="#383835" stroke-width="1"/>
