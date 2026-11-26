@@ -89,4 +89,14 @@ public readonly struct HttpUserAgentInformation : IEquatable<HttpUserAgentInform
 
     /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(UserAgent, Type, Name, Version);
+
+    /// <summary>
+    /// Returns <see langword="true"/> if both instances are equal.
+    /// </summary>
+    public static bool operator ==(HttpUserAgentInformation left, HttpUserAgentInformation right) => left.Equals(right);
+
+    /// <summary>
+    /// Returns <see langword="true"/> if both instances are not equal.
+    /// </summary>
+    public static bool operator !=(HttpUserAgentInformation left, HttpUserAgentInformation right) => !left.Equals(right);
 }

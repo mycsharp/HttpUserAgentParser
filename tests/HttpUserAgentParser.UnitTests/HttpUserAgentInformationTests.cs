@@ -75,6 +75,8 @@ public partial class HttpUserAgentInformationTests
 
         Assert.True(first.Equals(second));
         Assert.True(first.Equals((object)second));
+        Assert.True(first == second);
+        Assert.False(first != second);
         Assert.Equal(first.GetHashCode(), second.GetHashCode());
     }
 
@@ -100,6 +102,8 @@ public partial class HttpUserAgentInformationTests
 
         Assert.False(info.Equals(other));
         Assert.False(info.Equals((object)other));
+        Assert.False(info == other);
+        Assert.True(info != other);
     }
 
     [Fact]

@@ -64,4 +64,14 @@ public readonly struct HttpUserAgentPlatformInformation : IEquatable<HttpUserAge
 
     /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(Name, PlatformType);
+
+    /// <summary>
+    /// Returns <see langword="true"/> if both instances are equal.
+    /// </summary>
+    public static bool operator ==(HttpUserAgentPlatformInformation left, HttpUserAgentPlatformInformation right) => left.Equals(right);
+
+    /// <summary>
+    /// Returns <see langword="true"/> if both instances are not equal.
+    /// </summary>
+    public static bool operator !=(HttpUserAgentPlatformInformation left, HttpUserAgentPlatformInformation right) => !left.Equals(right);
 }

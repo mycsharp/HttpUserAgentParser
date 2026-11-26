@@ -47,6 +47,8 @@ public partial class HttpUserAgentPlatformInformationTests
 
         Assert.True(lazy.Equals(eager));
         Assert.True(lazy.Equals((object)eager));
+        Assert.True(lazy == eager);
+        Assert.False(lazy != eager);
         Assert.Equal(lazy.GetHashCode(), eager.GetHashCode());
     }
 
@@ -56,7 +58,10 @@ public partial class HttpUserAgentPlatformInformationTests
         Regex regex = EmptyRegex();
         HttpUserAgentPlatformInformation info = new(regex, "Android", HttpUserAgentPlatformType.Android);
 
-        Assert.False(info.Equals(new HttpUserAgentPlatformInformation(regex, "Android", HttpUserAgentPlatformType.Linux)));
+        HttpUserAgentPlatformInformation differentType = new(regex, "Android", HttpUserAgentPlatformType.Linux);
+        Assert.False(info.Equals(differentType));
+        Assert.False(info == differentType);
+        Assert.True(info != differentType);
         Assert.False(info.Equals(new HttpUserAgentPlatformInformation(regex, "android", HttpUserAgentPlatformType.Android)));
         Assert.False(info.Equals(new HttpUserAgentPlatformInformation(OtherRegex(), "Android", HttpUserAgentPlatformType.Android)));
         Assert.False(info.Equals((object?)null));
