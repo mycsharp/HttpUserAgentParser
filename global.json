@@ -1,6 +1,10 @@
 {
   "sdk": {
     "version": "11.0.100",
+    "rollForward": "disable",
     "allowPrerelease": false
+  },
+  "test": {
+    "runner": "VSTest"
   }
 }

@@ -15,6 +15,9 @@
         <!-- EventSource is disabled by default in Native AOT apps; enabled to verify the EventCounters -->
         <EventSourceSupport>true</EventSourceSupport>
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <!-- Explicit, independent of the global TreatWarningsAsErrors -->
+        <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+        <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>
 

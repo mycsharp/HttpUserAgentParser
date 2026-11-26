@@ -1,0 +1,50 @@
+<Solution>
+
+  <Folder Name="/src/">
+    <Project Path="src/HttpUserAgentParser/HttpUserAgentParser.csproj" />
+    <Project Path="src/HttpUserAgentParser.AspNetCore/HttpUserAgentParser.AspNetCore.csproj" />
+    <Project Path="src/HttpUserAgentParser.MemoryCache/HttpUserAgentParser.MemoryCache.csproj" />
+  </Folder>
+
+  <Folder Name="/tests/">
+    <Project Path="tests/HttpUserAgentParser.AspNetCore.UnitTests/HttpUserAgentParser.AspNetCore.UnitTests.csproj" />
+    <Project Path="tests/HttpUserAgentParser.MemoryCache.UnitTests/HttpUserAgentParser.MemoryCache.UnitTests.csproj" />
+    <Project Path="tests/HttpUserAgentParser.NativeAot.Smoke/HttpUserAgentParser.NativeAot.Smoke.csproj" />
+    <Project Path="tests/HttpUserAgentParser.TestHelpers/HttpUserAgentParser.TestHelpers.csproj" />
+    <Project Path="tests/HttpUserAgentParser.UnitTests/HttpUserAgentParser.UnitTests.csproj" />
+  </Folder>
+
+  <Folder Name="/perf/">
+    <Project Path="perf/HttpUserAgentParser.Benchmarks/HttpUserAgentParser.Benchmarks.csproj" />
+  </Folder>
+
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="Justfile" />
+    <File Path="LICENSE" />
+    <File Path="NuGet.config" />
+    <File Path="readme.md" />
+    <File Path="version.json" />
+  </Folder>
+
+  <Folder Name="/Solution Items/eng/">
+    <File Path="eng/Get-PackageValidationBaseline.ps1" />
+  </Folder>
+
+  <Folder Name="/Solution Items/.github/">
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/release-drafter.yml" />
+  </Folder>
+
+  <Folder Name="/Solution Items/.github/workflows/">
+    <File Path=".github/workflows/build-and-test.yml" />
+    <File Path=".github/workflows/main-build.yml" />
+    <File Path=".github/workflows/pr-validation.yml" />
+    <File Path=".github/workflows/release-publish.yml" />
+  </Folder>
+
+</Solution>

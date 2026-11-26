@@ -58,27 +58,6 @@
 			"command": "dotnet test --nologo",
 			"args": [],
 			"isBackground": false
-		},
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"isBackground": false
-		},
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"isBackground": false
-		},
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"isBackground": false
 		}
 	]
 }

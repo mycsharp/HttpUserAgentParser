@@ -46,7 +46,7 @@ Check(chrome.Equals(HttpUserAgentParser.Parse(Chrome)), "struct equality");
 // Source-generated regular expressions
 Regex? windows10 = chrome.Platform?.Regex;
 Check(windows10 is not null && windows10.IsMatch(Chrome), "platform regex");
-Check(HttpUserAgentStatics.Platforms.Count == 43 && HttpUserAgentStatics.Platforms.All(static p => p.Regex is not null), "platform regexes");
+Check(HttpUserAgentStatics.Platforms.Count == 44 && HttpUserAgentStatics.Platforms.All(static p => p.Regex is not null), "platform regexes");
 Regex chromeRegex = HttpUserAgentStatics.Browsers.First(static b => b.Key.ToString().StartsWith("Chrome", StringComparison.Ordinal)).Key;
 Check(string.Equals(chromeRegex.Match(Chrome).Groups[1].Value, "158.0.0.0", StringComparison.Ordinal), "browser regex version group");
 

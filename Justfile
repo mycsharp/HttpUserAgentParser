@@ -53,8 +53,9 @@ test-filter QUERY:
     dotnet test --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal --filter "{{QUERY}}"
 
 # ===== Packaging / Release =====
+# Validates against the latest nuget.org release of the major version in version.json (none for a new major version)
 pack *ARGS:
-    dotnet pack --configuration "{{CONFIG}}" --nologo --verbosity minimal -o "./artifacts/packages" {{ARGS}}
+    dotnet pack --configuration "{{CONFIG}}" --nologo --verbosity minimal -o "./artifacts/packages" "-p:PackageValidationBaselineVersion=$(./eng/Get-PackageValidationBaseline.ps1)" {{ARGS}}
 
 publish PROJECT *ARGS:
     dotnet publish "{{PROJECT}}" --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal -o "./artifacts/publish/{{TFM}}" {{ARGS}}

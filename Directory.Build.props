@@ -34,26 +34,25 @@
 
   <PropertyGroup Label="Compiler">
     <LangVersion>15.0</LangVersion>
-    <DebugType>embedded</DebugType>
+    <!-- Separate portable PDBs: the packages ship them as .snupkg symbol packages instead of embedding them
+         into every assembly that ends up in the consumers' bin and publish folders -->
+    <DebugType>portable</DebugType>
     <Nullable>enable</Nullable>
     <DefaultLanguage>en-US</DefaultLanguage>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <PropertyGroup Label="Performance">
-    <!-- Enable Dynamic Profile-Guided Optimization for runtime performance -->
-    <TieredPGO>true</TieredPGO>
-    <DynamicPGO>true</DynamicPGO>
-  </PropertyGroup>
-
   <PropertyGroup Label="Package">
     <IsPackable>false</IsPackable>
-    <NoPackageAnalysis>true</NoPackageAnalysis>
     <MinClientVersion>2.12</MinClientVersion>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- PackageValidationBaselineVersion is not set here: CI and "just pack" derive it from version.json
+         (eng/Get-PackageValidationBaseline.ps1) to detect breaking API changes against the last release of the major version -->
     <EnablePackageValidation>true</EnablePackageValidation>
 
     <Description>HTTP User Agent Parser for .NET</Description>
@@ -78,6 +77,61 @@
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!--
+    The compiler writes the documentation of all members into the XML documentation file, whatever their accessibility.
+    Members of the namespaces and types listed here (documentation IDs without the "T:"/"M:" prefix) are removed from it,
+    e.g. the pattern explanations the regex source generator writes for its internal helper types.
+  -->
+  <ItemGroup Label="Documentation file exclusions">
+    <DocumentationFileExclusion Include="System.Text.RegularExpressions.Generated" />
+  </ItemGroup>
+
+  <UsingTask TaskName="RemoveDocumentationMembers" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <DocumentationFile ParameterType="System.String" Required="true" />
+      <Exclusions ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var exclusions = Exclusions.Select(item => item.ItemSpec).ToArray();
+        var document = XDocument.Load(DocumentationFile);
+        var excluded = document.Descendants("member").Where(member =>
+        {
+            var name = (string)member.Attribute("name") ?? string.Empty;
+            var id = name.Length > 2 && name[1] == ':' ? name.Substring(2) : name;
+            return exclusions.Any(exclusion => id == exclusion || id.StartsWith(exclusion + ".", StringComparison.Ordinal));
+        }).ToList();
+
+        if (excluded.Count > 0)
+        {
+            excluded.ForEach(member => member.Remove());
+            document.Save(DocumentationFile);
+            Log.LogMessage(MessageImportance.Normal, "Removed {0} excluded members from {1}", excluded.Count, DocumentationFile);
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <!-- Runs after every compilation; the documentation file in obj/ is then copied to the output and packed -->
+  <Target Name="RemoveExcludedDocumentationMembers" AfterTargets="CoreCompile"
+          Condition="'$(GenerateDocumentationFile)' == 'true' AND '@(DocumentationFileExclusion)' != '' AND '@(DocFileItem)' != ''">
+    <RemoveDocumentationMembers DocumentationFile="%(DocFileItem.FullPath)" Exclusions="@(DocumentationFileExclusion)"
+                                Condition="Exists('%(DocFileItem.FullPath)')" />
+  </Target>
+
+  <!-- The SDK skips the package validation while the package inputs are unchanged; a changed baseline version must run it again -->
+  <Target Name="AddPackageValidationBaselineToInputs" BeforeTargets="RunPackageValidation"
+          Condition="'$(EnablePackageValidation)' == 'true' AND '$(IsPackable)' == 'true'">
+    <WriteLinesToFile File="$(IntermediateOutputPath)PackageValidationBaseline.txt" Lines="baseline=$(PackageValidationBaselineVersion)"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <NuGetPackInput Include="$(IntermediateOutputPath)PackageValidationBaseline.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)PackageValidationBaseline.txt" />
+    </ItemGroup>
+  </Target>
 
   <PropertyGroup Label="Visual Studio">
     <!-- https://devblogs.microsoft.com/visualstudio/visual-studio-2022-17-5-performance-enhancements/ -->

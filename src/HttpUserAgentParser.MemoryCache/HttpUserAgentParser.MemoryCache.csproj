@@ -7,6 +7,8 @@
 
     <PropertyGroup Label="Native AOT and trimming">
         <IsAotCompatible>true</IsAotCompatible>
+        <!-- Fails the build when a referenced assembly is not marked as AOT compatible -->
+        <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
     </PropertyGroup>
 
     <PropertyGroup Label="Package">
