@@ -5,6 +5,13 @@
         <Description>HTTP User Agent Parser Extensions for ASP.NET Core</Description>
     </PropertyGroup>
 
+    <PropertyGroup Label="Native AOT and trimming">
+        <IsAotCompatible>true</IsAotCompatible>
+        <!-- The assemblies of Microsoft.AspNetCore.App are not marked as AOT compatible (IL3058). The code analysis stays
+             enabled and the Native AOT smoke test verifies the library with the trimmer and the AOT compiler. -->
+        <VerifyReferenceAotCompatibility>false</VerifyReferenceAotCompatibility>
+    </PropertyGroup>
+
     <PropertyGroup Label="Package">
         <IsPackable>true</IsPackable>
         <PackageReadmeFile>readme.md</PackageReadmeFile>

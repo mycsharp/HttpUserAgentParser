@@ -41,7 +41,7 @@
 			"args": [
 				"test",
 				"--no-build",
-				"--nologo"
+				"--no-logo"
 			],
 			"problemMatcher": "$msCompile",
 			"dependsOn": "dotnet: build",
@@ -55,28 +55,7 @@
 		{
 			"label": "test",
 			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"isBackground": false
-		},
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"isBackground": false
-		},
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
-			"args": [],
-			"isBackground": false
-		},
-		{
-			"label": "test",
-			"type": "shell",
-			"command": "dotnet test --nologo",
+			"command": "dotnet test --no-logo",
 			"args": [],
 			"isBackground": false
 		}

@@ -1,15 +1,21 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
+using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.UnitTests.Telemetry;
 
-public class HttpUserAgentParserMemoryCacheTelemetryTests
+[Collection(TelemetryCollection.Name)]
+public sealed class HttpUserAgentParserMemoryCacheTelemetryTests : IDisposable
 {
+    public HttpUserAgentParserMemoryCacheTelemetryTests() => HttpUserAgentParserMemoryCacheTelemetry.ResetForTests();
+
+    public void Dispose() => HttpUserAgentParserMemoryCacheTelemetry.ResetForTests();
+
     [Fact]
     public void EventCounters_DoNotThrow_WhenEnabled()
     {

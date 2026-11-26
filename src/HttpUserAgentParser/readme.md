@@ -2,6 +2,10 @@
 
 Fast HTTP User-Agent parsing for .NET.
 
+- Allocation-free detection with vectorized searches (`SearchValues<string>` on .NET 9+) and a 128-bit shared rule index; `ReadOnlySpan<char>` overloads including zero-allocation `TryGetBrowser(ReadOnlySpan<char>, out string?, out ReadOnlySpan<char>)`; no regular expressions in the parser
+- Trimming and Native AOT compatible
+- Detects browsers and in-app WebViews including Amazon Silk, DuckDuckGo, Whale, QQ Browser, Huawei Browser, Miui Browser, Instagram and Facebook (`FBAV`), and search, SEO and AI crawlers including Bravebot, Screaming Frog SEO Spider, KimiBot, DeepSeekBot, ChatGLM-Spider and OAI-AdsBot
+
 Repository:
 https://github.com/mycsharp/HttpUserAgentParser
 
@@ -19,6 +23,18 @@ HttpUserAgentInformation info = HttpUserAgentParser.Parse(userAgent);
 // or: HttpUserAgentInformation.Parse(userAgent)
 ```
 
+## Regular expressions
+
+The parser itself does not execute regular expressions. `HttpUserAgentStatics.Platforms`, `HttpUserAgentStatics.Browsers`
+and `HttpUserAgentPlatformInformation.Regex` provide source-generated regular expressions (`[GeneratedRegex]`) for your own
+matching; the browser regexes are created when `HttpUserAgentStatics` is first used, a platform regex on first access. They use `RegexOptions.IgnoreCase` with culture-invariant case mapping and
+no `RegexOptions.Compiled`, because the source generator already emits the matching code.
+
+## Native AOT
+
+The package is trimming and Native AOT compatible. EventCounters (`WithTelemetry()`) need
+`<EventSourceSupport>true</EventSourceSupport>` in Native AOT apps; native meters work without it.
+
 ## Dependency injection
 
 If you want to inject a parser (e.g., in ASP.NET Core), use `IHttpUserAgentParserProvider`.
@@ -34,9 +50,16 @@ services
 
 ```csharp
 services
-	.AddHttpUserAgentCachedParser();
+	.AddHttpUserAgentCachedParser(); // default limit: 10,000 entries
+// or: .AddHttpUserAgentCachedParser(maxCacheEntries: 4096);
 // or: .AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>();
 ```
+
+`HttpUserAgentParserCachedProvider` bounds memory usage by rotating the cache atomically once `MaxCacheEntries`
+(default: `HttpUserAgentParserCachedProvider.DefaultMaxCacheEntries` = `10_000`) is reached; it has no sliding/absolute expiration.
+The key is the exact user agent string (ordinal). For web applications that need expiration or fine-grained eviction policies, use
+[MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache).
+All DI registration extensions are idempotent (`TryAddSingleton`).
 
 ## Telemetry (EventCounters)
 
@@ -57,11 +80,11 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserEventSource.EventSourceName`)
 
-- `parse.requests` (incrementing)
-- `parse.duration` (ms, event counter)
-- `cache.hit` (incrementing)
-- `cache.miss` (incrementing)
-- `cache.size` (polling)
+- `parse-requests` (incrementing)
+- `parse-duration` (s, event counter)
+- `cache-hit` (incrementing, `HttpUserAgentParserCachedProvider`)
+- `cache-miss` (incrementing, `HttpUserAgentParserCachedProvider`)
+- `cache-size` (polling, `HttpUserAgentParserCachedProvider`): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ### Monitor with dotnet-counters
 
@@ -86,15 +109,22 @@ services
 	.WithMeterTelemetry();
 ```
 
+Pass your own `Meter` to `WithMeterTelemetry(meter)` to record to it. A later registration with another meter replaces the
+previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
+The meter the package creates itself (without argument or with a prefix) is reused for the same name and disposed when another
+meter replaces it; a measurement that runs exactly during that switch may be lost. Meters you pass in are never disposed.
+The core and the MemoryCache package need separate meters (both create `cache.hit`, `cache.miss` and `cache.size`, and a meter keeps
+its instruments): a meter that one of them has used is rejected by the other with an `ArgumentException`, also after a switch.
+
 ### Meter + instruments
 
-Meter: `MyCSharp.HttpUserAgentParser` (constant: `HttpUserAgentParserMeters.MeterName`)
+Meter: `mycsharp.http_user_agent_parser` (the prefix `mycsharp.` can be changed with `WithMeterTelemetryPrefix(...)`)
 
 - `parse.requests` (counter)
-- `parse.duration` (histogram, ms)
+- `parse.duration` (histogram, s)
 - `cache.hit` (counter)
 - `cache.miss` (counter)
-- `cache.size` (observable gauge)
+- `cache.size` (observable gauge): the entries of all live providers of the package, including entries cached before telemetry was enabled
 
 ## Export to OpenTelemetry
 
@@ -132,13 +162,12 @@ If you enabled **native meters** (see above), collect them via `AddMeter(...)`:
 
 ```csharp
 using OpenTelemetry.Metrics;
-using MyCSharp.HttpUserAgentParser.Telemetry;
 
 builder.Services.AddOpenTelemetry()
 	.WithMetrics(metrics =>
 	{
 		metrics
-			.AddMeter(HttpUserAgentParserMeters.MeterName)
+			.AddMeter("mycsharp.http_user_agent_parser")
 			.AddOtlpExporter();
 	});
 ```

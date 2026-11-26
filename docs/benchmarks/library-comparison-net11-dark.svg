@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-labelledby="t d" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title id="t">Library comparison on .NET 11</title>
+<desc id="d">Linear column charts of mean time per call. Single parse with setup: MyCSharp 258 ns and 101 ns, UAParser 10.0 ms and 9.32 ms, DeviceDetector.NET 6.20 ms and 7.76 ms, for Chrome on Windows and APIs-Google. Repeated parse with reused state: MyCSharp result cache hit 19.2 ns and 13.0 ns, UAParser reused compiled parser 124 µs and 107 µs.</desc>
+<rect width="960" height="500" fill="#0d1117"/>
+<text x="24.0" y="36.0" font-size="19" font-weight="600" fill="#f0efec" text-anchor="start">Mean time per call on .NET 11</text>
+<text x="24.0" y="60.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="start">Linear scale, lower is better. Each panel has its own axis.</text>
+<rect x="24" y="76" width="12" height="12" rx="3" fill="#3987e5"/>
+<text x="42.0" y="87.0" font-size="13" font-weight="400" fill="#f0efec" text-anchor="start">Chrome on Windows</text>
+<rect x="188.0" y="76" width="12" height="12" rx="3" fill="#d95926"/>
+<text x="206.0" y="87.0" font-size="13" font-weight="400" fill="#f0efec" text-anchor="start">APIs-Google</text>
+<text x="68.0" y="112.0" font-size="14" font-weight="600" fill="#f0efec" text-anchor="start">Single parse, including each library's setup</text>
+<text x="60.0" y="404.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">0</text>
+<line x1="68" y1="354.7" x2="516" y2="354.7" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="358.7" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">2 ms</text>
+<line x1="68" y1="309.3" x2="516" y2="309.3" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="313.3" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">4 ms</text>
+<line x1="68" y1="264.0" x2="516" y2="264.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="268.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">6 ms</text>
+<line x1="68" y1="218.7" x2="516" y2="218.7" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="222.7" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">8 ms</text>
+<line x1="68" y1="173.3" x2="516" y2="173.3" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="177.3" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">10 ms</text>
+<line x1="68" y1="128.0" x2="516" y2="128.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="60.0" y="132.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">12 ms</text>
+<path d="M104.67,400.00 V400.00 Q104.67,399.99 104.67,399.99 H128.66 Q128.67,399.99 128.67,400.00 V400.00 Z" fill="#3987e5"/>
+<text x="116.7" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">258 ns</text>
+<path d="M156.67,400.00 V400.00 Q156.67,400.00 156.67,400.00 H180.66 Q180.67,400.00 180.67,400.00 V400.00 Z" fill="#d95926"/>
+<text x="168.7" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">101 ns</text>
+<text x="142.7" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">MyCSharp</text>
+<text x="142.7" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">Parse</text>
+<rect x="68.7" y="265.0" width="148.0" height="80" fill="#0d1117"/>
+<text x="142.7" y="282.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">Bars too short to draw</text>
+<text x="142.7" y="300.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">at this scale:</text>
+<text x="142.7" y="318.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">24,000× to 92,000×</text>
+<text x="142.7" y="336.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">faster</text>
+<line x1="142.7" y1="348.0" x2="142.7" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
+<path d="M254.00,400.00 V177.23 Q254.00,173.23 258.00,173.23 H274.00 Q278.00,173.23 278.00,177.23 V400.00 Z" fill="#3987e5"/>
+<text x="266.0" y="167.2" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">10.0 ms</text>
+<path d="M306.00,400.00 V192.75 Q306.00,188.75 310.00,188.75 H326.00 Q330.00,188.75 330.00,192.75 V400.00 Z" fill="#d95926"/>
+<text x="318.0" y="182.8" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.32 ms</text>
+<text x="292.0" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">UAParser</text>
+<text x="292.0" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">GetDefault + Parse</text>
+<path d="M403.33,400.00 V263.47 Q403.33,259.47 407.33,259.47 H423.33 Q427.33,259.47 427.33,263.47 V400.00 Z" fill="#3987e5"/>
+<text x="415.3" y="253.5" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">6.20 ms</text>
+<path d="M455.33,400.00 V228.11 Q455.33,224.11 459.33,224.11 H475.33 Q479.33,224.11 479.33,228.11 V400.00 Z" fill="#d95926"/>
+<text x="467.3" y="218.1" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">7.76 ms</text>
+<text x="441.3" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">DeviceDetector.NET</text>
+<text x="441.3" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">New detector + Parse</text>
+<line x1="68" y1="400" x2="516" y2="400" stroke="#383835" stroke-width="1"/>
+<text x="628.0" y="112.0" font-size="14" font-weight="600" fill="#f0efec" text-anchor="start">Repeated parse with reused state</text>
+<text x="620.0" y="404.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">0</text>
+<line x1="628" y1="354.7" x2="940" y2="354.7" stroke="#2c2c2a" stroke-width="1"/>
+<text x="620.0" y="358.7" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">25 µs</text>
+<line x1="628" y1="309.3" x2="940" y2="309.3" stroke="#2c2c2a" stroke-width="1"/>
+<text x="620.0" y="313.3" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">50 µs</text>
+<line x1="628" y1="264.0" x2="940" y2="264.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="620.0" y="268.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">75 µs</text>
+<line x1="628" y1="218.7" x2="940" y2="218.7" stroke="#2c2c2a" stroke-width="1"/>
+<text x="620.0" y="222.7" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">100 µs</text>
+<line x1="628" y1="173.3" x2="940" y2="173.3" stroke="#2c2c2a" stroke-width="1"/>
+<text x="620.0" y="177.3" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">125 µs</text>
+<line x1="628" y1="128.0" x2="940" y2="128.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="620.0" y="132.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">150 µs</text>
+<path d="M668.00,400.00 V400.00 Q668.00,399.97 668.03,399.97 H691.97 Q692.00,399.97 692.00,400.00 V400.00 Z" fill="#3987e5"/>
+<text x="680.0" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">19.2 ns</text>
+<path d="M720.00,400.00 V400.00 Q720.00,399.98 720.02,399.98 H743.98 Q744.00,399.98 744.00,400.00 V400.00 Z" fill="#d95926"/>
+<text x="732.0" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">13.0 ns</text>
+<text x="706.0" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">MyCSharp</text>
+<text x="706.0" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">Result cache hit</text>
+<rect x="632.0" y="265.0" width="148.0" height="80" fill="#0d1117"/>
+<text x="706.0" y="282.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">Bars too short to draw</text>
+<text x="706.0" y="300.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">at this scale:</text>
+<text x="706.0" y="318.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">6,400× to 8,200×</text>
+<text x="706.0" y="336.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">faster</text>
+<line x1="706.0" y1="348.0" x2="706.0" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
+<path d="M824.00,400.00 V179.00 Q824.00,175.00 828.00,175.00 H844.00 Q848.00,175.00 848.00,179.00 V400.00 Z" fill="#3987e5"/>
+<text x="836.0" y="169.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">124 µs</text>
+<path d="M876.00,400.00 V210.74 Q876.00,206.74 880.00,206.74 H896.00 Q900.00,206.74 900.00,210.74 V400.00 Z" fill="#d95926"/>
+<text x="888.0" y="200.7" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">107 µs</text>
+<text x="862.0" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">UAParser</text>
+<text x="862.0" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">Reused compiled parser</text>
+<line x1="628" y1="400" x2="940" y2="400" stroke="#383835" stroke-width="1"/>
+<text x="24.0" y="484.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="start">BenchmarkDotNet ShortRun, UAParser 3.1.47, DeviceDetector.NET 6.5.0. Exact times and allocations are in the table below.</text>
+</svg>

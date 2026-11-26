@@ -34,37 +34,40 @@
 
   <PropertyGroup Label="Compiler">
     <LangVersion>15.0</LangVersion>
-    <DebugType>embedded</DebugType>
+    <!-- Separate portable PDBs: the packages ship them as .snupkg symbol packages instead of embedding them
+         into every assembly that ends up in the consumers' bin and publish folders -->
+    <DebugType>portable</DebugType>
     <Nullable>enable</Nullable>
     <DefaultLanguage>en-US</DefaultLanguage>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <PropertyGroup Label="Performance">
-    <!-- Enable Dynamic Profile-Guided Optimization for runtime performance -->
-    <TieredPGO>true</TieredPGO>
-    <DynamicPGO>true</DynamicPGO>
-  </PropertyGroup>
-
   <PropertyGroup Label="Package">
     <IsPackable>false</IsPackable>
-    <NoPackageAnalysis>true</NoPackageAnalysis>
     <MinClientVersion>2.12</MinClientVersion>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- PackageValidationBaselineVersion is not set here: CI and "just pack" derive it from version.json
+         (eng/Get-PackageValidationBaseline.ps1) to detect breaking API changes against the last release of the major version -->
+    <EnablePackageValidation>true</EnablePackageValidation>
 
     <Description>HTTP User Agent Parser for .NET</Description>
     <PackageProjectUrl>https://github.com/mycsharp/HttpUserAgentParser</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mycsharp/HttpUserAgentParser</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>UserAgent, User Agent, Parse, Browser, Client, Detector, Detection, Console, ASP, Desktop, Mobile</PackageTags>
+    <!-- NuGet splits tags at spaces, so each tag is a single word -->
+    <PackageTags>user-agent;useragent;user-agent-parser;parser;browser-detection;platform-detection;mobile-detection;bot-detection;crawler-detection;aspnetcore;http</PackageTags>
     <!-- Central package icon for NuGet packages (file is included into the package via ItemGroup below) -->
-    <PackageIcon>mycsharpde-logo-nuget.png</PackageIcon>
+    <PackageIcon>httpuseragentparser-icon.png</PackageIcon>
   </PropertyGroup>
 
-<!-- Ensure the repository root res/mycsharpde-logo-nuget.png is packed into NuGet packages -->
+  <!-- Pack the 128x128 icon from res/ into the NuGet packages; the readme uses the 512x512 logo -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)res\mycsharpde-logo-nuget.png" Pack="true" PackagePath="" />
+    <None Include="$(MSBuildThisFileDirectory)res\httpuseragentparser-icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(IsBenchmarkProject)' == 'true'">
@@ -74,6 +77,61 @@
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!--
+    The compiler writes the documentation of all members into the XML documentation file, whatever their accessibility.
+    Members of the namespaces and types listed here (documentation IDs without the "T:"/"M:" prefix) are removed from it,
+    e.g. the pattern explanations the regex source generator writes for its internal helper types.
+  -->
+  <ItemGroup Label="Documentation file exclusions">
+    <DocumentationFileExclusion Include="System.Text.RegularExpressions.Generated" />
+  </ItemGroup>
+
+  <UsingTask TaskName="RemoveDocumentationMembers" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <DocumentationFile ParameterType="System.String" Required="true" />
+      <Exclusions ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var exclusions = Exclusions.Select(item => item.ItemSpec).ToArray();
+        var document = XDocument.Load(DocumentationFile);
+        var excluded = document.Descendants("member").Where(member =>
+        {
+            var name = (string)member.Attribute("name") ?? string.Empty;
+            var id = name.Length > 2 && name[1] == ':' ? name.Substring(2) : name;
+            return exclusions.Any(exclusion => id == exclusion || id.StartsWith(exclusion + ".", StringComparison.Ordinal));
+        }).ToList();
+
+        if (excluded.Count > 0)
+        {
+            excluded.ForEach(member => member.Remove());
+            document.Save(DocumentationFile);
+            Log.LogMessage(MessageImportance.Normal, "Removed {0} excluded members from {1}", excluded.Count, DocumentationFile);
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <!-- Runs after every compilation; the documentation file in obj/ is then copied to the output and packed -->
+  <Target Name="RemoveExcludedDocumentationMembers" AfterTargets="CoreCompile"
+          Condition="'$(GenerateDocumentationFile)' == 'true' AND '@(DocumentationFileExclusion)' != '' AND '@(DocFileItem)' != ''">
+    <RemoveDocumentationMembers DocumentationFile="%(DocFileItem.FullPath)" Exclusions="@(DocumentationFileExclusion)"
+                                Condition="Exists('%(DocFileItem.FullPath)')" />
+  </Target>
+
+  <!-- The SDK skips the package validation while the package inputs are unchanged; a changed baseline version must run it again -->
+  <Target Name="AddPackageValidationBaselineToInputs" BeforeTargets="RunPackageValidation"
+          Condition="'$(EnablePackageValidation)' == 'true' AND '$(IsPackable)' == 'true'">
+    <WriteLinesToFile File="$(IntermediateOutputPath)PackageValidationBaseline.txt" Lines="baseline=$(PackageValidationBaselineVersion)"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <NuGetPackInput Include="$(IntermediateOutputPath)PackageValidationBaseline.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)PackageValidationBaseline.txt" />
+    </ItemGroup>
+  </Target>
 
   <PropertyGroup Label="Visual Studio">
     <!-- https://devblogs.microsoft.com/visualstudio/visual-studio-2022-17-5-performance-enhancements/ -->
@@ -86,47 +144,25 @@
     <NuGetAuditLevel>low</NuGetAuditLevel>
   </PropertyGroup>
 
-  <!-- Global coverage settings applied to all test projects -->
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true'" Label="Coverage">
-    <CollectCoverage>true</CollectCoverage>
-    <CoverletOutputFormat>lcov,opencover,cobertura</CoverletOutputFormat>
-    <CoverletOutput>$(MSBuildThisFileDirectory)TestResults/coverage/$(TargetFramework)/$(MSBuildProjectName).</CoverletOutput>
-    <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
-    <ExcludeByFile>**/*Program.cs;**/*Startup.cs;**/*GlobalUsings.cs</ExcludeByFile>
-    <UseSourceLink>true</UseSourceLink>
-    <!-- Enforce high line coverage; branch coverage is informative only -->
-    <!-- Note: Set to 96 to account for performance-optimized helper methods and framework-specific code paths -->
-    <Threshold>96</Threshold>
-    <ThresholdType>line</ThresholdType>
-    <ThresholdStat>total</ThresholdStat>
+  <!-- Global Microsoft.Testing.Platform settings applied to all test projects -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'" Label="Testing">
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup Label="Default Test Dependencies" Condition="'$(IsTestProject)' == 'true'">
-    <PackageReference Include="coverlet.msbuild" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
-    <PackageReference Include="NSubstitute" />
-    <PackageReference Include="NSubstitute.Analyzers.CSharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <!-- Coverlet's MSBuild integration runs through VSTest. -->
-    <PackageReference Include="xunit.v3.mtp-off" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+    <PackageReference Include="coverlet.MTP" />
+    <None Update="testconfig.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('testconfig.json')" />
   </ItemGroup>
 
-  <!-- Limit coverage to the target assemblies for each test project -->
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.UnitTests'" Label="CoverageFilter">
-    <Include>[MyCSharp.HttpUserAgentParser]*</Include>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.MemoryCache.UnitTests'" Label="CoverageFilter">
-    <Include>[MyCSharp.HttpUserAgentParser.MemoryCache]*</Include>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.AspNetCore.UnitTests'" Label="CoverageFilter">
-    <Include>[MyCSharp.HttpUserAgentParser.AspNetCore]*</Include>
+  <PropertyGroup Label="Roslyn package assets">
+    <!-- The Roslyn packages below only pin the Roslyn version used by the analyzers; their runtime assets
+         (Roslyn, System.Composition, System.IO.Pipelines, ...) must not end up in the apps and tests, where they can
+         replace framework assemblies (e.g. System.IO.Pipelines of ASP.NET Core 8 in Native AOT apps).
+         BenchmarkDotNet compiles benchmarks at runtime and needs them. -->
+    <RoslynPackageIncludeAssets>build; analyzers</RoslynPackageIncludeAssets>
+    <RoslynPackageIncludeAssets Condition="'$(IsBenchmarkProject)' == 'true'">runtime; build; native; contentfiles; analyzers</RoslynPackageIncludeAssets>
   </PropertyGroup>
 
   <ItemGroup Label="Default Analyzers">
@@ -144,15 +180,15 @@
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>$(RoslynPackageIncludeAssets)</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.Common">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>$(RoslynPackageIncludeAssets)</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>$(RoslynPackageIncludeAssets)</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Meziantou.Analyzer">
       <PrivateAssets>all</PrivateAssets>

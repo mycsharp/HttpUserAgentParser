@@ -6,46 +6,71 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
+# Actions are pinned to commit SHAs; Dependabot keeps them up to date.
 jobs:
   publish-nuget:
     name: Publish to NuGet.org
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # NuGet Trusted Publishing (OIDC)
 
     steps:
       - name: Download release assets
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          gh release download "${{ github.event.release.tag_name }}" \
+          gh release download "$TAG" \
             --pattern "*.nupkg" \
+            --pattern "*.snupkg" \
             --dir ./artifacts \
-            --repo "${{ github.repository }}"
+            --repo "$GITHUB_REPOSITORY"
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: '11.0.x'
 
       - name: Verify packages
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        shell: python
         run: |
-          echo "Packages to be published:"
-          ls -la ./artifacts/*.nupkg
+          import os
+          from pathlib import Path
+          from xml.etree import ElementTree
+          from zipfile import ZipFile
 
-          # Verify package count
-          PACKAGE_COUNT=$(ls ./artifacts/*.nupkg | wc -l)
-          if [ "$PACKAGE_COUNT" -eq 0 ]; then
-            echo "Error: No packages found!"
-            exit 1
-          fi
+          version = os.environ["TAG"].removeprefix("v")
+          ids = ["MyCSharp.HttpUserAgentParser" + suffix for suffix in ("", ".AspNetCore", ".MemoryCache")]
+          packages = {Path("artifacts", f"{id_}.{version}.{extension}"): id_ for id_ in ids for extension in ("nupkg", "snupkg")}
+          found = set(Path("artifacts").glob("*.nupkg")) | set(Path("artifacts").glob("*.snupkg"))
+          if found != packages.keys():
+              raise SystemExit(f"Expected the three release packages and their symbol packages for version {version}, found {sorted(map(str, found))}")
+          for path, package_id in sorted(packages.items()):
+              with ZipFile(path) as archive:
+                  manifests = [name for name in archive.namelist() if "/" not in name and name.endswith(".nuspec")]
+                  if len(manifests) != 1:
+                      raise SystemExit(f"{path} must contain a single root .nuspec")
+                  manifest = ElementTree.fromstring(archive.read(manifests[0]))
+              identity = (manifest.findtext("{*}metadata/{*}id"), manifest.findtext("{*}metadata/{*}version"))
+              if identity != (package_id, version):
+                  raise SystemExit(f"{path} declares {identity}, expected {(package_id, version)}")
 
-          echo "Found $PACKAGE_COUNT package(s) to publish"
+      # Exchanges the GitHub OIDC token for a short-lived NuGet API key; requires a Trusted Publishing policy on nuget.org
+      - name: NuGet login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
 
       - name: Publish to NuGet.org
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
+          # dotnet nuget push also pushes the .snupkg symbol package next to each .nupkg
           for package in ./artifacts/*.nupkg; do
             echo "Publishing $package to NuGet.org..."
             dotnet nuget push "$package" \
@@ -57,8 +82,10 @@ jobs:
           echo "All packages published successfully!"
 
       - name: Upload published packages as artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: published-nuget-packages
-          path: ./artifacts/*.nupkg
+          path: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
           retention-days: 90

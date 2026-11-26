@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
@@ -9,7 +8,6 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 /// EventSource for EventCounters emitted by MyCSharp.HttpUserAgentParser.MemoryCache.
 /// </summary>
 [EventSource(Name = EventSourceName)]
-[ExcludeFromCodeCoverage]
 public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
 {
     /// <summary>
@@ -19,11 +17,12 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
 
     internal static HttpUserAgentParserMemoryCacheEventSource Log { get; } = new();
 
-    private readonly IncrementingEventCounter? _cacheHit;
+    private readonly IncrementingEventCounter _cacheHit;
     private readonly IncrementingEventCounter _cacheMiss;
     private readonly PollingCounter _cacheSize;
 
-    private HttpUserAgentParserMemoryCacheEventSource()
+    // Tests construct and dispose their own event source.
+    internal HttpUserAgentParserMemoryCacheEventSource()
     {
         _cacheHit = new IncrementingEventCounter("cache-hit", this)
         {
@@ -47,40 +46,27 @@ public sealed class HttpUserAgentParserMemoryCacheEventSource : EventSource
     [NonEvent]
     internal void CacheHit()
     {
-        if (!IsEnabled())
+        if (IsEnabled())
         {
-            return;
+            _cacheHit.Increment();
         }
-
-        _cacheHit?.Increment();
     }
 
     [NonEvent]
     internal void CacheMiss()
     {
-        if (!IsEnabled())
+        if (IsEnabled())
         {
-            return;
+            _cacheMiss.Increment();
         }
-
-        _cacheMiss?.Increment();
     }
-
-    [NonEvent]
-    internal static void CacheSizeIncrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeIncrement();
-
-    [NonEvent]
-    internal static void CacheSizeDecrement() => HttpUserAgentParserMemoryCacheTelemetryState.CacheSizeDecrement();
 
     /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            _cacheHit?.Dispose();
-            _cacheMiss?.Dispose();
-            _cacheSize?.Dispose();
-        }
+        _cacheHit.Dispose();
+        _cacheMiss.Dispose();
+        _cacheSize.Dispose();
 
         base.Dispose(disposing);
     }

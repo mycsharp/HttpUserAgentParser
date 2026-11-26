@@ -17,8 +17,9 @@ public class HttpUserAgentPlatformTypeTests
     [InlineData(HttpUserAgentPlatformType.BlackBerry, 7)]
     [InlineData(HttpUserAgentPlatformType.Android, 8)]
     [InlineData(HttpUserAgentPlatformType.Symbian, 9)]
+    [InlineData(HttpUserAgentPlatformType.ChromeOS, 10)]
     public void TestValue(HttpUserAgentPlatformType type, byte value)
     {
-        Assert.True((byte)type == value);
+        Assert.Equal(value, (byte)type);
     }
 }

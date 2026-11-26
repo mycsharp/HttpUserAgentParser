@@ -5,19 +5,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="NSubstitute" />
+        <PackageReference Include="NSubstitute.Analyzers.CSharp">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\HttpUserAgentParser.AspNetCore\HttpUserAgentParser.AspNetCore.csproj" />
-        <ProjectReference Include="..\..\tests\HttpUserAgentParser.TestHelpers\HttpUserAgentParser.TestHelpers.csproj" />
+        <ProjectReference Include="..\HttpUserAgentParser.TestHelpers\HttpUserAgentParser.TestHelpers.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Update="coverlet.msbuild">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-    </ItemGroup>
 
 </Project>

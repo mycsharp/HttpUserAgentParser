@@ -35,8 +35,8 @@ internal static class HttpUserAgentParserMeterNameHelper
     /// </param>
     /// <returns>The fully composed meter name.</returns>
     /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="meterPrefix"/> is non-empty but either does not end with <c>.</c>
-    /// or contains non-alphanumeric characters (excluding the trailing dot).
+    /// Thrown when <paramref name="meterPrefix"/> is non-empty but does not consist of at least one ASCII letter or digit
+    /// followed by <c>.</c>.
     /// </exception>
     public static string GetMeterName(string? meterPrefix, string meterNameSuffix)
     {
@@ -51,17 +51,16 @@ internal static class HttpUserAgentParserMeterNameHelper
             return meterNameSuffix;
         }
 
-        if (!meterPrefix.EndsWith('.'))
+        if (meterPrefix.Length < 2 || meterPrefix[^1] != '.')
         {
-            throw new ArgumentException("Meter prefix must end with '.'.", nameof(meterPrefix));
+            throw new ArgumentException("Meter prefix must be ASCII letters or digits followed by '.', e.g. \"acme.\".", nameof(meterPrefix));
         }
 
         for (int i = 0; i < meterPrefix.Length - 1; i++)
         {
-            char c = meterPrefix[i];
-            if (!char.IsLetterOrDigit(c))
+            if (!char.IsAsciiLetterOrDigit(meterPrefix[i]))
             {
-                throw new ArgumentException("Meter prefix must be alphanumeric.", nameof(meterPrefix));
+                throw new ArgumentException("Meter prefix must be ASCII letters or digits followed by '.', e.g. \"acme.\".", nameof(meterPrefix));
             }
         }
 

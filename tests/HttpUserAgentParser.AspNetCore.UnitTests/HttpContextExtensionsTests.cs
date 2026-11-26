@@ -27,11 +27,19 @@ public class HttpContextExtensionsTests
     [Fact]
     public void Accessor_Get_Returns_Null_When_Header_Missing()
     {
-        var provider = Substitute.For<IHttpUserAgentParserProvider>();
+        IHttpUserAgentParserProvider provider = Substitute.For<IHttpUserAgentParserProvider>();
         HttpUserAgentParserAccessor accessor = new(provider);
         DefaultHttpContext ctx = new();
 
         Assert.Null(accessor.Get(ctx));
         provider.DidNotReceiveWithAnyArgs().Parse(default!);
+    }
+
+    [Fact]
+    public void GetUserAgentString_Throws_When_HttpContext_Is_Null()
+    {
+        HttpContext ctx = null!;
+
+        Assert.Throws<ArgumentNullException>(() => ctx.GetUserAgentString());
     }
 }

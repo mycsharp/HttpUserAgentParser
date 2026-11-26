@@ -13,8 +13,8 @@ on:
         required: false
         type: boolean
         default: false
-      create-pack:
-        description: 'Whether to pack NuGet packages'
+      upload-packages:
+        description: 'Whether to upload the NuGet packages as artifacts'
         required: false
         type: boolean
         default: false
@@ -23,21 +23,25 @@ on:
         description: 'The calculated version from NBGV'
         value: ${{ jobs.build.outputs.version }}
 
+# Actions are pinned to commit SHAs; Dependabot keeps them up to date.
 jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    env:
+      CONFIGURATION: ${{ inputs.configuration }}
     outputs:
       version: ${{ steps.nbgv.outputs.SemVer2 }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0 # Required for GitVersion
+          fetch-depth: 0 # Required for NBGV
+          persist-credentials: false
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             8.0.x
@@ -47,39 +51,102 @@ jobs:
           global-json-file: ./global.json
 
       - name: Calculate Version with NBGV
-        uses: dotnet/nbgv@master
+        uses: dotnet/nbgv@705dad19ab067f12f4e9eeaa60812e01edef5d25 # v0.5.2
         id: nbgv
         with:
           setAllVars: true
 
-      - name: Version Info
+      # Latest nuget.org release of the major version in version.json; none for a new major version.
+      # Set for all following steps: the restore downloads the baseline package, the pack validates against it.
+      - name: Determine package validation baseline
+        shell: pwsh
         run: |
-          echo "Calculated version: ${{ steps.nbgv.outputs.SemVer2 }}"
+          $baseline = ./eng/Get-PackageValidationBaseline.ps1
+          if ($baseline) {
+            "PackageValidationBaselineVersion=$baseline" >> $env:GITHUB_ENV
+            Write-Output "Package validation baseline: $baseline"
+          }
+          else {
+            Write-Output "No package validation baseline: the major version has no release yet"
+          }
 
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration ${{ inputs.configuration }} --no-restore /p:Version=${{ steps.nbgv.outputs.SemVer2 }}
+        env:
+          PACKAGE_VERSION: ${{ steps.nbgv.outputs.SemVer2 }}
+        run: dotnet build --configuration "$CONFIGURATION" --no-restore "-p:Version=$PACKAGE_VERSION"
 
       - name: Test
-        run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal --logger "trx;LogFilePrefix=test-results"
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --output Normal --report-trx --coverlet --results-directory ./TestResults --results-directory-layout per-module
 
       - name: Upload test results
         if: always() && inputs.upload-test-results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results
-          path: '**/TestResults/**/*.trx'
+          path: |
+            TestResults/**/*.trx
+            TestResults/**/coverage.cobertura.*.xml
 
+      # Always packs to validate the packages (breaking changes against the baseline); also creates the .snupkg symbol packages
       - name: Pack NuGet packages
-        if: inputs.create-pack
-        run: dotnet pack --configuration ${{ inputs.configuration }} --no-build --output ./artifacts /p:PackageVersion=${{ steps.nbgv.outputs.SemVer2 }}
+        env:
+          PACKAGE_VERSION: ${{ steps.nbgv.outputs.SemVer2 }}
+        run: dotnet pack --configuration "$CONFIGURATION" --no-build --output ./artifacts "-p:PackageVersion=$PACKAGE_VERSION"
 
       - name: Upload NuGet packages
-        if: inputs.create-pack
-        uses: actions/upload-artifact@v6
+        if: inputs.upload-packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nuget-packages
-          path: ./artifacts/*.nupkg
+          path: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
+          if-no-files-found: error
           retention-days: 30
+
+  native-aot:
+    name: Native AOT (${{ matrix.os }}, ${{ matrix.framework }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        framework: [net8.0, net9.0, net10.0, net11.0]
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            extension: ''
+          - os: windows-latest
+            rid: win-x64
+            extension: '.exe'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+            11.0.x
+          global-json-file: ./global.json
+
+      - name: Install Native AOT prerequisites
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      # The libraries are rooted completely: every trimming or AOT warning fails the publish.
+      - name: Publish smoke test with Native AOT
+        run: dotnet publish tests/HttpUserAgentParser.NativeAot.Smoke --configuration Release --framework ${{ matrix.framework }} --runtime ${{ matrix.rid }} --output ./artifacts/aot
+
+      - name: Run smoke test
+        run: ./artifacts/aot/MyCSharp.HttpUserAgentParser.NativeAot.Smoke${{ matrix.extension }}

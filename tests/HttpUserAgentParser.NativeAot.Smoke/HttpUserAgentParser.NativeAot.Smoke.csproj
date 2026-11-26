@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        Native AOT smoke test: publish with
+          dotnet publish tests/HttpUserAgentParser.NativeAot.Smoke -c Release -f net11.0 -r linux-x64
+        and run the produced executable. The libraries are rooted completely, so the trimmer and the
+        AOT compiler analyze all of their code; any trimming or AOT warning fails the publish.
+    -->
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <IsPackable>false</IsPackable>
+        <PublishAot>true</PublishAot>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <!-- EventSource is disabled by default in Native AOT apps; enabled to verify the EventCounters -->
+        <EventSourceSupport>true</EventSourceSupport>
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <!-- Explicit, independent of the global TreatWarningsAsErrors -->
+        <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+        <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\HttpUserAgentParser\HttpUserAgentParser.csproj" />
+        <ProjectReference Include="..\..\src\HttpUserAgentParser.MemoryCache\HttpUserAgentParser.MemoryCache.csproj" />
+        <ProjectReference Include="..\..\src\HttpUserAgentParser.AspNetCore\HttpUserAgentParser.AspNetCore.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Label="Analyze all library code, not only the code reachable from this app">
+        <TrimmerRootAssembly Include="MyCSharp.HttpUserAgentParser" />
+        <TrimmerRootAssembly Include="MyCSharp.HttpUserAgentParser.MemoryCache" />
+        <TrimmerRootAssembly Include="MyCSharp.HttpUserAgentParser.AspNetCore" />
+    </ItemGroup>
+
+</Project>

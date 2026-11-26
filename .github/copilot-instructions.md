@@ -51,10 +51,10 @@ Use these commands consistently:
   `dotnet build --nologo`
 
 - Test (all):  
-  `dotnet test --nologo`
+  `dotnet test --no-logo`
 
 - Test (single project):  
-  `dotnet test <path-to-csproj> --nologo`
+  `dotnet test --project <path-to-csproj> --no-logo`
 
 ---
 

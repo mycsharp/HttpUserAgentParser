@@ -5,12 +5,18 @@ using Microsoft.Extensions.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.AspNetCore.DependencyInjection;
 using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 using MyCSharp.HttpUserAgentParser.DependencyInjection;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Xunit;
 
 namespace MyCSharp.HttpUserAgentParser.AspNetCore.UnitTests.Telemetry;
 
-public class HttpUserAgentParserAspNetCoreTelemetryTests
+[Collection(TelemetryCollection.Name)]
+public sealed class HttpUserAgentParserAspNetCoreTelemetryTests : IDisposable
 {
+    public HttpUserAgentParserAspNetCoreTelemetryTests() => HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
+
+    public void Dispose() => HttpUserAgentParserAspNetCoreTelemetry.ResetForTests();
+
     [Fact]
     public void EventCounters_DoNotThrow_WhenEnabled()
     {

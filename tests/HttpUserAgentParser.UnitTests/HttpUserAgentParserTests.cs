@@ -261,26 +261,6 @@ public class HttpUserAgentParserTests
     }
 
     [Fact]
-    public void GetRobot_UsesReplacementRuleInOriginalOrder()
-    {
-        int last = HttpUserAgentStatics.Robots.Length - 1;
-        (string Key, string Value) original = HttpUserAgentStatics.Robots[last];
-
-        try
-        {
-            HttpUserAgentStatics.Robots[last] = ("CustomTestCrawler", "Custom crawler");
-
-            Assert.Equal("Custom crawler", HttpUserAgentParser.GetRobot("customtestcrawler/1.0"));
-            Assert.Equal("Googlebot", HttpUserAgentParser.GetRobot("customtestcrawler/1.0 googlebot/2.1"));
-            Assert.Null(HttpUserAgentParser.GetRobot(original.Key));
-        }
-        finally
-        {
-            HttpUserAgentStatics.Robots[last] = original;
-        }
-    }
-
-    [Fact]
     public void TryGetMobileDevice_True_And_False()
     {
         bool ok = HttpUserAgentParser.TryGetMobileDevice("(iPhone; CPU iPhone OS)", out string? device);
@@ -324,11 +304,231 @@ public class HttpUserAgentParserTests
     }
 
     [Theory]
+    [InlineData("SamsungBrowser/ Chrome/131.0.0.0 Safari/537.36", "Chrome", "131.0.0.0")]
+    [InlineData("Chrome/109.0 Safari/537.36 Maxthon/7.0", "Maxthon", "7.0")]
+    [InlineData("Firefox/2.0 Netscape/9.0", "Netscape", "9.0")]
+    [InlineData("Version/4.0 Safari/531.3 OmniWeb/622", "OmniWeb", "622")]
+    [InlineData("Chrome/109.0 Maxthon/", "Chrome", "109.0")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)", "Internet Explorer", "8.0")]
+    [InlineData("Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko", "Internet Explorer", "11.0")]
+    // A later occurrence of the same token carries the version
+    [InlineData("Chrome/ Chrome/131.0", "Chrome", "131.0")]
+    [InlineData("Mozilla/5.0 Version/ Mobile Version/17.0 Safari/604.1", "Safari", "17.0")]
+    // A version token inside another word belongs to another product
+    [InlineData("Opera/9.80 VendorVersion/120.0", "Opera", "9.80")]
+    // A version token only counts after the browser token
+    [InlineData("OperaHelper/1 Version/17.0 Safari/604.1", "Safari", "17.0")]
+    [InlineData("TridentSpider/3.1 rv:99 Trident/7.0 rv:11", "Internet Explorer", "11")]
+    [InlineData("Opera 9.50 Version/", "Opera", "9.50")]
+    [InlineData("Trident/7.0 rv:", "Internet Explorer", "7.0")]
+    [InlineData("Version/99.0 Opera/9.80 Version/12.16", "Opera", "12.16")]
+    [InlineData("rv:99.0; Trident/7.0; rv:11.0", "Internet Explorer", "11.0")]
+    [InlineData("Mozilla/5.0 Version/ XVersion/1.0 Version/17.0 Safari/604.1", "Safari", "17.0")]
+    [InlineData("Version/17.0 Safari/604.1", "Safari", "17.0")]
+    [InlineData("Opera/9.80 Vendor-Version/120.0", "Opera", "9.80")]
+    // Browser tokens only count at the start of a token
+    [InlineData("ChromeHelper/1 MyChrome/2.0 Firefox/126.0", "Firefox", "126.0")]
+    [InlineData("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) MyChrome/2.0 Chrome/120.0.0.0 Safari/537.36", "Chrome", "120.0.0.0")]
+    [InlineData("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Knowledge/1.0", "Chrome", "120.0.0.0")]
+    [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.109 Safari/537.36", "Chrome", "120.0.6099.109")]
+    [InlineData("ELinks/0.12pre6 (textmode; Linux; 80x24-2)", "ELinks", "0.12")]
+    // "+" separates tokens like a space (URL-encoded logs, e.g. IIS)
+    [InlineData("Mozilla/5.0+(iPhone;+CPU+iPhone+OS+9_3_1+like+Mac+OS+X)+AppleWebKit/601.1.46+(KHTML,+like+Gecko)+Version/9.0+Mobile/13E238+Safari/601.1", "Safari", "9.0")]
+    [InlineData("Mozilla/5.0+(Windows+NT+10.0;+WOW64;+Trident/7.0;+rv:11.0)+like+Gecko", "Internet Explorer", "11.0")]
+    [InlineData("Opera/9.80+(Windows+NT+6.1;+WOW64)+Presto/2.12.388+Version/12.18", "Opera", "12.18")]
+    [InlineData("Mozilla/4.0+(compatible;+MSIE+8.0;+Windows+NT+6.1;+Trident/4.0)", "Internet Explorer", "8.0")]
+    // "Token 1.2" for rules with a version token
+    [InlineData("Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; en) Opera 8.50", "Opera", "8.50")]
+    [InlineData("Mozilla/5.0 (Windows NT 6.0; U; en; rv:1.8.1) Gecko/20061208 Firefox/2.0.0 Opera 9.51", "Opera", "9.51")]
+    [InlineData("LG-GD710/V10f; Mozilla/5.0 (Profile/MIDP-2.0 Configuration/CLDC-1.1; Opera Mini/att/4.2.14812; U; en) Opera 9.50", "Opera", "9.50")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE  6.0; Windows NT 5.1)", "Internet Explorer", "6.0")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE	6.0; Windows NT 5.1)", "Internet Explorer", "6.0")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE MSIE 7.0; Windows NT 5.1)", "Internet Explorer", "7.0")]
+    public void GetBrowser_Reads_The_Version_Of_Its_Own_Product_Token(string userAgent, string expectedName, string expectedVersion)
+    {
+        (string Name, string? Version)? browser = HttpUserAgentParser.GetBrowser(userAgent);
+
+        Assert.Equal((expectedName, expectedVersion), browser);
+    }
+
+    [Theory]
+    [InlineData("Chrome/ Safari/537.36")]
+    [InlineData("Mozilla/5.0 (iPhone) Version/ Mobile/15E148 Safari/604.1")]
+    [InlineData("Mozilla/5.0 Firefox/(X11) 120")]
+    [InlineData("Mozilla/5.0 VendorVersion/120.0 Safari/604.1")]
+    [InlineData("Mozilla/5.0 Chrome/ Chrome")]
+    [InlineData("Checklinks/1.3 (pywikipedia robot; http://toolserver.org/~dispenser/view/Checklinks)")]
+    [InlineData("Mozilla/5.0 (compatible; TridentSpider/3.1)")]
+    [InlineData("TridentSpider/3.1 (rv:12.0)")]
+    [InlineData("Mozilla/5.0 Opera")]
+    [InlineData("Mozilla/4.0 (compatible; MSIE ")]
+    public void GetBrowser_Does_Not_Take_The_Version_Of_Another_Product(string userAgent)
+    {
+        Assert.Null(HttpUserAgentParser.GetBrowser(userAgent));
+    }
+
+    [Theory]
     [InlineData("Chrome/ı1.2é3", "1.2")]
     [InlineData("Chrome/1.2ı3 followed by a long suffix", "1.2")]
     [InlineData("Chrome/1.2 release123", "1.2")]
     public void GetBrowser_ExtractsAsciiVersion(string userAgent, string expectedVersion)
     {
         Assert.Equal(expectedVersion, HttpUserAgentParser.GetBrowser(userAgent)?.Version);
+    }
+
+    [Theory]
+    [InlineData("Microsoft Office/16.0 (Macintosh; Mac OS X 10.15.7; Microsoft Outlook 16.80.23121017; Pro)", "Mac OS X")]
+    [InlineData("Microsoft-CryptoAPI/10.0", null)]
+    [InlineData("Windows NT 6.10", "Unknown Windows OS")]
+    [InlineData("Windows NT 6.10; Windows NT 6.1.7601", "Windows 7")]
+    [InlineData("CrOS", "ChromeOS")]
+    [InlineData("Crosstalk/2 (X11; CrOS)", "ChromeOS")]
+    [InlineData("Microsoft Office (Macros x86)", null)]
+    [InlineData("X11; Magnum; Linux x86_64", "Linux")]
+    [InlineData("X11; CrOS\tarmv7l", "ChromeOS")]
+    [InlineData("Mozilla/5.0+(Windows+Phone+10.0;+Android+6.0)", "Windows Phone")]
+    [InlineData("Mozilla/5.0+(Windows+NT+10.0)", "Windows 10")]
+    [InlineData("Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X)", "Mac OS X")]
+    [InlineData("Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "ChromeOS")]
+    [InlineData("Mozilla/5.0+(X11;+CrOS+x86_64+14541.0.0)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/120.0.0.0+Safari/537.36", "ChromeOS")]
+    [InlineData("Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Mobile Safari/537.36 Edge/15.15063", "Windows Phone")]
+    public void GetPlatform_Respects_Token_Boundaries_And_Compatibility_Tokens(string userAgent, string? expectedPlatform)
+    {
+        Assert.Equal(expectedPlatform, HttpUserAgentParser.GetPlatform(userAgent)?.Name);
+    }
+
+    [Fact]
+    public void Iis_Encoded_Crawler_Is_Recognized_Before_The_Browser()
+    {
+        const string ua = "Mozilla/5.0+(compatible;+Screaming+Frog SEO+Spider/22.0)+Chrome/131";
+        HttpUserAgentInformation result = HttpUserAgentParser.Parse(ua);
+
+        Assert.Equal((HttpUserAgentType.Robot, "Screaming Frog SEO Spider", ua), (result.Type, result.Name, result.UserAgent));
+        Assert.True(HttpUserAgentParser.TryGetRobot(ua, out string? name));
+        Assert.Equal(result.Name, name);
+    }
+
+    [Fact]
+    public void Iis_Spaces_Inside_Product_Names_Are_Decoded_Only_For_Detection()
+    {
+        const string ua = "Mozilla/5.0+(Nintendo+DSi;+Windows+NT+10.0)+Brave+Chrome/99";
+        HttpUserAgentInformation parsed = HttpUserAgentParser.Parse(ua);
+        Assert.Equal(ua, parsed.UserAgent);
+        Assert.Equal("Brave", parsed.Name);
+        Assert.Equal(("Brave", "99"), HttpUserAgentParser.GetBrowser(ua));
+        Assert.Equal("Nintendo DSi", parsed.MobileDeviceType);
+        Assert.Equal("Nintendo DSi", HttpUserAgentParser.GetMobileDevice(ua));
+        Assert.Equal("Windows 10", parsed.Platform?.Name);
+    }
+
+    [Fact]
+    public void GetPlatform_Decodes_Long_Iis_Headers()
+    {
+        Assert.Equal("Windows Phone", HttpUserAgentParser.GetPlatform(new string('x', 512) + "+Windows+Phone")?.Name);
+    }
+
+    [Theory]
+    [InlineData("X11; HP-UX B.11.31", "HP-UX", HttpUserAgentPlatformType.Unix)]
+    [InlineData("Windows Phone 10.0; Windows NT 10.0; Android 6.0", "Windows Phone", HttpUserAgentPlatformType.Windows)]
+    [InlineData("X11; Debian GNU/Linux", "Debian", HttpUserAgentPlatformType.Linux)]
+    [InlineData("X11; GNU/Linux", "GNU/Linux", HttpUserAgentPlatformType.Linux)]
+    [InlineData("X11; FreeBSD ppc", "FreeBSD", HttpUserAgentPlatformType.Unix)]
+    [InlineData("X11; Unix; HP-UX", "HP-UX", HttpUserAgentPlatformType.Unix)]
+    [InlineData("X11; Unix; NetBSD ppc", "NetBSD", HttpUserAgentPlatformType.Unix)]
+    [InlineData("Macintosh; U; PPC", "Macintosh", HttpUserAgentPlatformType.MacOS)]
+    public void Parse_Reports_The_Platform_Family(string comment, string expectedName, HttpUserAgentPlatformType expectedType)
+    {
+        HttpUserAgentPlatformInformation? platform = HttpUserAgentParser.Parse($"Mozilla/5.0 ({comment})").Platform;
+        Assert.Equal(expectedName, platform?.Name);
+        Assert.Equal(expectedType, platform?.PlatformType);
+    }
+
+    [Fact]
+    public void GetRobot_Tells_YouBot_And_ShowyouBot_Apart()
+    {
+        Assert.Equal("ShowyouBot", HttpUserAgentParser.GetRobot("ShowyouBot (http://showyou.com/crawler)"));
+        Assert.Equal("ShowyouBot", HttpUserAgentParser.GetRobot("ShowyouBot/1.0"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("YouBot/1.0"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0 (YouBot/1.0)"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0+(compatible;+YouBot/1.0)"));
+        Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; YouBot/1.0; +https://docs.you.com/youbot; env:prod) Chrome/X.X.X.X Safari/537.36"));
+    }
+
+    [Fact]
+    public void Public_Methods_Throw_ArgumentNullException_When_UserAgent_Is_Null()
+    {
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.Parse(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentInformation.Parse(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.Cleanup(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetPlatform(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetPlatform(null!, out _));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetBrowser(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetBrowser(null!, out _));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetRobot(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetRobot(null!, out _));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetMobileDevice(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetMobileDevice(null!, out _));
+    }
+
+    [Fact]
+    public void Span_Overloads_Match_String_Overloads_Including_Zero_Alloc_Browser_Version()
+    {
+        ReadOnlySpan<char> ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/90.0.4430.78 Mobile/15E148 Safari/604.1";
+
+        Assert.Equal("iOS", HttpUserAgentParser.GetPlatform(ua)?.Name);
+        Assert.True(HttpUserAgentParser.TryGetPlatform(ua, out HttpUserAgentPlatformInformation? platform));
+        Assert.Equal("iOS", platform.Value.Name);
+
+        Assert.Equal(("Chrome", "90.0.4430.78"), HttpUserAgentParser.GetBrowser(ua));
+        Assert.True(HttpUserAgentParser.TryGetBrowser(ua, out (string Name, string? Version)? browser));
+        Assert.Equal(("Chrome", "90.0.4430.78"), browser);
+
+        Assert.True(HttpUserAgentParser.TryGetBrowser(ua, out string? browserName, out ReadOnlySpan<char> browserVersion));
+        Assert.Equal("Chrome", browserName);
+        Assert.Equal("90.0.4430.78", browserVersion.ToString());
+
+        Assert.Equal("Apple iPhone", HttpUserAgentParser.GetMobileDevice(ua));
+        Assert.True(HttpUserAgentParser.TryGetMobileDevice(ua, out string? device));
+        Assert.Equal("Apple iPhone", device);
+        Assert.Equal("Apple iPhone", HttpUserAgentParser.GetMobileDevice(new string('x', 260) + " iPhone"));
+
+        ReadOnlySpan<char> iisUa = "Mozilla/5.0+(Windows+NT+10.0)+Brave+Chrome/99.1";
+        Assert.True(HttpUserAgentParser.TryGetBrowser(iisUa, out string? iisName, out ReadOnlySpan<char> iisVersion));
+        Assert.Equal("Brave", iisName);
+        Assert.Equal("99.1", iisVersion.ToString());
+
+        ReadOnlySpan<char> robotUa = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
+        Assert.Equal("Googlebot", HttpUserAgentParser.GetRobot(robotUa));
+        Assert.True(HttpUserAgentParser.TryGetRobot(robotUa, out string? robotName));
+        Assert.Equal("Googlebot", robotName);
+
+        ReadOnlySpan<char> unknown = "CustomClient";
+        Assert.False(HttpUserAgentParser.TryGetPlatform(unknown, out _));
+        Assert.False(HttpUserAgentParser.TryGetBrowser(unknown, out _));
+        Assert.False(HttpUserAgentParser.TryGetBrowser(unknown, out string? noName, out ReadOnlySpan<char> noVersion));
+        Assert.Null(noName);
+        Assert.True(noVersion.IsEmpty);
+        Assert.False(HttpUserAgentParser.TryGetRobot(unknown, out _));
+        Assert.False(HttpUserAgentParser.TryGetMobileDevice(unknown, out _));
+    }
+
+    [Theory]
+    [InlineData("Mozilla/5.0 (Macintosh; U; Intel) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", "Chrome", "131.0.0.0", "Macintosh", HttpUserAgentPlatformType.MacOS)]
+    [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Whale/3.24.223.21 Safari/537.36", "Whale", "3.24.223.21", "Windows 10", HttpUserAgentPlatformType.Windows)]
+    [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 QQBrowser/13.1", "QQ Browser", "13.1", "Windows 10", HttpUserAgentPlatformType.Windows)]
+    [InlineData("Mozilla/5.0 (Linux; Android 12; HUAWEI) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.88 HuaweiBrowser/14.0.1.302 Mobile Safari/537.36", "Huawei Browser", "14.0.1.302", "Android", HttpUserAgentPlatformType.Android)]
+    [InlineData("Mozilla/5.0 (Linux; U; Android 13; 2210132G) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/112.0.0.0 Mobile Safari/537.36 XiaoMi/MiuiBrowser/17.3.12", "Miui Browser", "17.3.12", "Android", HttpUserAgentPlatformType.Android)]
+    [InlineData("Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 MiuiBrowser/17.3.12 Mobile Safari/537.36", "Miui Browser", "17.3.12", "Android", HttpUserAgentPlatformType.Android)]
+    [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21A329 Instagram 302.0.0.23.108", "Instagram", "302.0.0.23.108", "iOS", HttpUserAgentPlatformType.IOS)]
+    [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21A329 [FBAN/FBIOS;FBAV/436.0.0.42.111;FBBV/526455120]", "Facebook", "436.0.0.42.111", "iOS", HttpUserAgentPlatformType.IOS)]
+    public void Parse_Recognizes_Modern_Browsers_WebViews_And_Macintosh(string ua, string expectedName, string expectedVersion, string expectedPlatform, HttpUserAgentPlatformType expectedPlatformType)
+    {
+        HttpUserAgentInformation info = HttpUserAgentParser.Parse(ua);
+
+        Assert.Equal(HttpUserAgentType.Browser, info.Type);
+        Assert.Equal(expectedName, info.Name);
+        Assert.Equal(expectedVersion, info.Version);
+        Assert.Equal(expectedPlatform, info.Platform?.Name);
+        Assert.Equal(expectedPlatformType, info.Platform?.PlatformType);
     }
 }

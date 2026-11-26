@@ -1,0 +1,14 @@
+{
+  "platformOptions": {
+    "Coverlet": {
+      "include": "[MyCSharp.HttpUserAgentParser.AspNetCore]*",
+      "excludeByAttribute": "GeneratedCodeAttribute,ExcludeFromCodeCoverage,ExcludeFromCodeCoverageAttribute,CompilerGeneratedAttribute",
+      "excludeAssembliesWithoutSources": "MissingAll",
+      "format": "lcov,opencover,cobertura",
+      "useSourceLink": true,
+      "threshold": 100,
+      "thresholdType": "line,branch,method",
+      "thresholdStat": "Total"
+    }
+  }
+}

@@ -15,22 +15,40 @@ dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore
 
 Register a provider (any of the available ones) and then add the accessor:
 
-The accessor pattern reads the `User-Agent` header from the current `HttpContext` and parses it using the registered provider.
+The accessor reads the `User-Agent` header of a request, parses it using the registered provider, and caches the result per request in `HttpContext.Items` (so repeated calls within the same request neither re-parse nor emit duplicate telemetry events). There are two options:
+
+- `AddHttpUserAgentParserAccessor()` registers `IHttpUserAgentParserAccessor`: you pass the `HttpContext` (`Get(httpContext)`). Recommended.
+- `AddHttpUserAgentParserContextAccessor()` registers `IHttpUserAgentParserContextAccessor` and `IHttpContextAccessor`: `Get()` uses the current request, `Get(httpContext)` works as well. Useful in services without access to the `HttpContext`; `IHttpContextAccessor` has a small cost on every request.
 
 ```csharp
 services
 	.AddHttpUserAgentMemoryCachedParser() // or: AddHttpUserAgentParser / AddHttpUserAgentCachedParser
-	.AddHttpUserAgentParserAccessor();
+	.AddHttpUserAgentParserAccessor(); // or: .AddHttpUserAgentParserContextAccessor()
 ```
 
-Usage:
+Usage with the `HttpContext`:
 
 ```csharp
-public sealed class MyController(IHttpUserAgentParserAccessor accessor)
+public sealed class MyController(IHttpUserAgentParserAccessor accessor) : ControllerBase
 {
-	public HttpUserAgentInformation Get() => accessor.Get();
+	[HttpGet]
+	public HttpUserAgentInformation? Get() => accessor.Get(HttpContext); // null without (or with an empty) User-Agent header
+}
+
+// Minimal API
+app.MapGet("/ua", (HttpContext context, IHttpUserAgentParserAccessor accessor) => accessor.Get(context));
+```
+
+Usage with the current request (`AddHttpUserAgentParserContextAccessor()`):
+
+```csharp
+public sealed class MyService(IHttpUserAgentParserContextAccessor accessor)
+{
+	public bool IsRobot() => accessor.Get()?.IsRobot() ?? false; // null outside of a request or without User-Agent header
 }
 ```
+
+The package is trimming and Native AOT compatible.
 
 ### Just read the header
 
@@ -48,6 +66,7 @@ Telemetry is **modular** and **opt-in**.
 
 ```csharp
 services
+	.AddHttpUserAgentParser()
 	.AddHttpUserAgentParserAccessor()
 	.WithAspNetCoreTelemetry();
 ```
@@ -58,8 +77,8 @@ services
 
 EventSource: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgentParserAspNetCoreEventSource.EventSourceName`)
 
-- `user_agent.present` (incrementing)
-- `user_agent.missing` (incrementing)
+- `useragent-present` (incrementing)
+- `useragent-missing` (incrementing)
 
 ### Monitor with dotnet-counters
 
@@ -75,13 +94,19 @@ This package can also emit native `System.Diagnostics.Metrics` instruments.
 
 ```csharp
 services
+	.AddHttpUserAgentParser()
 	.AddHttpUserAgentParserAccessor()
 	.WithAspNetCoreMeterTelemetry();
 ```
 
+Pass your own `Meter` to `WithAspNetCoreMeterTelemetry(meter)` to record to it. A later registration with another meter
+replaces the previous one, which then neither records nor reports values; a meter that is registered again reuses its instruments.
+The meter the package creates itself (without argument or with a prefix) is reused for the same name and disposed when another
+meter replaces it; a measurement that runs exactly during that switch may be lost. Meters you pass in are never disposed.
+
 ### Meter + instruments
 
-Meter: `MyCSharp.HttpUserAgentParser.AspNetCore` (constant: `HttpUserAgentParserAspNetCoreMeters.MeterName`)
+Meter: `mycsharp.http_user_agent_parser.aspnetcore` (the prefix `mycsharp.` can be changed with `WithAspNetCoreMeterTelemetryPrefix(...)`)
 
 - `user_agent.present` (counter)
 - `user_agent.missing` (counter)
@@ -107,7 +132,6 @@ If you enabled **native meters** (see above), collect them via `AddMeter(...)`:
 
 ```csharp
 using OpenTelemetry.Metrics;
-using MyCSharp.HttpUserAgentParser.AspNetCore.Telemetry;
 
-metrics.AddMeter(HttpUserAgentParserAspNetCoreMeters.MeterName);
+metrics.AddMeter("mycsharp.http_user_agent_parser.aspnetcore");
 ```

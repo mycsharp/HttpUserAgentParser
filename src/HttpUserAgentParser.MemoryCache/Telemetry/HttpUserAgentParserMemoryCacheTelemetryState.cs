@@ -1,47 +1,40 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 
 /// <summary>
-/// Holds telemetry state for tracking the size of the HTTP User-Agent parser memory cache.
+/// Tracks providers from construction so the reported cache size includes entries added before telemetry was enabled.
+/// Weak references let providers be collected between observations.
 /// </summary>
-/// <remarks>
-/// This class is excluded from code coverage as it contains only simple
-/// thread-safe state management logic.
-/// </remarks>
-[ExcludeFromCodeCoverage]
 internal static class HttpUserAgentParserMemoryCacheTelemetryState
 {
-    private static long s_cacheSize;
+    private static readonly ConditionalWeakTable<HttpUserAgentParserMemoryCachedProvider, object?> s_providers = new();
+
+    public static void Register(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.Add(provider, value: null);
+
+    public static void Unregister(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.Remove(provider);
+
+    public static bool IsRegistered(HttpUserAgentParserMemoryCachedProvider provider) => s_providers.TryGetValue(provider, out _);
 
     /// <summary>
-    /// Gets the current number of entries in the memory cache.
+    /// Gets the number of entries of all live memory caches.
     /// </summary>
     /// <remarks>
-    /// The value is read atomically to ensure thread safety.
+    /// Counting only runs when an instrument is observed, never on the parse path.
     /// </remarks>
-    public static long CacheSize => Volatile.Read(ref s_cacheSize);
+    public static long CacheSize
+    {
+        get
+        {
+            long size = 0;
+            foreach (KeyValuePair<HttpUserAgentParserMemoryCachedProvider, object?> provider in (IEnumerable<KeyValuePair<HttpUserAgentParserMemoryCachedProvider, object?>>)s_providers)
+            {
+                size += provider.Key.CacheEntryCount;
+            }
 
-    /// <summary>
-    /// Increments the cached entry counter by one.
-    /// </summary>
-    /// <remarks>
-    /// Uses an atomic operation to remain safe in concurrent scenarios.
-    /// </remarks>
-    public static void CacheSizeIncrement() => Interlocked.Increment(ref s_cacheSize);
-
-    /// <summary>
-    /// Decrements the cached entry counter by one.
-    /// </summary>
-    /// <remarks>
-    /// Uses an atomic operation to remain safe in concurrent scenarios.
-    /// </remarks>
-    public static void CacheSizeDecrement() => Interlocked.Decrement(ref s_cacheSize);
-
-    /// <summary>
-    /// Resets the cache size for unit tests.
-    /// </summary>
-    public static void ResetForTests() => Volatile.Write(ref s_cacheSize, 0);
+            return size;
+        }
+    }
 }

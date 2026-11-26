@@ -5,6 +5,7 @@ extern alias Baseline;
 #endif
 
 using BenchmarkDotNet.Attributes;
+using MyCSharp.HttpUserAgentParser.TestHelpers;
 using Parser = MyCSharp.HttpUserAgentParser.HttpUserAgentParser;
 
 namespace HttpUserAgentParser.Benchmarks;
@@ -29,6 +30,12 @@ public class HttpUserAgentParserBenchmarks
         yield return new("Googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)");
         yield return new("Applebot", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)");
         yield return new("Unknown", "custom-client/1.0 (+https://example.org/client)");
+        yield return new("IIS encoded crawler", "Mozilla/5.0+(compatible;+Screaming+Frog+SEO+Spider/22.0)+Chrome/131");
+
+        foreach (ObservedUserAgent sample in UserAgentsMeSnapshot.Cases)
+        {
+            yield return new TestData(sample.Label, sample.UserAgent);
+        }
     }
 
     [Benchmark]
@@ -37,5 +44,52 @@ public class HttpUserAgentParserBenchmarks
 #if BENCHMARK_BASELINE
     [Benchmark(Baseline = true)]
     public string ParseBaseline() => Baseline::MyCSharp.HttpUserAgentParser.HttpUserAgentParser.Parse(Data.UserAgent).Name;
+#endif
+}
+
+[MemoryDiagnoser]
+public class RepeatedBrowserTokenBenchmarks
+{
+    [Params("Chrome/a", "Chrome/a ", "Version/a", "Version/a ", "MSIE ", "Opera+a ")]
+    public string Token { get; set; }
+
+    [Params(1_000, 10_000, 100_000)]
+    public int Repetitions { get; set; }
+
+    private string _userAgent;
+
+    [GlobalSetup]
+    public void Setup() => _userAgent = string.Concat(Enumerable.Repeat(Token, Repetitions));
+
+    [Benchmark]
+    public (string Name, string Version)? GetBrowser() => Parser.GetBrowser(_userAgent);
+}
+
+[MemoryDiagnoser]
+public class HeaderLengthBenchmarks
+{
+    private const string Prefix = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
+    private string _userAgent;
+
+    [Params(128, 256, 4096)]
+    public int Length { get; set; }
+
+    [Params(false, true)]
+    public bool Unicode { get; set; }
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        // Keep browser tokens and total length identical. Only the trailing comment changes.
+        string suffix = Unicode ? "é)" : "x)";
+        _userAgent = Prefix + " (" + new string('x', Length - Prefix.Length - 4) + suffix;
+    }
+
+    [Benchmark]
+    public string Parse() => Parser.Parse(_userAgent).Name;
+
+#if BENCHMARK_BASELINE
+    [Benchmark(Baseline = true)]
+    public string ParseBaseline() => Baseline::MyCSharp.HttpUserAgentParser.HttpUserAgentParser.Parse(_userAgent).Name;
 #endif
 }

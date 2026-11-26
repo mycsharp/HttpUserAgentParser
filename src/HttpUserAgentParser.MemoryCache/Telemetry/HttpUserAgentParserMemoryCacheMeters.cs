@@ -1,6 +1,5 @@
 // Copyright © https://myCSharp.de - all rights reserved
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using MyCSharp.HttpUserAgentParser.Telemetry;
@@ -10,7 +9,10 @@ namespace MyCSharp.HttpUserAgentParser.MemoryCache.Telemetry;
 /// <summary>
 /// System.Diagnostics.Metrics instruments emitted by MyCSharp.HttpUserAgentParser.MemoryCache.
 /// </summary>
-[ExcludeFromCodeCoverage]
+/// <remarks>
+/// See <see cref="HttpUserAgentParserMeterRegistration{TInstruments}"/> for the registration rules; a replaced meter no longer
+/// reports the cache size.
+/// </remarks>
 internal static class HttpUserAgentParserMemoryCacheMeters
 {
     private const string MeterNameSuffix = "http_user_agent_parser.memorycache";
@@ -22,61 +24,67 @@ internal static class HttpUserAgentParserMemoryCacheMeters
     /// </summary>
     /// <param name="meterPrefix">
     /// The prefix to use. When null, the default prefix is used. When empty,
-    /// no prefix is applied. Otherwise, the prefix must be alphanumeric and end with '.'.
+    /// no prefix is applied. Otherwise, the prefix must be ASCII letters or digits followed by '.'.
     /// </param>
     /// <returns>The full meter name.</returns>
     /// <exception cref="ArgumentException">Thrown when the prefix is not empty and does not match the required format.</exception>
     public static string GetMeterName(string? meterPrefix)
         => HttpUserAgentParserMeterNameHelper.GetMeterName(meterPrefix, MeterNameSuffix);
 
-    private static int s_initialized;
+    private static readonly HttpUserAgentParserMeterRegistration<Instruments> s_registration = new(
+        static meter => new Instruments(meter),
+        HttpUserAgentParserCacheMeterGuard.ReserveForMemoryCache, // the core and the MemoryCache package must not share a meter
+        HttpUserAgentParserCacheMeterGuard.ResetMemoryCacheForTests,
+        HttpUserAgentParserMemoryCacheTelemetry.MarkMetersEnabled);
 
-    private static Meter? s_meter;
-    private static Counter<long>? s_cacheHit;
-    private static Counter<long>? s_cacheMiss;
-    private static ObservableGauge<long>? s_cacheSize;
+    public static bool IsEnabled => s_registration.Current is not null;
 
-    public static bool IsEnabled => Volatile.Read(ref s_initialized) != 0;
+    /// <summary>
+    /// Creates the metric instruments on <paramref name="meter"/> (or on a default meter) and uses them from now on.
+    /// </summary>
+    public static void Enable(Meter? meter = null) => s_registration.Use(meter, MeterName);
 
-    public static void Enable(Meter? meter = null)
+    /// <summary>
+    /// Creates the metric instruments on a meter named <paramref name="meterName"/> that this class creates and owns.
+    /// </summary>
+    public static void EnableOwnedMeter(string meterName) => s_registration.Use(meter: null, meterName);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CacheHit() => s_registration.Current?.CacheHit.Add(1);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CacheMiss() => s_registration.Current?.CacheMiss.Add(1);
+
+    public static void ResetForTests() => s_registration.ResetForTests();
+
+    private sealed class Instruments(Meter meter) : HttpUserAgentParserMeterInstruments(meter)
     {
-        if (Interlocked.Exchange(ref s_initialized, 1) == 1)
+        private Counter<long>? _cacheHit;
+        private Counter<long>? _cacheMiss;
+        private int _cacheSizeCreated;
+
+        public Counter<long> CacheHit => _cacheHit!;
+
+        public Counter<long> CacheMiss => _cacheMiss!;
+
+        public override void CreateMissingInstruments()
         {
-            return;
+            CreateInstrument(ref _cacheHit, Meter.CreateCounter<long>, "cache.hit", "{call}", "Cache hit");
+            CreateInstrument(ref _cacheMiss, Meter.CreateCounter<long>, "cache.miss", "{call}", "Cache miss");
+
+            // A listener can throw after publication. Creating the gauge again would register a second callback.
+            if (Interlocked.Exchange(ref _cacheSizeCreated, 1) == 0)
+            {
+                _ = Meter.CreateObservableGauge(name: "cache.size", observeValues: ObserveCacheSize, unit: "{entry}", description: "Cache size");
+            }
         }
 
-        s_meter = meter ?? new Meter(MeterName);
-
-        s_cacheHit = s_meter.CreateCounter<long>(
-            name: "cache.hit",
-            unit: "{call}",
-            description: "Cache hit");
-
-        s_cacheMiss = s_meter.CreateCounter<long>(
-            name: "cache.miss",
-            unit: "{call}",
-            description: "Cache miss");
-
-        s_cacheSize = s_meter.CreateObservableGauge<long>(
-            name: "cache.size",
-            observeValue: static () => HttpUserAgentParserMemoryCacheTelemetryState.CacheSize,
-            unit: "{entry}",
-            description: "Cache size");
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CacheHit() => s_cacheHit?.Add(1);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CacheMiss() => s_cacheMiss?.Add(1);
-
-    public static void ResetForTests()
-    {
-        Volatile.Write(ref s_initialized, 0);
-
-        s_meter = null;
-        s_cacheHit = null;
-        s_cacheMiss = null;
-        s_cacheSize = null;
+        /// <summary>
+        /// Reports the cache size only while these instruments are in use, so a replaced meter does not report it as well.
+        /// </summary>
+        private IEnumerable<Measurement<long>> ObserveCacheSize()
+            => ReferenceEquals(s_registration.Current, this)
+                ? [new Measurement<long>(HttpUserAgentParserMemoryCacheTelemetryState.CacheSize)]
+                : [];
     }
 }
