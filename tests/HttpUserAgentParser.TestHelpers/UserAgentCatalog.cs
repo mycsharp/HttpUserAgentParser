@@ -134,8 +134,8 @@ public static class UserAgentCatalog
         new("UC Browser 11 Android", "Mozilla/5.0 (Linux; U; Android 6.0.1; zh-CN; F5121 Build/34.0.A.1.247) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/40.0.2214.89 UCBrowser/11.5.1.944 Mobile Safari/537.36", "UC Browser", "11.5.1.944", "Android", Android, "Android"),
 
         // DuckDuckGo browser (WebKit on iOS, WebView on Android)
-        new("DuckDuckGo iOS", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 DuckDuckGo/7 Safari/605.1.15", "Safari", "26.0", "iOS", IOS, "Apple iPhone"),
-        new("DuckDuckGo Android", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/151.0.7922.199 Mobile DuckDuckGo/5 Safari/537.36", "Chrome", "151.0.7922.199", "Android", Android, "Android"),
+        new("DuckDuckGo iOS", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 DuckDuckGo/7 Safari/605.1.15", "DuckDuckGo", "7", "iOS", IOS, "Apple iPhone"),
+        new("DuckDuckGo Android", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/151.0.7922.199 Mobile DuckDuckGo/5 Safari/537.36", "DuckDuckGo", "5", "Android", Android, "Android"),
     ];
 
     /// <summary>

@@ -23,6 +23,11 @@ public static class HttpUserAgentInformationExtensions
     public static bool IsBrowser(this in HttpUserAgentInformation userAgent) => IsType(userAgent, HttpUserAgentType.Browser);
 
     /// <summary>
+    /// Tests if <paramref name="userAgent"/> is of type <see cref="HttpUserAgentType.Unknown"/>
+    /// </summary>
+    public static bool IsUnknown(this in HttpUserAgentInformation userAgent) => IsType(userAgent, HttpUserAgentType.Unknown);
+
+    /// <summary>
     /// returns <c>true</c> if agent is a mobile device
     /// </summary>
     /// <remarks>checks if <see cref="HttpUserAgentInformation.MobileDeviceType"/> is null</remarks>

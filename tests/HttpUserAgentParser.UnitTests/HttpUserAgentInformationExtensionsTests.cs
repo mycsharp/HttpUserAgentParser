@@ -20,6 +20,7 @@ public class HttpUserAgentInformationExtensionsTests
         Assert.Equal(expectedType == HttpUserAgentType.Unknown, info.IsType(HttpUserAgentType.Unknown));
         Assert.Equal(expectedType == HttpUserAgentType.Browser, info.IsBrowser());
         Assert.Equal(expectedType == HttpUserAgentType.Robot, info.IsRobot());
+        Assert.Equal(expectedType == HttpUserAgentType.Unknown, info.IsUnknown());
         Assert.Equal(isMobile, info.IsMobile());
     }
 }

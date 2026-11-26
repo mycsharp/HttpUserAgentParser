@@ -511,4 +511,24 @@ public class HttpUserAgentParserTests
         Assert.False(HttpUserAgentParser.TryGetRobot(unknown, out _));
         Assert.False(HttpUserAgentParser.TryGetMobileDevice(unknown, out _));
     }
+
+    [Theory]
+    [InlineData("Mozilla/5.0 (Macintosh; U; Intel) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", "Chrome", "131.0.0.0", "Macintosh", HttpUserAgentPlatformType.MacOS)]
+    [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Whale/3.24.223.21 Safari/537.36", "Whale", "3.24.223.21", "Windows 10", HttpUserAgentPlatformType.Windows)]
+    [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 QQBrowser/13.1", "QQ Browser", "13.1", "Windows 10", HttpUserAgentPlatformType.Windows)]
+    [InlineData("Mozilla/5.0 (Linux; Android 12; HUAWEI) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.88 HuaweiBrowser/14.0.1.302 Mobile Safari/537.36", "Huawei Browser", "14.0.1.302", "Android", HttpUserAgentPlatformType.Android)]
+    [InlineData("Mozilla/5.0 (Linux; U; Android 13; 2210132G) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/112.0.0.0 Mobile Safari/537.36 XiaoMi/MiuiBrowser/17.3.12", "Miui Browser", "17.3.12", "Android", HttpUserAgentPlatformType.Android)]
+    [InlineData("Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 MiuiBrowser/17.3.12 Mobile Safari/537.36", "Miui Browser", "17.3.12", "Android", HttpUserAgentPlatformType.Android)]
+    [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21A329 Instagram 302.0.0.23.108", "Instagram", "302.0.0.23.108", "iOS", HttpUserAgentPlatformType.IOS)]
+    [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21A329 [FBAN/FBIOS;FBAV/436.0.0.42.111;FBBV/526455120]", "Facebook", "436.0.0.42.111", "iOS", HttpUserAgentPlatformType.IOS)]
+    public void Parse_Recognizes_Modern_Browsers_WebViews_And_Macintosh(string ua, string expectedName, string expectedVersion, string expectedPlatform, HttpUserAgentPlatformType expectedPlatformType)
+    {
+        HttpUserAgentInformation info = HttpUserAgentParser.Parse(ua);
+
+        Assert.Equal(HttpUserAgentType.Browser, info.Type);
+        Assert.Equal(expectedName, info.Name);
+        Assert.Equal(expectedVersion, info.Version);
+        Assert.Equal(expectedPlatform, info.Platform?.Name);
+        Assert.Equal(expectedPlatformType, info.Platform?.PlatformType);
+    }
 }

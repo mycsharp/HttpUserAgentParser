@@ -74,4 +74,8 @@ public readonly struct HttpUserAgentPlatformInformation : IEquatable<HttpUserAge
     /// Returns <see langword="true"/> if both instances are not equal.
     /// </summary>
     public static bool operator !=(HttpUserAgentPlatformInformation left, HttpUserAgentPlatformInformation right) => !left.Equals(right);
+
+    /// <inheritdoc/>
+    public override string ToString()
+        => string.IsNullOrEmpty(Name) ? PlatformType.ToString() : $"{Name} ({PlatformType})";
 }

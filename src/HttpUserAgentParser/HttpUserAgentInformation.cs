@@ -99,4 +99,12 @@ public readonly struct HttpUserAgentInformation : IEquatable<HttpUserAgentInform
     /// Returns <see langword="true"/> if both instances are not equal.
     /// </summary>
     public static bool operator !=(HttpUserAgentInformation left, HttpUserAgentInformation right) => !left.Equals(right);
+
+    /// <inheritdoc/>
+    public override string ToString() => (Name, Version) switch
+    {
+        ({ } name, { } version) => $"{Type}: {name} {version}",
+        ({ } name, null) => $"{Type}: {name}",
+        _ => Type.ToString(),
+    };
 }

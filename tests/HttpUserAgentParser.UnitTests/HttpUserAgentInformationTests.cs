@@ -115,6 +115,14 @@ public partial class HttpUserAgentInformationTests
         Assert.False(info.Equals("ua"));
     }
 
+    [Fact]
+    public void ToString_Formats_Type_Name_And_Version()
+    {
+        Assert.Equal("Browser: Chrome 131.0", HttpUserAgentInformation.CreateForBrowser("ua", platform: null, "Chrome", "131.0", deviceName: null).ToString());
+        Assert.Equal("Robot: Googlebot", HttpUserAgentInformation.CreateForRobot("ua", "Googlebot").ToString());
+        Assert.Equal("Unknown", HttpUserAgentInformation.CreateForUnknown("ua", platform: null, deviceName: null).ToString());
+    }
+
     [GeneratedRegex("", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex TextRegex();
 }

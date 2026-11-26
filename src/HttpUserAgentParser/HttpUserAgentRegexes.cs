@@ -57,6 +57,7 @@ internal enum HttpUserAgentPlatformRegexId : byte
     Gnu,
     Unix,
     Symbian,
+    Macintosh,
 }
 
 /// <summary>
@@ -123,6 +124,7 @@ internal static partial class HttpUserAgentRegexes
         HttpUserAgentPlatformRegexId.Gnu => Gnu(),
         HttpUserAgentPlatformRegexId.Unix => Unix(),
         HttpUserAgentPlatformRegexId.Symbian => Symbian(),
+        HttpUserAgentPlatformRegexId.Macintosh => Macintosh(),
         _ => null,
     };
 
@@ -170,6 +172,7 @@ internal static partial class HttpUserAgentRegexes
     [GeneratedRegex(@"gnu", Options, MatchTimeoutMilliseconds)] private static partial Regex Gnu();
     [GeneratedRegex(@"unix", Options, MatchTimeoutMilliseconds)] private static partial Regex Unix();
     [GeneratedRegex(@"symbian", Options, MatchTimeoutMilliseconds)] private static partial Regex Symbian();
+    [GeneratedRegex(@"macintosh", Options, MatchTimeoutMilliseconds)] private static partial Regex Macintosh();
 
     // Browsers: pattern = "{token}.*?([0-9\.]+)"
     // The numbered group is public behavior: consumers read the version from Groups[1], so ExplicitCapture must not be used.
@@ -216,5 +219,13 @@ internal static partial class HttpUserAgentRegexes
     [GeneratedRegex(@"UCBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserUCBrowser();
     [GeneratedRegex(@"UCMobile.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserUCMobile();
     [GeneratedRegex(@"HeadlessChrome.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserHeadlessChrome();
+    [GeneratedRegex(@"DuckDuckGo.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserDuckDuckGo();
+    [GeneratedRegex(@"Whale.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserWhale();
+    [GeneratedRegex(@"QQBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserQQBrowser();
+    [GeneratedRegex(@"HuaweiBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserHuaweiBrowser();
+    [GeneratedRegex(@"XiaoMi/MiuiBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserXiaoMiMiuiBrowser();
+    [GeneratedRegex(@"MiuiBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserMiuiBrowser();
+    [GeneratedRegex(@"Instagram.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserInstagram();
+    [GeneratedRegex(@"FBAV.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserFbav();
 #pragma warning restore MA0023
 }

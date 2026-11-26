@@ -76,6 +76,15 @@ public partial class HttpUserAgentPlatformInformationTests
         Assert.Contains(platform, HttpUserAgentStatics.Platforms);
     }
 
+    [Fact]
+    public void ToString_Formats_Name_And_PlatformType()
+    {
+        HttpUserAgentPlatformInformation platform = new(HttpUserAgentPlatformRegexId.Android, "Android", HttpUserAgentPlatformType.Android);
+
+        Assert.Equal("Android (Android)", platform.ToString());
+        Assert.Equal("Unknown", default(HttpUserAgentPlatformInformation).ToString());
+    }
+
     [GeneratedRegex("", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex EmptyRegex();
 

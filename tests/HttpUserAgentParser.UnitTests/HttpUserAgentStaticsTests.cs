@@ -61,6 +61,7 @@ public class HttpUserAgentStaticsTests
         ("gnu", "GNU/Linux", HttpUserAgentPlatformType.Linux),
         ("unix", "Unknown Unix OS", HttpUserAgentPlatformType.Unix),
         ("symbian", "Symbian OS", HttpUserAgentPlatformType.Symbian),
+        ("macintosh", "Macintosh", HttpUserAgentPlatformType.MacOS),
     ];
 
     /// <summary>
@@ -70,7 +71,9 @@ public class HttpUserAgentStaticsTests
     [
         ("OPR", "Opera"), ("Silk", "Amazon Silk"), ("Flock", "Flock"), ("Edge", "Edge"), ("EdgA", "Edge"), ("Edg", "Edge"), ("EdgiOS", "Edge"),
         ("Vivaldi", "Vivaldi"), ("Brave Chrome", "Brave"), ("SamsungBrowser", "Samsung Internet"), ("YaBrowser", "Yandex Browser"),
-        ("UCBrowser", "UC Browser"), ("UCMobile", "UC Browser"), ("Chrome", "Chrome"), ("CriOS", "Chrome"), ("HeadlessChrome", "Chrome"),
+        ("UCBrowser", "UC Browser"), ("UCMobile", "UC Browser"), ("DuckDuckGo", "DuckDuckGo"), ("Whale", "Whale"), ("QQBrowser", "QQ Browser"),
+        ("HuaweiBrowser", "Huawei Browser"), ("XiaoMi/MiuiBrowser", "Miui Browser"), ("MiuiBrowser", "Miui Browser"),
+        ("Instagram", "Instagram"), ("FBAV", "Facebook"), ("Chrome", "Chrome"), ("CriOS", "Chrome"), ("HeadlessChrome", "Chrome"),
         ("Opera.*?Version", "Opera"), ("Opera", "Opera"), ("MSIE", "Internet Explorer"), ("Internet Explorer", "Internet Explorer"),
         ("Trident.* rv", "Internet Explorer"), ("Shiira", "Shiira"), ("Firefox", "Firefox"), ("FxiOS", "Firefox"), ("Chimera", "Chimera"),
         ("Phoenix", "Phoenix"), ("Firebird", "Firebird"), ("Camino", "Camino"), ("Netscape", "Netscape"), ("OmniWeb", "OmniWeb"),

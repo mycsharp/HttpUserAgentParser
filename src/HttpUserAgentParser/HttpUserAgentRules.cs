@@ -72,6 +72,7 @@ internal static class HttpUserAgentRules
         ("bsdi", new(HttpUserAgentPlatformRegexId.Bsdi, "BSDi", HttpUserAgentPlatformType.Unix)),
         ("unix", new(HttpUserAgentPlatformRegexId.Unix, "Unknown Unix OS", HttpUserAgentPlatformType.Unix)),
         ("ppc", new(HttpUserAgentPlatformRegexId.Ppc, "Macintosh", HttpUserAgentPlatformType.MacOS)),
+        ("macintosh", new(HttpUserAgentPlatformRegexId.Macintosh, "Macintosh", HttpUserAgentPlatformType.MacOS)),
     ];
 
     /// <summary>
@@ -97,6 +98,14 @@ internal static class HttpUserAgentRules
         ("Yandex Browser", "YaBrowser", null),
         ("UC Browser", "UCBrowser", null),
         ("UC Browser", "UCMobile", null),
+        ("DuckDuckGo", "DuckDuckGo", null),
+        ("Whale", "Whale", null),
+        ("QQ Browser", "QQBrowser", null),
+        ("Huawei Browser", "HuaweiBrowser", null),
+        ("Miui Browser", "XiaoMi/MiuiBrowser", null),
+        ("Miui Browser", "MiuiBrowser", null),
+        ("Instagram", "Instagram", "Instagram"),
+        ("Facebook", "FBAV", null),
         ("Maxthon", "Maxthon", null),
         // Common browsers
         ("Chrome", "Chrome", null),
