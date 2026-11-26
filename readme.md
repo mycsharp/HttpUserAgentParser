@@ -55,6 +55,15 @@ Version = "90.0.4430.212"
 MobileDeviceType = null
 ```
 
+`ReadOnlySpan<char>` overloads are also available for `GetPlatform`, `TryGetPlatform`, `GetBrowser`, `TryGetBrowser`, `GetRobot`, `TryGetRobot`, `GetMobileDevice`, and `TryGetMobileDevice` — including a zero-allocation browser lookup that slices the version directly from the input span:
+
+```csharp
+if (HttpUserAgentParser.TryGetBrowser(userAgent.AsSpan(), out string? name, out ReadOnlySpan<char> version))
+{
+    // zero allocations
+}
+```
+
 ### Dependency Injection and Caching
 
 For dependency injection mechanisms, the `IHttpUserAgentParserProvider` interface exists, for which built-in or custom caching mechanisms can be used. The use is always:
@@ -81,13 +90,15 @@ Likewise, an in-process cache based on a `ConcurrentDictionary` is provided.
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-    services.AddHttpUserAgentCachedParser(); // uses `HttpUserAgentParserCachedProvider`
+    services.AddHttpUserAgentCachedParser(); // uses HttpUserAgentParserCachedProvider (default limit: 10,000 entries)
+    // or with a custom entry limit:
+    // services.AddHttpUserAgentCachedParser(maxCacheEntries: 4096);
     // or
     // services.AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>();
 }
 ```
 
-This cache has no size limit and no expiration: every distinct user agent string stays in memory as long as the provider lives. Both caches use the exact user agent string as key (ordinal), because the result contains the user agent. Clients choose the `User-Agent` header freely, so use it only for a known, limited set of user agents, e.g. in tests. For web applications, use the `IMemoryCache` implementation, which limits the number of entries and expires them.
+`HttpUserAgentParserCachedProvider` bounds memory usage by rotating the cache atomically once `MaxCacheEntries` (default: `HttpUserAgentParserCachedProvider.DefaultMaxCacheEntries` = `10_000`) is reached; it does not support sliding/absolute expiration. Both caches use the exact user agent string as key (ordinal), because the result contains the user agent. For web applications that need sliding/absolute expiration or fine-grained eviction policies, use the `IMemoryCache` implementation. All DI registration extensions are idempotent (`TryAddSingleton`).
 
 The package [MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache) is required to use the IMemoryCache. This enables the registration of the `IMemoryCache` implementation:
 
@@ -152,16 +163,16 @@ public void MyMethod(IHttpUserAgentParserContextAccessor parserAccessor)
 }
 ```
 
-If you only need the raw header value, use `httpContext.GetUserAgentString()`.
+If you only need the raw header value, use `httpContext.GetUserAgentString()`. `HttpUserAgentParserAccessor.Get(httpContext)` caches the parsed result per request in `HttpContext.Items`, so repeated calls within the same request neither re-parse nor emit duplicate telemetry events.
 
 ## Detection rules
 
 `HttpUserAgentParser.Parse` checks, in this order:
 
 1. **Robots**: search engine crawlers (e.g. Googlebot, Bingbot, Applebot, Bravebot, DuckDuckBot, YandexBot), SEO crawlers (e.g. AhrefsBot, SemrushBot, Screaming Frog) and AI crawlers and AI user agents (e.g. GPTBot, ChatGPT-User, OAI-SearchBot, OAI-AdsBot, ClaudeBot, PerplexityBot, KimiBot, DeepSeekBot, ChatGLM-Spider, Amazonbot, Bytespider, CCBot)
-2. **Platform**: Windows, macOS, iOS, Android, ChromeOS, Linux and others
+2. **Platform**: Windows, macOS (`Mac OS X` / `Macintosh`), iOS, Android, ChromeOS, Linux and others
 3. **Mobile device**: devices and manufacturers before operating systems before mobile browsers before generic tokens (e.g. a Samsung phone reports `Samsung`, an Android phone without manufacturer token `Android`)
-4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Amazon Silk, Yandex Browser, UC Browser and others
+4. **Browser and version**: Chrome, Edge, Firefox, Safari, Opera, Samsung Internet, Amazon Silk, Yandex Browser, UC Browser, DuckDuckGo, Whale, QQ Browser, Huawei Browser, Miui Browser, Instagram, Facebook (`FBAV`) and others
 
 In every list the first matching entry wins. Browser and version tokens only count at the start of a token: at the beginning of the user agent or after a space, tab, `+`, `;`, `(`, `)` or `,`, so `Knowledge/1.0` is no Edge and `VendorVersion/1.0` no version token. The version is read from the browser's own product token (`Chrome/131.0.0.0`), which ends at the next of these characters; Opera and Internet Explorer also accept `Opera 9.50` and `MSIE 6.0`; their separate version tokens (`Version/`, `rv:`) only count after the browser token. If a token has no version, later occurrences of the token are checked, then the next rule. `+` stands for a space as in URL-encoded logs (IIS); decode other encodings such as `%20` before parsing, e.g. with `WebUtility.UrlDecode`.
 
@@ -468,18 +479,18 @@ Notes:
 
 ### Parser performance on .NET 11
 
-Mean time per uncached header on Windows 10 x64, AMD Ryzen 9 9950X, .NET 11.0.0. Each mixed workload processes 5,280 headers per invocation, with equal weight per distinct header. The API snapshot contains 60 captured user agents. [Test inputs and measurements](docs/benchmarks/2026-11-24.md)
+Mean time per uncached header on Windows 10 x64, AMD Ryzen 9 9950X, .NET 11.0.0. Each mixed workload processes 5,280 headers per invocation, with equal weight per distinct header. The API snapshot contains 60 captured user agents. [Test inputs and measurements](docs/benchmarks/2026-11-26.md)
 
 | Workload | v3.1.9 | Current parser | Time change | Allocated per current parse |
 | --- | ---: | ---: | ---: | ---: |
-| Catalog browsers (44) | 318.05 ns | 234.69 ns | −26.2% | 38 B |
-| Catalog crawlers (48) | 378.70 ns | 82.12 ns | −78.3% | 0 B |
-| Full catalog (96) | 373.01 ns | 157.98 ns | −57.6% | 18 B |
-| API snapshot (60) | 398.19 ns | 202.41 ns | −49.2% | 29 B |
-| Googlebot | 8.537 ns | 6.915 ns | −19.0% | 0 B |
-| OAI-AdsBot | 842.291 ns | 139.364 ns | −83.5% | 0 B |
+| Catalog browsers (44) | 314.93 ns | 233.07 ns | −26.0% | 37 B |
+| Catalog crawlers (48) | 366.10 ns | 83.96 ns | −77.1% | 0 B |
+| Full catalog (96) | 372.54 ns | 143.52 ns | −61.5% | 17 B |
+| API snapshot (60) | 424.54 ns | 198.03 ns | −53.4% | 29 B |
+| Googlebot | 15.16 ns | 12.64 ns | −16.6% | 0 B |
+| OAI-AdsBot | 812.68 ns | 132.55 ns | −83.7% | 0 B |
 
-Full-catalog means on the other supported runtimes were 191.49 ns (.NET 8), 196.83 ns (.NET 9) and 166.70 ns (.NET 10). The first Chrome parse on .NET 11 took 13.43 ms and allocated 193,792 B on the calling thread (medians across nine fresh processes).
+Standalone detectors on .NET 11 (`DetectorWorkloadBenchmarks`, full catalog): `GetPlatform` improved from 106.55 ns to **78.06 ns** (−26.7%, 0 B), `GetMobileDevice` from 151.35 ns to **118.87 ns** (−21.5%, 0 B), and the `ReadOnlySpan<char>` `TryGetBrowser` overload allocates **0 B** (vs. 18 B for `GetBrowser`). On .NET 8, `GetPlatform` improved by **−52.3%** and `GetMobileDevice` by **−66.1%**.
 
 ### Library comparison on .NET 11
 
