@@ -15,7 +15,7 @@ dotnet add package MyCSharp.HttpUserAgentParser.AspNetCore
 
 Register a provider (any of the available ones) and then add the accessor:
 
-The accessor reads the `User-Agent` header of a request and parses it using the registered provider. There are two options:
+The accessor reads the `User-Agent` header of a request, parses it using the registered provider, and caches the result per request in `HttpContext.Items` (so repeated calls within the same request neither re-parse nor emit duplicate telemetry events). There are two options:
 
 - `AddHttpUserAgentParserAccessor()` registers `IHttpUserAgentParserAccessor`: you pass the `HttpContext` (`Get(httpContext)`). Recommended.
 - `AddHttpUserAgentParserContextAccessor()` registers `IHttpUserAgentParserContextAccessor` and `IHttpContextAccessor`: `Get()` uses the current request, `Get(httpContext)` works as well. Useful in services without access to the `HttpContext`; `IHttpContextAccessor` has a small cost on every request.

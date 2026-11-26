@@ -503,11 +503,11 @@ BenchmarkDotNet ShortRun, three warm-ups and three measured iterations. UAParser
 
 | Library | Measured operation | Chrome on Windows | Allocated | APIs-Google | Allocated |
 | --- | --- | ---: | ---: | ---: | ---: |
-| MyCSharp | Parse | 241.39 ns | 48 B | 106.15 ns | 0 B |
-| UAParser | GetDefault + Parse | 9,769,158.85 ns | 11,653,583 B | 9,323,358.33 ns | 12,010,118 B |
-| DeviceDetector.NET | New detector + Parse | 5,826,561.20 ns | 5,529,304 B | 7,377,367.19 ns | 10,123,039 B |
-| MyCSharp | Result cache hit | 17.84 ns | 0 B | 12.69 ns | 0 B |
-| UAParser | Reused compiled parser | 125,258.05 ns | 37,400 B | 110,313.30 ns | 45,832 B |
+| MyCSharp | Parse | 257.80 ns | 48 B | 101.34 ns | 0 B |
+| UAParser | GetDefault + Parse | 10,004,667.19 ns | 11,653,583 B | 9,319,852.60 ns | 12,010,118 B |
+| DeviceDetector.NET | New detector + Parse | 6,198,998.44 ns | 5,529,304 B | 7,764,429.43 ns | 10,123,039 B |
+| MyCSharp | Result cache hit | 19.24 ns | 0 B | 13.03 ns | 0 B |
+| UAParser | Reused compiled parser | 124,078.83 ns | 37,400 B | 106,577.78 ns | 45,832 B |
 
 ### Run the benchmarks
 

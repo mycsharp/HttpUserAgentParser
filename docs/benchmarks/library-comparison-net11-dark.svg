@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-labelledby="t d" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
 <title id="t">Library comparison on .NET 11</title>
-<desc id="d">Linear column charts of mean time per call. Single parse with setup: MyCSharp 241 ns and 106 ns, UAParser 9.77 ms and 9.32 ms, DeviceDetector.NET 5.83 ms and 7.38 ms, for Chrome on Windows and APIs-Google. Repeated parse with reused state: MyCSharp result cache hit 17.8 ns and 12.7 ns, UAParser reused compiled parser 125 µs and 110 µs.</desc>
+<desc id="d">Linear column charts of mean time per call. Single parse with setup: MyCSharp 258 ns and 101 ns, UAParser 10.0 ms and 9.32 ms, DeviceDetector.NET 6.20 ms and 7.76 ms, for Chrome on Windows and APIs-Google. Repeated parse with reused state: MyCSharp result cache hit 19.2 ns and 13.0 ns, UAParser reused compiled parser 124 µs and 107 µs.</desc>
 <rect width="960" height="500" fill="#0d1117"/>
 <text x="24.0" y="36.0" font-size="19" font-weight="600" fill="#f0efec" text-anchor="start">Mean time per call on .NET 11</text>
 <text x="24.0" y="60.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="start">Linear scale, lower is better. Each panel has its own axis.</text>
@@ -21,27 +21,27 @@
 <line x1="68" y1="128.0" x2="516" y2="128.0" stroke="#2c2c2a" stroke-width="1"/>
 <text x="60.0" y="132.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">10 ms</text>
 <path d="M104.67,400.00 V400.00 Q104.67,399.99 104.67,399.99 H128.66 Q128.67,399.99 128.67,400.00 V400.00 Z" fill="#3987e5"/>
-<text x="116.7" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">241 ns</text>
+<text x="116.7" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">258 ns</text>
 <path d="M156.67,400.00 V400.00 Q156.67,400.00 156.67,400.00 H180.66 Q180.67,400.00 180.67,400.00 V400.00 Z" fill="#d95926"/>
-<text x="168.7" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">106 ns</text>
+<text x="168.7" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">101 ns</text>
 <text x="142.7" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">MyCSharp</text>
 <text x="142.7" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">Parse</text>
 <rect x="68.7" y="265.0" width="148.0" height="80" fill="#0d1117"/>
 <text x="142.7" y="282.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">Bars too short to draw</text>
 <text x="142.7" y="300.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">at this scale:</text>
-<text x="142.7" y="318.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">24,000× to 88,000×</text>
+<text x="142.7" y="318.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">24,000× to 92,000×</text>
 <text x="142.7" y="336.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">faster</text>
 <line x1="142.7" y1="348.0" x2="142.7" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
-<path d="M254.00,400.00 V138.28 Q254.00,134.28 258.00,134.28 H274.00 Q278.00,134.28 278.00,138.28 V400.00 Z" fill="#3987e5"/>
-<text x="266.0" y="128.3" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.77 ms</text>
-<path d="M306.00,400.00 V150.40 Q306.00,146.40 310.00,146.40 H326.00 Q330.00,146.40 330.00,150.40 V400.00 Z" fill="#d95926"/>
-<text x="318.0" y="140.4" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.32 ms</text>
+<path d="M254.00,400.00 V132.00 Q254.00,128.00 258.00,128.00 H274.00 Q278.00,128.00 278.00,132.00 V400.00 Z" fill="#3987e5"/>
+<text x="266.0" y="122.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">10.0 ms</text>
+<path d="M306.00,400.00 V150.50 Q306.00,146.50 310.00,146.50 H326.00 Q330.00,146.50 330.00,150.50 V400.00 Z" fill="#d95926"/>
+<text x="318.0" y="140.5" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">9.32 ms</text>
 <text x="292.0" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">UAParser</text>
 <text x="292.0" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">GetDefault + Parse</text>
-<path d="M403.33,400.00 V245.52 Q403.33,241.52 407.33,241.52 H423.33 Q427.33,241.52 427.33,245.52 V400.00 Z" fill="#3987e5"/>
-<text x="415.3" y="235.5" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">5.83 ms</text>
-<path d="M455.33,400.00 V203.34 Q455.33,199.34 459.33,199.34 H475.33 Q479.33,199.34 479.33,203.34 V400.00 Z" fill="#d95926"/>
-<text x="467.3" y="193.3" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">7.38 ms</text>
+<path d="M403.33,400.00 V235.36 Q403.33,231.36 407.33,231.36 H423.33 Q427.33,231.36 427.33,235.36 V400.00 Z" fill="#3987e5"/>
+<text x="415.3" y="225.4" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">6.20 ms</text>
+<path d="M455.33,400.00 V192.93 Q455.33,188.93 459.33,188.93 H475.33 Q479.33,188.93 479.33,192.93 V400.00 Z" fill="#d95926"/>
+<text x="467.3" y="182.9" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">7.76 ms</text>
 <text x="441.3" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">DeviceDetector.NET</text>
 <text x="441.3" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">New detector + Parse</text>
 <line x1="68" y1="400" x2="516" y2="400" stroke="#383835" stroke-width="1"/>
@@ -60,21 +60,21 @@
 <line x1="628" y1="128.0" x2="940" y2="128.0" stroke="#2c2c2a" stroke-width="1"/>
 <text x="620.0" y="132.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="end" style="font-variant-numeric: tabular-nums">150 µs</text>
 <path d="M668.00,400.00 V400.00 Q668.00,399.97 668.03,399.97 H691.97 Q692.00,399.97 692.00,400.00 V400.00 Z" fill="#3987e5"/>
-<text x="680.0" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">17.8 ns</text>
+<text x="680.0" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">19.2 ns</text>
 <path d="M720.00,400.00 V400.00 Q720.00,399.98 720.02,399.98 H743.98 Q744.00,399.98 744.00,400.00 V400.00 Z" fill="#d95926"/>
-<text x="732.0" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">12.7 ns</text>
+<text x="732.0" y="394.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">13.0 ns</text>
 <text x="706.0" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">MyCSharp</text>
 <text x="706.0" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">Result cache hit</text>
 <rect x="632.0" y="265.0" width="148.0" height="80" fill="#0d1117"/>
 <text x="706.0" y="282.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">Bars too short to draw</text>
 <text x="706.0" y="300.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">at this scale:</text>
-<text x="706.0" y="318.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">7,000× to 8,700×</text>
+<text x="706.0" y="318.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">6,400× to 8,200×</text>
 <text x="706.0" y="336.0" font-size="13" font-weight="400" fill="#c3c2b7" text-anchor="middle">faster</text>
 <line x1="706.0" y1="348.0" x2="706.0" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
-<path d="M824.00,400.00 V176.87 Q824.00,172.87 828.00,172.87 H844.00 Q848.00,172.87 848.00,176.87 V400.00 Z" fill="#3987e5"/>
-<text x="836.0" y="166.9" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">125 µs</text>
-<path d="M876.00,400.00 V203.97 Q876.00,199.97 880.00,199.97 H896.00 Q900.00,199.97 900.00,203.97 V400.00 Z" fill="#d95926"/>
-<text x="888.0" y="194.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">110 µs</text>
+<path d="M824.00,400.00 V179.00 Q824.00,175.00 828.00,175.00 H844.00 Q848.00,175.00 848.00,179.00 V400.00 Z" fill="#3987e5"/>
+<text x="836.0" y="169.0" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">124 µs</text>
+<path d="M876.00,400.00 V210.74 Q876.00,206.74 880.00,206.74 H896.00 Q900.00,206.74 900.00,210.74 V400.00 Z" fill="#d95926"/>
+<text x="888.0" y="200.7" font-size="12" font-weight="400" fill="#f0efec" text-anchor="middle" style="font-variant-numeric: tabular-nums">107 µs</text>
 <text x="862.0" y="422.0" font-size="13" font-weight="600" fill="#f0efec" text-anchor="middle">UAParser</text>
 <text x="862.0" y="440.0" font-size="12" font-weight="400" fill="#c3c2b7" text-anchor="middle">Reused compiled parser</text>
 <line x1="628" y1="400" x2="940" y2="400" stroke="#383835" stroke-width="1"/>

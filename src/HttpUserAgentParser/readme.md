@@ -2,10 +2,9 @@
 
 Fast HTTP User-Agent parsing for .NET.
 
-- Allocation-free detection with vectorized searches (`SearchValues<string>` on .NET 9+); for a user agent without surrounding
-  white space only the version string is allocated; no regular expressions in the parser
+- Allocation-free detection with vectorized searches (`SearchValues<string>` on .NET 9+) and a 128-bit shared rule index; `ReadOnlySpan<char>` overloads including zero-allocation `TryGetBrowser(ReadOnlySpan<char>, out string?, out ReadOnlySpan<char>)`; no regular expressions in the parser
 - Trimming and Native AOT compatible
-- Detects browsers including Amazon Silk, and search, SEO and AI crawlers including Bravebot, Screaming Frog SEO Spider, KimiBot, DeepSeekBot, ChatGLM-Spider and OAI-AdsBot
+- Detects browsers and in-app WebViews including Amazon Silk, DuckDuckGo, Whale, QQ Browser, Huawei Browser, Miui Browser, Instagram and Facebook (`FBAV`), and search, SEO and AI crawlers including Bravebot, Screaming Frog SEO Spider, KimiBot, DeepSeekBot, ChatGLM-Spider and OAI-AdsBot
 
 Repository:
 https://github.com/mycsharp/HttpUserAgentParser
@@ -51,14 +50,16 @@ services
 
 ```csharp
 services
-	.AddHttpUserAgentCachedParser();
+	.AddHttpUserAgentCachedParser(); // default limit: 10,000 entries
+// or: .AddHttpUserAgentCachedParser(maxCacheEntries: 4096);
 // or: .AddHttpUserAgentParser<HttpUserAgentParserCachedProvider>();
 ```
 
-This cache has no size limit and no expiration: every distinct user agent string stays in memory as long as the provider lives.
-The key is the exact user agent string (ordinal).
-Use it only for a known, limited set of user agents (e.g. in tests); for web applications use
+`HttpUserAgentParserCachedProvider` bounds memory usage by rotating the cache atomically once `MaxCacheEntries`
+(default: `HttpUserAgentParserCachedProvider.DefaultMaxCacheEntries` = `10_000`) is reached; it has no sliding/absolute expiration.
+The key is the exact user agent string (ordinal). For web applications that need expiration or fine-grained eviction policies, use
 [MyCSharp.HttpUserAgentParser.MemoryCache](https://www.nuget.org/packages/MyCSharp.HttpUserAgentParser.MemoryCache).
+All DI registration extensions are idempotent (`TryAddSingleton`).
 
 ## Telemetry (EventCounters)
 
