@@ -144,40 +144,17 @@
     <NuGetAuditLevel>low</NuGetAuditLevel>
   </PropertyGroup>
 
-  <!-- Global coverage settings applied to all test projects -->
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true'" Label="Coverage">
-    <CollectCoverage>true</CollectCoverage>
-    <CoverletOutputFormat>lcov,opencover,cobertura</CoverletOutputFormat>
-    <CoverletOutput>$(MSBuildThisFileDirectory)TestResults/coverage/$(TargetFramework)/$(MSBuildProjectName).</CoverletOutput>
-    <ExcludeByAttribute>GeneratedCodeAttribute</ExcludeByAttribute>
-    <UseSourceLink>true</UseSourceLink>
-    <!-- Enforce full line, branch and method coverage for every target framework -->
-    <Threshold>100</Threshold>
-    <ThresholdType>line,branch,method</ThresholdType>
-    <ThresholdStat>total</ThresholdStat>
+  <!-- Global Microsoft.Testing.Platform settings applied to all test projects -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'" Label="Testing">
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup Label="Default Test Dependencies" Condition="'$(IsTestProject)' == 'true'">
-    <PackageReference Include="coverlet.msbuild" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <!-- Coverlet's MSBuild integration runs through VSTest. -->
-    <PackageReference Include="xunit.v3.mtp-off" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+    <PackageReference Include="coverlet.MTP" />
+    <None Update="testconfig.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('testconfig.json')" />
   </ItemGroup>
-
-  <!-- Limit coverage to the target assemblies for each test project -->
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.UnitTests'" Label="CoverageFilter">
-    <Include>[MyCSharp.HttpUserAgentParser]*</Include>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.MemoryCache.UnitTests'" Label="CoverageFilter">
-    <Include>[MyCSharp.HttpUserAgentParser.MemoryCache]*</Include>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'HttpUserAgentParser.AspNetCore.UnitTests'" Label="CoverageFilter">
-    <Include>[MyCSharp.HttpUserAgentParser.AspNetCore]*</Include>
-  </PropertyGroup>
 
   <PropertyGroup Label="Roslyn package assets">
     <!-- The Roslyn packages below only pin the Roslyn version used by the analyzers; their runtime assets

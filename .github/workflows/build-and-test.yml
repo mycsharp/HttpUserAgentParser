@@ -79,7 +79,7 @@ jobs:
         run: dotnet build --configuration "$CONFIGURATION" --no-restore "-p:Version=$PACKAGE_VERSION"
 
       - name: Test
-        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal --logger "trx;LogFilePrefix=test-results"
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --output Normal --report-trx --coverlet --results-directory ./TestResults --results-directory-layout per-module
 
       - name: Upload test results
         if: always() && inputs.upload-test-results
@@ -87,8 +87,8 @@ jobs:
         with:
           name: test-results
           path: |
-            **/TestResults/**/*.trx
-            TestResults/coverage/**/*.cobertura.xml
+            TestResults/**/*.trx
+            TestResults/**/coverage.cobertura.*.xml
 
       # Always packs to validate the packages (breaking changes against the baseline); also creates the .snupkg symbol packages
       - name: Pack NuGet packages

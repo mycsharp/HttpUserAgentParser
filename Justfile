@@ -43,14 +43,13 @@ format-check:
     dotnet format --verify-no-changes --verbosity minimal
 
 test *ARGS:
-    dotnet test --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal {{ARGS}}
+    dotnet test --configuration "{{CONFIG}}" --framework "{{TFM}}" --no-logo -v minimal {{ARGS}}
 
-test-cov:
-    dotnet test --configuration "{{CONFIG}}" --nologo --verbosity minimal -p:CollectCoverage=true
-
+test-cov *ARGS:
+    dotnet test --configuration "{{CONFIG}}" --no-logo -v minimal --coverlet --results-directory "./TestResults" --results-directory-layout per-module {{ARGS}}
 
 test-filter QUERY:
-    dotnet test --configuration "{{CONFIG}}" --framework "{{TFM}}" --nologo --verbosity minimal --filter "{{QUERY}}"
+    dotnet test --configuration "{{CONFIG}}" --framework "{{TFM}}" --no-logo -v minimal --filter "{{QUERY}}"
 
 # ===== Packaging / Release =====
 # Validates against the latest nuget.org release of the major version in version.json (none for a new major version)
