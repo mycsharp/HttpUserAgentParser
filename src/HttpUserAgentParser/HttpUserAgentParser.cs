@@ -61,14 +61,14 @@ public static class HttpUserAgentParser
         userAgent = Cleanup(userAgent);
         return robots.MatchFirst(userAgent) is { } first
             ? HttpUserAgentInformation.CreateForRobot(userAgent, first)
-            : Detect(userAgent, robots, AnalyzeUserAgent);
+            : Detect(userAgent.AsSpan(), (userAgent, robots), static (original, ua, state) => AnalyzeUserAgent(state.userAgent, original, ua, state.robots));
     }
 
-    private static HttpUserAgentInformation AnalyzeUserAgent(string userAgent, ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
+    private static HttpUserAgentInformation AnalyzeUserAgent(string userAgent, ReadOnlySpan<char> original, ReadOnlySpan<char> ua, HttpUserAgentRobotSet robots)
     {
         UserAgentRuleIndex.RuleMasks candidates = UserAgentRuleIndex.BuiltIn.Find(ua);
-        ulong robotMask = ReferenceEquals(robots, HttpUserAgentRules.DefaultRobotSet) ? candidates.Robots : ulong.MaxValue;
-        if (robots.MatchAfterFirst(userAgent, ua, robotMask) is { } robotName)
+        UInt128 robotMask = ReferenceEquals(robots, HttpUserAgentRules.DefaultRobotSet) ? candidates.Robots : UInt128.MaxValue;
+        if (robots.MatchAfterFirst(original, ua, robotMask) is { } robotName)
         {
             return HttpUserAgentInformation.CreateForRobot(userAgent, robotName);
         }
@@ -84,22 +84,19 @@ public static class HttpUserAgentParser
         return HttpUserAgentInformation.CreateForUnknown(userAgent, platform, mobileDeviceType);
     }
 
-    private delegate T Detector<TState, T>(string original, ReadOnlySpan<char> decoded, TState state);
+    private delegate T Detector<TState, T>(ReadOnlySpan<char> original, ReadOnlySpan<char> decoded, TState state);
     private delegate T ProductDetector<T>(ReadOnlySpan<char> products);
 
-    private static T DetectProduct<T>(string userAgent, ProductDetector<T> detector)
+    private static T DetectProduct<T>(ReadOnlySpan<char> userAgent, ProductDetector<T> detector)
         => Detect(userAgent, detector, static (_, ua, detect) => detect(ua));
 
     // IIS logs use '+' for spaces, including spaces inside product names. Keep the original
     // string in the result and share the decoded span across all detectors.
-    private static T Detect<TState, T>(string userAgent, TState state, Detector<TState, T> detect)
+    private static T Detect<TState, T>(ReadOnlySpan<char> ua, TState state, Detector<TState, T> detect)
     {
-        ArgumentNullException.ThrowIfNull(userAgent);
-
-        ReadOnlySpan<char> ua = userAgent.AsSpan();
         if (!ua.Contains('+'))
         {
-            return detect(userAgent, ua, state);
+            return detect(ua, ua, state);
         }
 
         // 512 chars are 1 KiB of stack. The parser runs at whatever stack depth the caller has already
@@ -113,15 +110,20 @@ public static class HttpUserAgentParser
             Span<char> decoded = stackalloc char[MaxStackLength];
             decoded = decoded[..ua.Length];
             ua.Replace(decoded, '+', ' ');
-            return detect(userAgent, decoded, state);
+            return detect(ua, decoded, state);
         }
 
         char[] rented = ArrayPool<char>.Shared.Rent(ua.Length);
-        Span<char> rentedSpan = rented.AsSpan(0, ua.Length);
-        ua.Replace(rentedSpan, '+', ' ');
-        T result = detect(userAgent, rentedSpan, state);
-        ArrayPool<char>.Shared.Return(rented);
-        return result;
+        try
+        {
+            Span<char> rentedSpan = rented.AsSpan(0, ua.Length);
+            ua.Replace(rentedSpan, '+', ' ');
+            return detect(ua, rentedSpan, state);
+        }
+        finally
+        {
+            ArrayPool<char>.Shared.Return(rented);
+        }
     }
 
     /// <summary>
@@ -137,9 +139,18 @@ public static class HttpUserAgentParser
     /// returns the platform or null
     /// </summary>
     public static HttpUserAgentPlatformInformation? GetPlatform(string userAgent)
-        => DetectProduct(userAgent, static ua => FindPlatform(ua, ulong.MaxValue));
+    {
+        ArgumentNullException.ThrowIfNull(userAgent);
+        return GetPlatform(userAgent.AsSpan());
+    }
 
-    private static HttpUserAgentPlatformInformation? FindPlatform(ReadOnlySpan<char> ua, ulong mask)
+    /// <summary>
+    /// returns the platform or null
+    /// </summary>
+    public static HttpUserAgentPlatformInformation? GetPlatform(ReadOnlySpan<char> userAgent)
+        => DetectProduct(userAgent, static ua => FindPlatform(ua, UserAgentRuleIndex.BuiltIn.Find(ua).Platforms));
+
+    private static HttpUserAgentPlatformInformation? FindPlatform(ReadOnlySpan<char> ua, UInt128 mask)
     {
         (string Token, HttpUserAgentPlatformInformation Platform)[] rules = HttpUserAgentRules.Platforms;
         UserAgentRuleIndex.Candidates candidates = new(mask, rules.Length);
@@ -182,6 +193,15 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
+    /// returns true if platform was found
+    /// </summary>
+    public static bool TryGetPlatform(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out HttpUserAgentPlatformInformation? platform)
+    {
+        platform = GetPlatform(userAgent);
+        return platform is not null;
+    }
+
+    /// <summary>
     /// returns the browser or null
     /// </summary>
     /// <remarks>
@@ -190,9 +210,26 @@ public static class HttpUserAgentParser
     /// or after a space, tab, <c>+</c>, <c>;</c>, <c>(</c>, <c>)</c> or <c>,</c>.
     /// </remarks>
     public static (string Name, string? Version)? GetBrowser(string userAgent)
+    {
+        ArgumentNullException.ThrowIfNull(userAgent);
+        return GetBrowser(userAgent.AsSpan());
+    }
+
+    /// <summary>
+    /// returns the browser or null
+    /// </summary>
+    /// <remarks>
+    /// Rules are evaluated in priority order (specific browsers before the browsers their user agents contain); the first rule
+    /// with a version wins. Browser and version tokens only count at the start of a token, i.e. at the beginning of the user agent
+    /// or after a space, tab, <c>+</c>, <c>;</c>, <c>(</c>, <c>)</c> or <c>,</c>.
+    /// </remarks>
+    public static (string Name, string? Version)? GetBrowser(ReadOnlySpan<char> userAgent)
         => DetectProduct(userAgent, static ua => FindBrowser(ua, UserAgentRuleIndex.BuiltIn.Find(ua).Browsers));
 
-    private static (string Name, string? Version)? FindBrowser(ReadOnlySpan<char> ua, ulong mask)
+    private static (string Name, string? Version)? FindBrowser(ReadOnlySpan<char> ua, UInt128 mask)
+        => FindBrowserRange(ua, mask) is { } match ? (match.Name, ua[match.Version].ToString()) : null;
+
+    private static (string Name, Range Version)? FindBrowserRange(ReadOnlySpan<char> ua, UInt128 mask)
     {
         (string Name, string DetectToken, string? VersionToken)[] rules = HttpUserAgentRules.Browsers;
         UserAgentRuleIndex.Candidates candidates = new(mask, rules.Length);
@@ -207,7 +244,7 @@ public static class HttpUserAgentParser
 
             if (TryReadBrowserVersion(ua, detectToken, detectIndex, versionToken, out Range version))
             {
-                return (name, ua[version].ToString());
+                return (name, version);
             }
         }
 
@@ -352,12 +389,45 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
+    /// returns true if browser was found
+    /// </summary>
+    public static bool TryGetBrowser(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out (string Name, string? Version)? browser)
+    {
+        browser = GetBrowser(userAgent);
+        return browser is not null;
+    }
+
+    /// <summary>
+    /// returns true if browser was found, slicing <paramref name="version"/> directly from <paramref name="userAgent"/> without allocating a version string
+    /// </summary>
+    public static bool TryGetBrowser(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out string? name, out ReadOnlySpan<char> version)
+    {
+        if (DetectProduct(userAgent, static ua => FindBrowserRange(ua, UserAgentRuleIndex.BuiltIn.Find(ua).Browsers)) is { } match)
+        {
+            name = match.Name;
+            version = userAgent[match.Version];
+            return true;
+        }
+
+        name = null;
+        version = default;
+        return false;
+    }
+
+    /// <summary>
     /// returns the robot or null
     /// </summary>
     public static string? GetRobot(string userAgent)
     {
         ArgumentNullException.ThrowIfNull(userAgent);
+        return GetRobot(userAgent.AsSpan());
+    }
 
+    /// <summary>
+    /// returns the robot or null
+    /// </summary>
+    public static string? GetRobot(ReadOnlySpan<char> userAgent)
+    {
         HttpUserAgentRobotSet robots = HttpUserAgentRules.RobotSet;
         return robots.MatchFirst(userAgent)
             ?? Detect(userAgent, robots, static (original, decoded, rules) => rules.MatchAfterFirst(original, decoded));
@@ -373,14 +443,38 @@ public static class HttpUserAgentParser
     }
 
     /// <summary>
+    /// returns true if robot was found
+    /// </summary>
+    public static bool TryGetRobot(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out string? robotName)
+    {
+        robotName = GetRobot(userAgent);
+        return robotName is not null;
+    }
+
+    /// <summary>
     /// returns the device or null
     /// </summary>
     public static string? GetMobileDevice(string userAgent)
-        => DetectProduct(userAgent, static ua => FindMobileDevice(ua, ulong.MaxValue));
-
-    private static string? FindMobileDevice(ReadOnlySpan<char> ua, ulong mask)
     {
-        int index = mask != ulong.MaxValue
+        ArgumentNullException.ThrowIfNull(userAgent);
+        return GetMobileDevice(userAgent.AsSpan());
+    }
+
+    /// <summary>
+    /// returns the device or null
+    /// </summary>
+    public static string? GetMobileDevice(ReadOnlySpan<char> userAgent)
+#if NET9_0_OR_GREATER
+        // On .NET 9+, MobileMatcher uses vectorized SearchValues<string>, which is faster for a standalone
+        // device lookup than indexing all four tables in UserAgentRuleIndex.
+        => DetectProduct(userAgent, static ua => FindMobileDevice(ua, UInt128.MaxValue));
+#else
+        => DetectProduct(userAgent, static ua => FindMobileDevice(ua, UserAgentRuleIndex.BuiltIn.Find(ua).Devices));
+#endif
+
+    private static string? FindMobileDevice(ReadOnlySpan<char> ua, UInt128 mask)
+    {
+        int index = mask != UInt128.MaxValue
             ? UserAgentRuleIndex.FindKey(ua, HttpUserAgentRules.MobileKeys, mask)
             : HttpUserAgentRules.MobileMatcher.Find(ua, 0);
         return index >= 0 ? HttpUserAgentRules.Mobiles[index].Value : null;
@@ -390,6 +484,15 @@ public static class HttpUserAgentParser
     /// returns true if device was found
     /// </summary>
     public static bool TryGetMobileDevice(string userAgent, [NotNullWhen(true)] out string? device)
+    {
+        device = GetMobileDevice(userAgent);
+        return device is not null;
+    }
+
+    /// <summary>
+    /// returns true if device was found
+    /// </summary>
+    public static bool TryGetMobileDevice(ReadOnlySpan<char> userAgent, [NotNullWhen(true)] out string? device)
     {
         device = GetMobileDevice(userAgent);
         return device is not null;

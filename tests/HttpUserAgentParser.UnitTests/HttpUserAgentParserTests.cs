@@ -469,4 +469,46 @@ public class HttpUserAgentParserTests
         Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetMobileDevice(null!));
         Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetMobileDevice(null!, out _));
     }
+
+    [Fact]
+    public void Span_Overloads_Match_String_Overloads_Including_Zero_Alloc_Browser_Version()
+    {
+        ReadOnlySpan<char> ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/90.0.4430.78 Mobile/15E148 Safari/604.1";
+
+        Assert.Equal("iOS", HttpUserAgentParser.GetPlatform(ua)?.Name);
+        Assert.True(HttpUserAgentParser.TryGetPlatform(ua, out HttpUserAgentPlatformInformation? platform));
+        Assert.Equal("iOS", platform.Value.Name);
+
+        Assert.Equal(("Chrome", "90.0.4430.78"), HttpUserAgentParser.GetBrowser(ua));
+        Assert.True(HttpUserAgentParser.TryGetBrowser(ua, out (string Name, string? Version)? browser));
+        Assert.Equal(("Chrome", "90.0.4430.78"), browser);
+
+        Assert.True(HttpUserAgentParser.TryGetBrowser(ua, out string? browserName, out ReadOnlySpan<char> browserVersion));
+        Assert.Equal("Chrome", browserName);
+        Assert.Equal("90.0.4430.78", browserVersion.ToString());
+
+        Assert.Equal("Apple iPhone", HttpUserAgentParser.GetMobileDevice(ua));
+        Assert.True(HttpUserAgentParser.TryGetMobileDevice(ua, out string? device));
+        Assert.Equal("Apple iPhone", device);
+        Assert.Equal("Apple iPhone", HttpUserAgentParser.GetMobileDevice(new string('x', 260) + " iPhone"));
+
+        ReadOnlySpan<char> iisUa = "Mozilla/5.0+(Windows+NT+10.0)+Brave+Chrome/99.1";
+        Assert.True(HttpUserAgentParser.TryGetBrowser(iisUa, out string? iisName, out ReadOnlySpan<char> iisVersion));
+        Assert.Equal("Brave", iisName);
+        Assert.Equal("99.1", iisVersion.ToString());
+
+        ReadOnlySpan<char> robotUa = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
+        Assert.Equal("Googlebot", HttpUserAgentParser.GetRobot(robotUa));
+        Assert.True(HttpUserAgentParser.TryGetRobot(robotUa, out string? robotName));
+        Assert.Equal("Googlebot", robotName);
+
+        ReadOnlySpan<char> unknown = "CustomClient";
+        Assert.False(HttpUserAgentParser.TryGetPlatform(unknown, out _));
+        Assert.False(HttpUserAgentParser.TryGetBrowser(unknown, out _));
+        Assert.False(HttpUserAgentParser.TryGetBrowser(unknown, out string? noName, out ReadOnlySpan<char> noVersion));
+        Assert.Null(noName);
+        Assert.True(noVersion.IsEmpty);
+        Assert.False(HttpUserAgentParser.TryGetRobot(unknown, out _));
+        Assert.False(HttpUserAgentParser.TryGetMobileDevice(unknown, out _));
+    }
 }

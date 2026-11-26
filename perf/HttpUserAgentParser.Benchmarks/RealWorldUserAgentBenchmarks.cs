@@ -115,3 +115,116 @@ public class MixedWorkloadBenchmarks
     }
 #endif
 }
+
+/// <summary>
+/// Benchmarks the standalone detector methods (<c>GetPlatform</c>, <c>GetMobileDevice</c>, <c>GetBrowser</c> and zero-allocation span <c>TryGetBrowser</c>)
+/// over the mixed real-world workload.
+/// </summary>
+[MemoryDiagnoser]
+public class DetectorWorkloadBenchmarks
+{
+    private const int OperationsPerInvoke = 5280;
+
+    private string[] _userAgents;
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        IReadOnlyList<string> source = UserAgentCatalog.All;
+        _userAgents = [.. Enumerable.Range(0, OperationsPerInvoke).Select(i => source[i % source.Count])];
+    }
+
+    [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+    public int GetPlatform()
+    {
+        int found = 0;
+        foreach (string userAgent in _userAgents)
+        {
+            if (Parser.GetPlatform(userAgent) is not null)
+            {
+                found++;
+            }
+        }
+
+        return found;
+    }
+
+#if BENCHMARK_BASELINE
+    [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+    public int GetPlatformBaseline()
+    {
+        int found = 0;
+        foreach (string userAgent in _userAgents)
+        {
+            if (Baseline::MyCSharp.HttpUserAgentParser.HttpUserAgentParser.GetPlatform(userAgent) is not null)
+            {
+                found++;
+            }
+        }
+
+        return found;
+    }
+#endif
+
+    [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+    public int GetMobileDevice()
+    {
+        int found = 0;
+        foreach (string userAgent in _userAgents)
+        {
+            if (Parser.GetMobileDevice(userAgent) is not null)
+            {
+                found++;
+            }
+        }
+
+        return found;
+    }
+
+#if BENCHMARK_BASELINE
+    [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+    public int GetMobileDeviceBaseline()
+    {
+        int found = 0;
+        foreach (string userAgent in _userAgents)
+        {
+            if (Baseline::MyCSharp.HttpUserAgentParser.HttpUserAgentParser.GetMobileDevice(userAgent) is not null)
+            {
+                found++;
+            }
+        }
+
+        return found;
+    }
+#endif
+
+    [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+    public int GetBrowser()
+    {
+        int found = 0;
+        foreach (string userAgent in _userAgents)
+        {
+            if (Parser.GetBrowser(userAgent) is not null)
+            {
+                found++;
+            }
+        }
+
+        return found;
+    }
+
+    [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+    public int TryGetBrowserSpan()
+    {
+        int found = 0;
+        foreach (string userAgent in _userAgents)
+        {
+            if (Parser.TryGetBrowser(userAgent.AsSpan(), out _, out _))
+            {
+                found++;
+            }
+        }
+
+        return found;
+    }
+}

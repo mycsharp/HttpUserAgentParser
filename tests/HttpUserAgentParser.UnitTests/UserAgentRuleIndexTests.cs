@@ -24,9 +24,9 @@ public class UserAgentRuleIndexTests
                 {
                     string header = prefix + keys[i].ToUpperInvariant();
                     UserAgentRuleIndex.RuleMasks masks = UserAgentRuleIndex.BuiltIn.Find(header);
-                    ulong[] lanes = [masks.Robots, masks.Platforms, masks.Devices, masks.Browsers];
+                    UInt128[] lanes = [masks.Robots, masks.Platforms, masks.Devices, masks.Browsers];
                     int expected = Array.FindIndex(keys, key => header.Contains(key, StringComparison.OrdinalIgnoreCase));
-                    Assert.NotEqual(0UL, lanes[table] & (1UL << (i % 64)));
+                    Assert.NotEqual(UInt128.Zero, lanes[table] & ((UInt128)1 << (i % 128)));
                     Assert.Equal(expected, UserAgentRuleIndex.FindKey(header, keys, lanes[table]));
                 }
             }
@@ -34,14 +34,35 @@ public class UserAgentRuleIndexTests
     }
 
     [Fact]
+    public void Built_In_Rule_Tables_Fit_In_128_Bits_Without_Aliasing()
+    {
+        Assert.True(HttpUserAgentRules.DefaultRobotSet.Keys.Length <= 128);
+        Assert.True(HttpUserAgentRules.Platforms.Length <= 128);
+        Assert.True(HttpUserAgentRules.MobileKeys.Length <= 128);
+        Assert.True(HttpUserAgentRules.Browsers.Length <= 128);
+    }
+
+    [Fact]
+    public void Rule_Tables_Beyond_128_Entries_Match_Exact_Key()
+    {
+        string[] keys = [.. Enumerable.Range(0, 130).Select(static i => $"RuleKey{i:D3}")];
+        UserAgentRuleIndex index = new(keys, [], [], []);
+
+        Assert.Equal(129, UserAgentRuleIndex.FindKey("RuleKey129", keys, index.Find("RuleKey129").Robots));
+        Assert.Equal(65, UserAgentRuleIndex.FindKey("RuleKey065", keys, index.Find("RuleKey065").Robots));
+        Assert.Equal(-1, UserAgentRuleIndex.FindKey("NoMatchHere", keys, index.Find("NoMatchHere").Robots));
+    }
+
+    [Fact]
     public void Long_Headers_Use_All_Rules_At_The_Length_Threshold()
     {
         UserAgentRuleIndex index = new(["Safari"], [], [], []);
-        Assert.Equal(0UL, index.Find(new string('x', 255)).Robots);
+        Assert.Equal(UInt128.Zero, index.Find(new string('x', 255)).Robots);
         string header = new string('x', 250) + "Safari";
-        ulong mask = index.Find(header).Robots;
-        Assert.Equal(ulong.MaxValue, mask);
+        UInt128 mask = index.Find(header).Robots;
+        Assert.Equal(UInt128.MaxValue, mask);
         Assert.Equal(0, UserAgentRuleIndex.FindKey(header, ["Safari"], mask));
+        Assert.Equal(-1, UserAgentRuleIndex.FindKey(new string('x', 260), ["Safari"], UInt128.MaxValue));
     }
 
     [Fact]

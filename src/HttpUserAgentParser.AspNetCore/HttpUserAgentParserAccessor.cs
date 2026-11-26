@@ -18,6 +18,7 @@ public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAg
     : IHttpUserAgentParserAccessor
 {
     private readonly IHttpUserAgentParserProvider _httpUserAgentParser = httpUserAgentParser;
+    private readonly object _httpContextItemKey = new();
 
     /// <inheritdoc/>
     public string? GetHttpContextUserAgent(HttpContext httpContext)
@@ -26,12 +27,19 @@ public class HttpUserAgentParserAccessor(IHttpUserAgentParserProvider httpUserAg
     /// <inheritdoc/>
     public HttpUserAgentInformation? Get(HttpContext httpContext)
     {
-        string? httpUserAgent = GetHttpContextUserAgent(httpContext);
-        if (string.IsNullOrWhiteSpace(httpUserAgent))
+        ArgumentNullException.ThrowIfNull(httpContext);
+
+        if (httpContext.Items.TryGetValue(_httpContextItemKey, out object? cached))
         {
-            return null;
+            return (HttpUserAgentInformation?)cached;
         }
 
-        return _httpUserAgentParser.Parse(httpUserAgent);
+        string? httpUserAgent = GetHttpContextUserAgent(httpContext);
+        HttpUserAgentInformation? result = string.IsNullOrWhiteSpace(httpUserAgent)
+            ? null
+            : _httpUserAgentParser.Parse(httpUserAgent);
+
+        httpContext.Items[_httpContextItemKey] = result;
+        return result;
     }
 }

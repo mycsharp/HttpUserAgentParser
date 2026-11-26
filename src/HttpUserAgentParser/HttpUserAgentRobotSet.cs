@@ -40,9 +40,15 @@ internal sealed class HttpUserAgentRobotSet
     /// <summary>
     /// Matches both IIS-encoded names and literal plus signs in custom keys, in configured priority order.
     /// </summary>
-    public string? MatchAfterFirst(string original, ReadOnlySpan<char> decoded, ulong mask = ulong.MaxValue)
+    public string? MatchAfterFirst(ReadOnlySpan<char> original, ReadOnlySpan<char> decoded)
+        => MatchAfterFirst(original, decoded, UInt128.MaxValue);
+
+    /// <summary>
+    /// Matches both IIS-encoded names and literal plus signs in custom keys, in configured priority order.
+    /// </summary>
+    public string? MatchAfterFirst(ReadOnlySpan<char> original, ReadOnlySpan<char> decoded, UInt128 mask)
     {
-        int index = mask != ulong.MaxValue
+        int index = mask != UInt128.MaxValue
             ? UserAgentRuleIndex.FindKey(decoded, Keys, mask)
             : FindAfterFirst(decoded);
         foreach (int literal in _literalPlusRules)
@@ -52,7 +58,7 @@ internal sealed class HttpUserAgentRobotSet
                 break;
             }
 
-            if (original.AsSpan().Contains(Keys[literal], StringComparison.OrdinalIgnoreCase))
+            if (original.Contains(Keys[literal], StringComparison.OrdinalIgnoreCase))
             {
                 return ReadOnlyEntries[literal].Value;
             }
