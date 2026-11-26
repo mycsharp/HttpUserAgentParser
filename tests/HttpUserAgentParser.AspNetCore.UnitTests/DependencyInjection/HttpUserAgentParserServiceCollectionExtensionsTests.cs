@@ -76,4 +76,13 @@ public class HttpUserAgentParserDependencyInjectionOptionsExtensionsTests
         Assert.Single(provider.GetServices<IHttpUserAgentParserAccessor>());
         Assert.Single(provider.GetServices<IHttpUserAgentParserContextAccessor>());
     }
+
+    [Fact]
+    public void Accessor_Registrations_Throw_When_Options_Is_Null()
+    {
+        HttpUserAgentParserDependencyInjectionOptions options = null!;
+
+        Assert.Throws<ArgumentNullException>(() => options.AddHttpUserAgentParserAccessor());
+        Assert.Throws<ArgumentNullException>(() => options.AddHttpUserAgentParserContextAccessor());
+    }
 }

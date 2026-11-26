@@ -34,4 +34,12 @@ public class HttpContextExtensionsTests
         Assert.Null(accessor.Get(ctx));
         provider.DidNotReceiveWithAnyArgs().Parse(default!);
     }
+
+    [Fact]
+    public void GetUserAgentString_Throws_When_HttpContext_Is_Null()
+    {
+        HttpContext ctx = null!;
+
+        Assert.Throws<ArgumentNullException>(() => ctx.GetUserAgentString());
+    }
 }

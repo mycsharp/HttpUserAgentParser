@@ -199,10 +199,10 @@ internal static partial class HttpUserAgentRegexes
     [GeneratedRegex(@"Netscape.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserNetscape();
     [GeneratedRegex(@"OmniWeb.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserOmniWeb();
     [GeneratedRegex(@"Version.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserVersion();
-    [GeneratedRegex(@"Mozilla.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserMozilla();
     [GeneratedRegex(@"Konqueror.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserKonqueror();
     [GeneratedRegex(@"icab.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserICab();
     [GeneratedRegex(@"Lynx.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserLynx();
+    [GeneratedRegex(@"ELinks.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserELinks();
     [GeneratedRegex(@"Links.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserLinks();
     [GeneratedRegex(@"hotjava.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserHotJava();
     [GeneratedRegex(@"amaya.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserAmaya();
@@ -210,5 +210,11 @@ internal static partial class HttpUserAgentRegexes
     [GeneratedRegex(@"Maxthon.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserMaxthon();
     [GeneratedRegex(@"ipod touch.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserIPodTouch();
     [GeneratedRegex(@"Ubuntu.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserUbuntu();
+    [GeneratedRegex(@"EdgiOS.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserEdgiOS();
+    [GeneratedRegex(@"SamsungBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserSamsungBrowser();
+    [GeneratedRegex(@"YaBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserYaBrowser();
+    [GeneratedRegex(@"UCBrowser.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserUCBrowser();
+    [GeneratedRegex(@"UCMobile.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserUCMobile();
+    [GeneratedRegex(@"HeadlessChrome.*?([0-9\.]+)", Options, MatchTimeoutMilliseconds)] internal static partial Regex BrowserHeadlessChrome();
 #pragma warning restore MA0023
 }

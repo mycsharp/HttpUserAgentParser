@@ -42,6 +42,8 @@ public class HttpUserAgentParserMemoryCachedProvider : IHttpUserAgentParserProvi
     /// <param name="options">The options used to set expiration and size limit</param>
     public HttpUserAgentParserMemoryCachedProvider(HttpUserAgentParserMemoryCachedProviderOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         _memoryCache = new(options.CacheOptions);
         _options = options;
 

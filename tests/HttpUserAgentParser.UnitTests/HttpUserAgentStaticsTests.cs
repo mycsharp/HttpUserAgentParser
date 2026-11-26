@@ -68,12 +68,13 @@ public class HttpUserAgentStaticsTests
     /// </summary>
     private static readonly (string Token, string Name)[] s_expectedBrowsers =
     [
-        ("OPR", "Opera"), ("Silk", "Amazon Silk"), ("Flock", "Flock"), ("Edge", "Edge"), ("EdgA", "Edge"), ("Edg", "Edge"), ("Vivaldi", "Vivaldi"),
-        ("Brave Chrome", "Brave"), ("Chrome", "Chrome"), ("CriOS", "Chrome"), ("Opera.*?Version", "Opera"), ("Opera", "Opera"),
-        ("MSIE", "Internet Explorer"), ("Internet Explorer", "Internet Explorer"), ("Trident.* rv", "Internet Explorer"),
-        ("Shiira", "Shiira"), ("Firefox", "Firefox"), ("FxiOS", "Firefox"), ("Chimera", "Chimera"), ("Phoenix", "Phoenix"),
-        ("Firebird", "Firebird"), ("Camino", "Camino"), ("Netscape", "Netscape"), ("OmniWeb", "OmniWeb"), ("Version", "Safari"),
-        ("Mozilla", "Mozilla"), ("Konqueror", "Konqueror"), ("icab", "iCab"), ("Lynx", "Lynx"), ("Links", "Links"),
+        ("OPR", "Opera"), ("Silk", "Amazon Silk"), ("Flock", "Flock"), ("Edge", "Edge"), ("EdgA", "Edge"), ("Edg", "Edge"), ("EdgiOS", "Edge"),
+        ("Vivaldi", "Vivaldi"), ("Brave Chrome", "Brave"), ("SamsungBrowser", "Samsung Internet"), ("YaBrowser", "Yandex Browser"),
+        ("UCBrowser", "UC Browser"), ("UCMobile", "UC Browser"), ("Chrome", "Chrome"), ("CriOS", "Chrome"), ("HeadlessChrome", "Chrome"),
+        ("Opera.*?Version", "Opera"), ("Opera", "Opera"), ("MSIE", "Internet Explorer"), ("Internet Explorer", "Internet Explorer"),
+        ("Trident.* rv", "Internet Explorer"), ("Shiira", "Shiira"), ("Firefox", "Firefox"), ("FxiOS", "Firefox"), ("Chimera", "Chimera"),
+        ("Phoenix", "Phoenix"), ("Firebird", "Firebird"), ("Camino", "Camino"), ("Netscape", "Netscape"), ("OmniWeb", "OmniWeb"),
+        ("Version", "Safari"), ("Konqueror", "Konqueror"), ("icab", "iCab"), ("Lynx", "Lynx"), ("ELinks", "ELinks"), ("Links", "Links"),
         ("hotjava", "HotJava"), ("amaya", "Amaya"), ("IBrowse", "IBrowse"), ("Maxthon", "Maxthon"), ("ipod touch", "Apple iPod"),
         ("Ubuntu", "Ubuntu Web Browser"),
     ];
@@ -113,6 +114,25 @@ public class HttpUserAgentStaticsTests
         Dictionary<string, string> expected = s_expectedBrowsers.ToDictionary(static b => $@"{b.Token}.*?([0-9\.]+)", static b => b.Name, StringComparer.Ordinal);
 
         Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void Browsers_Cover_All_Parser_Browser_Rules()
+    {
+        HashSet<string> expectedNames = new(HttpUserAgentRules.Browsers.Select(static rule => rule.Name), StringComparer.Ordinal);
+        HashSet<string> actualNames = new(HttpUserAgentStatics.Browsers.Values, StringComparer.Ordinal);
+
+        Assert.Equal(expectedNames, actualNames);
+
+        foreach ((string name, string detectToken, string? versionToken) in HttpUserAgentRules.Browsers)
+        {
+            string expectedToken = detectToken.TrimEnd('/');
+            bool matched = HttpUserAgentStatics.Browsers.Any(entry =>
+                string.Equals(entry.Value, name, StringComparison.Ordinal)
+                && entry.Key.ToString().StartsWith(expectedToken, StringComparison.Ordinal));
+
+            Assert.True(matched, $"HttpUserAgentStatics.Browsers is missing rule '{name}' ({detectToken}, {versionToken}).");
+        }
     }
 
     [Fact]

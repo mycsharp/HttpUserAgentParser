@@ -453,4 +453,20 @@ public class HttpUserAgentParserTests
         Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0+(compatible;+YouBot/1.0)"));
         Assert.Equal("YouBot", HttpUserAgentParser.GetRobot("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; YouBot/1.0; +https://docs.you.com/youbot; env:prod) Chrome/X.X.X.X Safari/537.36"));
     }
+
+    [Fact]
+    public void Public_Methods_Throw_ArgumentNullException_When_UserAgent_Is_Null()
+    {
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.Parse(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentInformation.Parse(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.Cleanup(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetPlatform(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetPlatform(null!, out _));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetBrowser(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetBrowser(null!, out _));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetRobot(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetRobot(null!, out _));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.GetMobileDevice(null!));
+        Assert.Throws<ArgumentNullException>(() => HttpUserAgentParser.TryGetMobileDevice(null!, out _));
+    }
 }

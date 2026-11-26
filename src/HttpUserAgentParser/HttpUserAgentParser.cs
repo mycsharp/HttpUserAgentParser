@@ -34,6 +34,8 @@ public static class HttpUserAgentParser
 
     internal static HttpUserAgentInformation Parse(string userAgent, HttpUserAgentRobotSet robots)
     {
+        ArgumentNullException.ThrowIfNull(userAgent);
+
         if (!HttpUserAgentParserTelemetry.IsEnabled)
         {
             return ParseInternal(userAgent, robots);
@@ -92,6 +94,8 @@ public static class HttpUserAgentParser
     // string in the result and share the decoded span across all detectors.
     private static T Detect<TState, T>(string userAgent, TState state, Detector<TState, T> detect)
     {
+        ArgumentNullException.ThrowIfNull(userAgent);
+
         ReadOnlySpan<char> ua = userAgent.AsSpan();
         if (!ua.Contains('+'))
         {
@@ -123,7 +127,11 @@ public static class HttpUserAgentParser
     /// <summary>
     /// pre-cleanup of <param name="userAgent">user agent</param>
     /// </summary>
-    public static string Cleanup(string userAgent) => userAgent.Trim();
+    public static string Cleanup(string userAgent)
+    {
+        ArgumentNullException.ThrowIfNull(userAgent);
+        return userAgent.Trim();
+    }
 
     /// <summary>
     /// returns the platform or null
@@ -348,6 +356,8 @@ public static class HttpUserAgentParser
     /// </summary>
     public static string? GetRobot(string userAgent)
     {
+        ArgumentNullException.ThrowIfNull(userAgent);
+
         HttpUserAgentRobotSet robots = HttpUserAgentRules.RobotSet;
         return robots.MatchFirst(userAgent)
             ?? Detect(userAgent, robots, static (original, decoded, rules) => rules.MatchAfterFirst(original, decoded));

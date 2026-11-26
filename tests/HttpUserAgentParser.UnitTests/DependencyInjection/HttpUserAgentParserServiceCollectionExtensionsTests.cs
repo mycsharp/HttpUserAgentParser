@@ -54,4 +54,48 @@ public class HttpUserAgentParserServiceCollectionExtensionsTests
         Assert.Equal(typeof(TestHttpUserAgentParserProvider), services[0].ImplementationType);
         Assert.Equal(ServiceLifetime.Singleton, services[0].Lifetime);
     }
+
+    [Fact]
+    public void AddHttpUserAgentCachedParser_With_MaxCacheEntries()
+    {
+        ServiceCollection services = new();
+
+        HttpUserAgentParserDependencyInjectionOptions options = services.AddHttpUserAgentCachedParser(maxCacheEntries: 128);
+
+        Assert.Same(services, options.Services);
+        Assert.Single(services);
+
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        HttpUserAgentParserCachedProvider provider = Assert.IsType<HttpUserAgentParserCachedProvider>(
+            serviceProvider.GetRequiredService<IHttpUserAgentParserProvider>());
+        Assert.Equal(128, provider.MaxCacheEntries);
+    }
+
+    [Fact]
+    public void AddHttpUserAgentParser_Is_Idempotent()
+    {
+        ServiceCollection services = new();
+
+        services.AddHttpUserAgentParser();
+        services.AddHttpUserAgentCachedParser();
+        services.AddHttpUserAgentCachedParser(64);
+        services.AddHttpUserAgentParser<TestHttpUserAgentParserProvider>();
+
+        Assert.Single(services);
+        Assert.Equal(typeof(HttpUserAgentParserDefaultProvider), services[0].ImplementationType);
+    }
+
+    [Fact]
+    public void AddHttpUserAgentParser_Validates_Arguments()
+    {
+        IServiceCollection nullServices = null!;
+        ServiceCollection services = new();
+
+        Assert.Throws<ArgumentNullException>(() => nullServices.AddHttpUserAgentParser());
+        Assert.Throws<ArgumentNullException>(() => nullServices.AddHttpUserAgentCachedParser());
+        Assert.Throws<ArgumentNullException>(() => nullServices.AddHttpUserAgentCachedParser(10));
+        Assert.Throws<ArgumentNullException>(() => nullServices.AddHttpUserAgentParser<TestHttpUserAgentParserProvider>());
+        Assert.Throws<ArgumentOutOfRangeException>(() => services.AddHttpUserAgentCachedParser(0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => services.AddHttpUserAgentCachedParser(-5));
+    }
 }

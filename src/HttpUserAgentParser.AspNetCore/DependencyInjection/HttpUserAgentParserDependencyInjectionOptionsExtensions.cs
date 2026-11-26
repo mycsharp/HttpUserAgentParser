@@ -25,6 +25,8 @@ public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParserAccessor(
         this HttpUserAgentParserDependencyInjectionOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         options.Services.TryAddSingleton<IHttpUserAgentParserAccessor, HttpUserAgentParserAccessor>();
         return options;
     }
@@ -42,6 +44,8 @@ public static class HttpUserAgentParserDependencyInjectionOptionsExtensions
     public static HttpUserAgentParserDependencyInjectionOptions AddHttpUserAgentParserContextAccessor(
         this HttpUserAgentParserDependencyInjectionOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         options.Services.AddHttpContextAccessor();
         options.Services.TryAddSingleton<IHttpUserAgentParserContextAccessor, HttpUserAgentParserContextAccessor>();
         options.Services.TryAddSingleton<IHttpUserAgentParserAccessor>(

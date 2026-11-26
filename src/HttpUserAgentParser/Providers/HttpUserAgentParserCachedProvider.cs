@@ -10,6 +10,11 @@ namespace MyCSharp.HttpUserAgentParser.Providers;
 /// </summary>
 public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
 {
+    /// <summary>
+    /// Default maximum number of cached user agent entries before the cache is rotated.
+    /// </summary>
+    public const int DefaultMaxCacheEntries = 10_000;
+
     private sealed class Cache(HttpUserAgentRobotSet robots)
     {
         public HttpUserAgentRobotSet Robots { get; } = robots;
@@ -35,9 +40,30 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     }
 
     /// <summary>
-    /// Creates a provider with an empty cache.
+    /// Creates a provider with an empty cache limited to <see cref="DefaultMaxCacheEntries"/> entries.
     /// </summary>
-    public HttpUserAgentParserCachedProvider() => HttpUserAgentParserTelemetryState.Register(this);
+    public HttpUserAgentParserCachedProvider()
+        : this(DefaultMaxCacheEntries)
+    {
+    }
+
+    /// <summary>
+    /// Creates a provider with an empty cache limited to <paramref name="maxCacheEntries"/> entries.
+    /// </summary>
+    /// <param name="maxCacheEntries">Maximum number of entries retained before the cache is rotated.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxCacheEntries"/> is less than or equal to zero.</exception>
+    public HttpUserAgentParserCachedProvider(int maxCacheEntries)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCacheEntries);
+
+        MaxCacheEntries = maxCacheEntries;
+        HttpUserAgentParserTelemetryState.Register(this);
+    }
+
+    /// <summary>
+    /// Maximum number of entries retained in the cache before it is rotated.
+    /// </summary>
+    public int MaxCacheEntries { get; }
 
     /// <inheritdoc/>
     /// <remarks>
@@ -46,20 +72,29 @@ public class HttpUserAgentParserCachedProvider : IHttpUserAgentParserProvider
     public HttpUserAgentInformation Parse(string userAgent)
     {
         Cache cache = GetCurrentCache();
-        if (!HttpUserAgentParserTelemetry.IsEnabled)
-        {
-            return cache.Entries.GetOrAdd(userAgent, static (ua, robots) => HttpUserAgentParser.Parse(ua, robots), cache.Robots);
-        }
-
         if (cache.Entries.TryGetValue(userAgent, out HttpUserAgentInformation cached))
         {
-            HttpUserAgentParserTelemetry.ConcurrentCacheHit();
+            if (HttpUserAgentParserTelemetry.IsEnabled)
+            {
+                HttpUserAgentParserTelemetry.ConcurrentCacheHit();
+            }
+
             return cached;
+        }
+
+        if (cache.Entries.Count >= MaxCacheEntries)
+        {
+            Interlocked.CompareExchange(ref _cache, new Cache(cache.Robots), cache);
+            cache = GetCurrentCache();
         }
 
         // Report the observed miss after insertion so a synchronous listener can read the entry.
         HttpUserAgentInformation information = cache.Entries.GetOrAdd(userAgent, static (ua, robots) => HttpUserAgentParser.Parse(ua, robots), cache.Robots);
-        HttpUserAgentParserTelemetry.ConcurrentCacheMiss();
+        if (HttpUserAgentParserTelemetry.IsEnabled)
+        {
+            HttpUserAgentParserTelemetry.ConcurrentCacheMiss();
+        }
+
         return information;
     }
 

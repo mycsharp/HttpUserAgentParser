@@ -20,6 +20,8 @@ public static class HttpContextExtensions
     /// </remarks>
     public static string? GetUserAgentString(this HttpContext httpContext)
     {
+        ArgumentNullException.ThrowIfNull(httpContext);
+
         StringValues value = httpContext.Request.Headers.UserAgent;
         if (value.Count > 0)
         {
